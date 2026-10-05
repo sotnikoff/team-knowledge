@@ -1,6 +1,6 @@
 import { renameBoard, type Board, type BoardId } from '@/domain/board/Board'
-import type { BoardRepository } from '../ports/BoardRepository'
-import type { Clock } from '../ports/Clock'
+import type { BoardRepository } from '../../ports/BoardRepository'
+import type { Clock } from '../../ports/Clock'
 
 export class RenameBoard {
   private readonly boards: BoardRepository

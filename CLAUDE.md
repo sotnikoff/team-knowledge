@@ -1,7 +1,8 @@
-# Team Knowledge — редактор диаграмм
+# Team Knowledge — зарисовки: доски и документы
 
-Клон Excalidraw: список досок + «рисованный от руки» редактор диаграмм
-(Vite + React 19 + TypeScript strict + Tailwind v4, рендер на canvas через roughjs).
+Зарисовки (в коде — `Space`), в каждой — доски с диаграммами в стиле Excalidraw
+(canvas + roughjs) и текстовые документы с минимальным WYSIWYG (TipTap), как
+страницы в Confluence. Vite + React 19 + TypeScript strict + Tailwind v4.
 
 ## Команды
 
@@ -9,7 +10,7 @@
 npm run dev        # dev-сервер
 npm run build      # tsc -b + vite build
 npm run typecheck  # только проверка типов
-npm test           # vitest: domain, editor, контракт репозитория, архитектура
+npm test           # vitest: domain, editor, use cases, контракты репозиториев, архитектура
 npm run lint       # oxlint
 ```
 
@@ -30,17 +31,38 @@ npm run lint       # oxlint
    readonly; любое изменение = новый объект. Это даёт дешёвый undo/redo,
    кэширование отрисовки по ссылке и простые тесты.
 
+## Модель данных
+
+```
+Space (зарисовка)            domain/space/Space.ts
+ ├─ Board (доска)  *         domain/board/Board.ts        — ссылается через spaceId
+ └─ Document (документ) *    domain/document/Document.ts  — ссылается через spaceId
+```
+
+- Зарисовка **не хранит** список детей: доски и документы указывают на неё через
+  `spaceId` (как `GET /spaces/:id/boards`). Внутри зарисовки — плоский список.
+- Все сущности `Versioned` (`domain/shared/versioned.ts`): `id`, `version`, `createdAt`,
+  `updatedAt`. Имена валидирует общий `normalizeName` (`domain/shared/name.ts`).
+- Для списков есть лёгкие проекции без тяжёлого содержимого: `BoardSummary` (без
+  `elements`), `DocumentSummary` (без `content`).
+- Текст документа — `RichText` (`domain/document/richText.ts`): нейтральное JSON-дерево
+  в формате ProseMirror. Domain не зависит от TipTap; связь «RichText ↔ TipTap JSON»
+  только в `presentation/documents/richTextAdapter.ts`.
+
 ## Слои и правило зависимостей
 
 ```
 src/
-  domain/          Сущности и чистая логика: Board, элементы, геометрия, доменные ошибки.
+  domain/          Сущности и чистая логика: Space, Board, Document, элементы, геометрия,
+                   доменные ошибки.
                    Не импортирует НИЧЕГО (ни другие слои, ни npm-пакеты).
-  application/     Порты (интерфейсы), use cases, логика редактора (EditorModel,
-                   history, viewport, scene). Импортирует только domain. Без пакетов.
+  application/     Порты (интерфейсы), use cases (usecases/spaces|boards|documents),
+                   логика редактора досок (EditorModel, history, viewport, scene).
+                   Импортирует только domain. Без пакетов.
   infrastructure/  Адаптеры портов: persistence (DTO, mapper, localStorage), system
                    (id, часы). Импортирует application и domain.
-  presentation/    React: страницы, canvas, инструменты, хуки, store. Импортирует
+  presentation/    React: страницы, canvas, инструменты, редактор документов (TipTap),
+                   хуки, store. Импортирует
                    application и domain. Infrastructure — ТОЛЬКО из
                    presentation/app/container.ts (composition root).
 ```
@@ -50,36 +72,56 @@ src/
 
 ## Слой персистентности (самое важное)
 
-- Порт: `application/ports/BoardRepository.ts`. Его форма **повторяет будущий REST**:
-  `list → GET /boards` (summary без элементов), `get → GET /boards/:id`,
-  `create → POST /boards`, `save → PUT /boards/:id` с `If-Match: version`,
-  `delete → DELETE /boards/:id`.
+- Три порта, форма каждого **повторяет будущий REST**:
+
+  | Порт | Методы | REST |
+  |---|---|---|
+  | `SpaceRepository` | `list, get, create, save, delete` | `/spaces`, `/spaces/:id` |
+  | `BoardRepository` | `list(spaceId), get, create, save, delete` | `GET /spaces/:spaceId/boards`, `/boards/:id` |
+  | `DocumentRepository` | `list(spaceId), get, create, save, delete` | `GET /spaces/:spaceId/documents`, `/documents/:id` |
+
+  `save` → `PUT` с `If-Match: version`. `list` возвращает summary без тяжёлого содержимого.
+- **`SpaceRepository.delete` удаляет зарисовку вместе со всеми её досками и
+  документами** — часть контракта порта (на бэке это каскад на сервере, один запрос).
+  Use case `DeleteSpace` ничего не перебирает сам.
+- Создание доски/документа проверяет, что зарисовка существует (`NotFoundError`).
 - **Всё асинхронно**, даже поверх синхронного localStorage. UI уже обрабатывает
   loading/error, поэтому сеть ничего в нём не изменит.
-- **Оптимистичная конкурентность**: `save` проходит, только если `board.version`
-  совпадает с сохранённой; иначе `BoardConflictError`. Успешный save возвращает
-  доску с `version + 1` — следующий save строится от неё (так делает `useAutosave`).
+- **Оптимистичная конкурентность**: `save` проходит, только если `entity.version`
+  совпадает с сохранённой; иначе `VersionConflictError`. Успешный save возвращает
+  сущность с `version + 1` — следующий save строится от неё (так делает `useAutosave`).
+- **Переименование и автосохранение не конфликтуют.** Переименование идёт отдельным
+  use case и тоже повышает версию. `useAutosave` следит за кэшем: если там появилась
+  более новая версия того же объекта (например, переименовали из боковой панели),
+  она становится базой следующего сохранения. Содержимое при этом не теряется:
+  save кладёт текущее содержимое поверх свежей базы.
 - **Id генерирует клиент** (порт `IdGenerator`), бэк их принимает.
 - **Доменные ошибки** (`domain/shared/errors.ts`): адаптер обязан переводить свои
-  сбои (QuotaExceeded, битый JSON, 404/409/5xx) в `BoardNotFoundError`,
-  `BoardConflictError`, `BoardAlreadyExistsError`, `StorageUnavailableError`.
+  сбои (QuotaExceeded, битый JSON, 404/409/5xx) в `NotFoundError`,
+  `VersionConflictError`, `AlreadyExistsError` (у всех есть `entity: space | board |
+  document` и `id`), `InvalidNameError`, `StorageUnavailableError`.
   UI знает только их (`presentation/errors.ts`).
-- **Wire-формат общий для всех адаптеров**: `infrastructure/persistence/dto/BoardDto.ts`
-  + `boardMapper.ts` (сериализация, валидация входящих данных, `schemaVersion`).
-  Это и есть JSON-контракт с бэком.
-- **Контрактный тест-сьют** `application/ports/BoardRepository.contract.ts` —
-  единый для всех реализаций (Liskov). Новый адаптер обязан его пройти.
+- **Wire-формат общий для всех адаптеров**: `infrastructure/persistence/dto/`
+  (`*Dto.ts` + `*Mapper.ts`: сериализация, валидация входящих данных, `schemaVersion`;
+  общие гарды — `common.ts`). Это и есть JSON-контракт с бэком.
+- **Контрактный тест-сьют** `application/ports/repository.contract.ts`
+  (`runVersionedRepositoryContract`) — единый для всех репозиториев и всех реализаций
+  (Liskov). Новый адаптер обязан его пройти.
+- localStorage-адаптеры — тонкие обёртки над `LocalCollection` (индекс summary +
+  JSON на объект, версии, перевод ошибок). Ключи с префиксом `tk2:`; данные старого
+  формата (`tk:*`) удаляет `purgeLegacyData` при старте.
 - Серверное состояние в UI — через TanStack Query (`presentation/hooks`), кэш
   обновляется из ответов use cases.
 
 ### Чек-лист: переход на HTTP
 
-1. `infrastructure/persistence/http/HttpBoardRepository.ts implements BoardRepository`:
-   `fetch` + `boardToDto`/`boardFromDto`/`summaryFromDto`; статусы → доменные ошибки
-   (404 → NotFound, 409/412 → Conflict, сеть/5xx → StorageUnavailable).
-2. `HttpBoardRepository.test.ts`: `runBoardRepositoryContract(...)` поверх мок-сервера
-   (например, msw).
-3. В `presentation/app/container.ts` раскомментировать ветку `case 'http'`.
+1. `infrastructure/persistence/http/Http{Space,Board,Document}Repository.ts`,
+   каждый `implements` свой порт: `fetch` + существующие mapper'ы из `dto/`; статусы →
+   доменные ошибки (404 → NotFound, 409/412 → VersionConflict, сеть/5xx →
+   StorageUnavailable). Каскадное удаление зарисовки делает сервер.
+2. Тесты: `runVersionedRepositoryContract(...)` для каждого поверх мок-сервера
+   (например, msw) — те же сценарии, что и для localStorage.
+3. В `presentation/app/container.ts` заполнить ветку `case 'http'` в `createRepositories`.
 4. `.env`: `VITE_PERSISTENCE=http`, `VITE_API_URL=...`.
 
 Больше ничего менять не нужно. Не добавляйте в порт методы «под localStorage»
@@ -94,17 +136,40 @@ src/
   `presentation/canvas/elementRenderers.ts → elementRenderers`,
   `presentation/canvas/tools/index.ts → tools`. Новый тип/инструмент = новая запись,
   без `switch` по всему коду. Mapped types заставят компилятор потребовать запись.
-- **L** — любой `BoardRepository` проходит один контрактный сьют.
-- **I** — узкие порты (`BoardRepository`, `IdGenerator`, `Clock`); UI получает
-  use cases через `AppDependencies`, а не репозиторий.
+- **L** — любой репозиторий проходит один контрактный сьют.
+- **I** — узкие порты (`SpaceRepository`, `BoardRepository`, `DocumentRepository`,
+  `IdGenerator`, `Clock`); UI получает use cases через `AppDependencies`, а не репозиторий.
 - **D** — use cases зависят от портов; конкретные классы связываются только в
   `presentation/app/container.ts` и передаются через `DependenciesProvider`.
 
-## Редактор
+## Интерфейс
+
+Маршруты (`presentation/app/App.tsx`): `/` — список зарисовок; `/spaces/:spaceId` —
+`SpaceLayout` (боковая панель с досками и документами + `<Outlet/>`): index — обзор,
+`boards/:boardId` — редактор доски, `docs/:documentId` — документ.
+
+Автосохранение (`presentation/hooks/useAutosave.ts`) — одно на доски и документы:
+debounce, не больше одного запроса одновременно, побеждают последние данные, база
+следующего save — результат предыдущего.
+
+## Документы
+
+- `presentation/documents/RichTextEditor.tsx` — TipTap + StarterKit, **без постоянного
+  тулбара**: markdown-шорткаты (`# `, `- `, `1. `, `> `) и мини-панель при выделении
+  (`SelectionToolbar.tsx`: жирный, курсив, зачёркнутый, код, H1, H2, списки, цитата).
+  Новое форматирование — новая запись в массиве `actions`.
+- Заголовок документа переименовывается отдельно (`RenameDocument`, по blur/Enter);
+  Enter переводит фокус в текст.
+
+## Редактор досок
 
 - Вся логика — чистые функции в `application/editor/editorModel.ts`
   (`EditorModel` → `EditorModel`). `presentation/editor/store.ts` (zustand) лишь
   делает модель реактивной: `dispatch(...transitions)`, `useEditor(selector)`.
+- Store один на приложение и принадлежит «сессии» редактора: `Editor` загружает доску
+  в layout-эффекте (`resetEditor(elements, session)`) и рендерит содержимое, только
+  когда store принадлежит его сессии. Так никто, в первую очередь автосохранение,
+  не увидит элементы предыдущей доски.
 - Непрерывные действия (рисование, перетаскивание, ресайз, ввод текста):
   `beginInteraction` → `updateLive`… → `endInteraction` = **один** шаг undo.
   Дискретные изменения (удаление, стиль) — `commit`.

@@ -105,6 +105,11 @@ export const geometryHandlers: GeometryRegistry = {
   line: pointsGeometry(),
   arrow: pointsGeometry(),
   freedraw: pointsGeometry(),
+  document: {
+    hitTest: (el, p, tol) => containsPoint(el, p, tol),
+    // Only the width is free: the height always follows the content.
+    resize: (el, target) => ({ ...el, x: target.x, width: Math.max(160, target.width) }),
+  },
   text: {
     hitTest: (el, p, tol) => containsPoint(el, p, tol),
     resize: (el, target) => {

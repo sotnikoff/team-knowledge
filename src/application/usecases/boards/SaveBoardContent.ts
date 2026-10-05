@@ -1,7 +1,7 @@
 import { replaceElements, type Board } from '@/domain/board/Board'
 import type { DiagramElement } from '@/domain/element/types'
-import type { BoardRepository } from '../ports/BoardRepository'
-import type { Clock } from '../ports/Clock'
+import type { BoardRepository } from '../../ports/BoardRepository'
+import type { Clock } from '../../ports/Clock'
 
 export class SaveBoardContent {
   private readonly boards: BoardRepository

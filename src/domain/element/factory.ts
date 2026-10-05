@@ -1,5 +1,6 @@
 import { boundsOfPoints, type Point } from '../shared/geometry'
 import type {
+  DocumentElement,
   ElementId,
   ElementStyle,
   FreedrawElement,
@@ -50,6 +51,20 @@ export function createText(
   init: CommonInit & { x: number; y: number; fontSize: number },
 ): TextElement {
   return { ...init, type: 'text', text: '', width: 0, height: init.fontSize * 1.25 }
+}
+
+export const DOCUMENT_CARD_WIDTH = 480
+
+/** Height is a placeholder until the card is rendered and measured. */
+export function createDocumentElement(
+  init: CommonInit & { documentId: string; x: number; y: number; width?: number },
+): DocumentElement {
+  return {
+    ...init,
+    type: 'document',
+    width: init.width ?? DOCUMENT_CARD_WIDTH,
+    height: 160,
+  }
 }
 
 /**

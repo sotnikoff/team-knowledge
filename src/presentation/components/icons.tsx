@@ -80,6 +80,28 @@ const paths = {
       <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
     </Icon>
   ),
+  board: (
+    <Icon>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M7 15l3-4 3 3 4-5" />
+    </Icon>
+  ),
+  document: (
+    <Icon>
+      <path d="M6 3h8l4 4v14H6z" />
+      <path d="M14 3v4h4M9 12h6M9 16h6" />
+    </Icon>
+  ),
+  plus: (
+    <Icon>
+      <path d="M12 5v14M5 12h14" />
+    </Icon>
+  ),
+  edit: (
+    <Icon>
+      <path d="M4 20h4L19 9l-4-4L4 16z" />
+    </Icon>
+  ),
   back: (
     <Icon>
       <path d="M15 18l-6-6 6-6" />

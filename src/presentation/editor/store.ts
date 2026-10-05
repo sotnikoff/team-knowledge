@@ -9,10 +9,22 @@ import type { DiagramElement } from '@/domain/element/types'
  * Thin reactive wrapper around the pure `EditorModel`. All logic lives in
  * `application/editor`; this file only makes it observable for React.
  */
-const useEditorStore = create<{ model: EditorModel }>(() => ({ model: createEditorModel([]) }))
+const useEditorStore = create<{ model: EditorModel; session: object | null }>(() => ({
+  model: createEditorModel([]),
+  session: null,
+}))
 
-export function resetEditor(elements: readonly DiagramElement[]): void {
-  useEditorStore.setState({ model: createEditorModel(elements) })
+/**
+ * Loads content for one editor session (one mount of the editor). Components
+ * render the content only once the store belongs to their session, so they
+ * never see the previous board.
+ */
+export function resetEditor(elements: readonly DiagramElement[], session: object): void {
+  useEditorStore.setState({ model: createEditorModel(elements), session })
+}
+
+export function useEditorSession(): object | null {
+  return useEditorStore((s) => s.session)
 }
 
 export function getModel(): EditorModel {
@@ -23,7 +35,7 @@ export function getModel(): EditorModel {
 export function dispatch(...transitions: Array<(m: EditorModel) => EditorModel>): void {
   useEditorStore.setState((s) => {
     const model = transitions.reduce((m, t) => t(m), s.model)
-    return model === s.model ? s : { model }
+    return model === s.model ? s : { model, session: s.session }
   })
 }
 

@@ -1,35 +1,56 @@
-import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Board } from '@/domain/board/Board'
-import type { DiagramElement } from '@/domain/element/types'
-import { BoardConflictError } from '@/domain/shared/errors'
-import { useDependencies } from '../app/dependencies'
-import { queryKeys } from './queryKeys'
+import { VersionConflictError } from '@/domain/shared/errors'
+import type { Versioned } from '@/domain/shared/versioned'
 
 export type SaveStatus = 'saved' | 'pending' | 'saving' | 'error' | 'conflict'
 
 const DEBOUNCE_MS = 600
 
+export interface AutosaveOptions<T extends Versioned, C> {
+  /** The entity as loaded; its version is the base of the first save. */
+  readonly initial: T
+  /** The content as loaded (to tell whether anything changed). */
+  readonly initialContent: C
+  /** Current content in the editor. Compared by reference. */
+  readonly content: C
+  /**
+   * The freshest copy of the entity known to the app (the query cache). When
+   * it gets newer — e.g. it was renamed from the sidebar — it becomes the base
+   * of the next save instead of causing a false version conflict.
+   */
+  readonly latest: T | undefined
+  /** Persists `content` on top of `base`; resolves with the saved entity. */
+  readonly save: (base: T, content: C) => Promise<T>
+  /** Called with every successfully saved entity (to update caches). */
+  readonly onSaved: (saved: T) => void
+}
+
 /**
- * Debounced, strictly sequential saving of the editor content. Written with a
- * slow network in mind: at most one request in flight, the latest content
- * always wins, and the version returned by each save is the base of the next.
+ * Debounced, strictly sequential saving of editor content. Written with a slow
+ * network in mind: at most one request in flight, the latest content always
+ * wins, and the version returned by each save is the base of the next.
  */
-export function useAutosave(initial: Board, elements: readonly DiagramElement[]) {
-  const { saveBoardContent } = useDependencies()
-  const queryClient = useQueryClient()
+export function useAutosave<T extends Versioned, C>(options: AutosaveOptions<T, C>) {
   const [status, setStatus] = useState<SaveStatus>('saved')
 
-  const base = useRef(initial)
-  const latest = useRef(elements)
-  const persisted = useRef(initial.elements)
+  const base = useRef(options.initial)
+  const latest = useRef(options.content)
+  const persisted = useRef(options.initialContent)
   const inFlight = useRef(false)
   const blocked = useRef(false)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const callbacks = useRef({ save: options.save, onSaved: options.onSaved })
 
   useEffect(() => {
-    latest.current = elements
-  }, [elements])
+    latest.current = options.content
+    callbacks.current = { save: options.save, onSaved: options.onSaved }
+  })
+
+  // Adopt a newer version saved by someone else in this app (rename etc.).
+  useEffect(() => {
+    const remote = options.latest
+    if (remote && !inFlight.current && remote.version > base.current.version) base.current = remote
+  }, [options.latest])
 
   const flush = useCallback(async (): Promise<void> => {
     clearTimeout(timer.current)
@@ -40,28 +61,27 @@ export function useAutosave(initial: Board, elements: readonly DiagramElement[])
       while (latest.current !== persisted.current) {
         setStatus('saving')
         const content = latest.current
-        const saved = await saveBoardContent.execute(base.current, content)
+        const saved = await callbacks.current.save(base.current, content)
         base.current = saved
         persisted.current = content
-        queryClient.setQueryData(queryKeys.board(saved.id), saved)
-        void queryClient.invalidateQueries({ queryKey: queryKeys.boards, exact: true })
+        callbacks.current.onSaved(saved)
       }
       setStatus('saved')
     } catch (error) {
-      const conflict = error instanceof BoardConflictError
+      const conflict = error instanceof VersionConflictError
       blocked.current = conflict
       setStatus(conflict ? 'conflict' : 'error')
     } finally {
       inFlight.current = false
     }
-  }, [saveBoardContent, queryClient])
+  }, [])
 
   useEffect(() => {
-    if (elements === persisted.current || blocked.current) return
+    if (options.content === persisted.current || blocked.current) return
     setStatus('pending')
     clearTimeout(timer.current)
     timer.current = setTimeout(() => void flush(), DEBOUNCE_MS)
-  }, [elements, flush])
+  }, [options.content, flush])
 
   // Do not lose the last edits when leaving the page or closing the tab.
   useEffect(() => {

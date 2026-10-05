@@ -3,13 +3,24 @@ import { useState } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import { isRetryable } from '../errors'
 import { BoardEditorPage } from '../pages/BoardEditorPage'
-import { BoardsListPage } from '../pages/BoardsListPage'
+import { DocumentPage } from '../pages/DocumentPage'
+import { SpaceLayout } from '../pages/SpaceLayout'
+import { SpaceOverviewPage } from '../pages/SpaceOverviewPage'
+import { SpacesListPage } from '../pages/SpacesListPage'
 import type { AppDependencies } from './dependencies'
 import { DependenciesProvider } from './DependenciesProvider'
 
 const router = createBrowserRouter([
-  { path: '/', element: <BoardsListPage /> },
-  { path: '/boards/:boardId', element: <BoardEditorPage /> },
+  { path: '/', element: <SpacesListPage /> },
+  {
+    path: '/spaces/:spaceId',
+    element: <SpaceLayout />,
+    children: [
+      { index: true, element: <SpaceOverviewPage /> },
+      { path: 'boards/:boardId', element: <BoardEditorPage /> },
+      { path: 'docs/:documentId', element: <DocumentPage /> },
+    ],
+  },
 ])
 
 export function App(props: { dependencies: AppDependencies }) {

@@ -1,39 +1,64 @@
-import { useState } from 'react'
-import { Link } from 'react-router'
+import { useQueryClient } from '@tanstack/react-query'
+import { useLayoutEffect, useState } from 'react'
 import type { Board } from '@/domain/board/Board'
+import type { DiagramElement } from '@/domain/element/types'
+import { useDependencies } from '../app/dependencies'
 import { Canvas } from '../canvas/Canvas'
 import { BottomBar } from '../components/BottomBar'
-import { AppIcon } from '../components/icons'
 import { Island } from '../components/Island'
 import { SaveStatus } from '../components/SaveStatus'
 import { StylePanel } from '../components/StylePanel'
 import { Toolbar } from '../components/Toolbar'
 import { useAutosave } from '../hooks/useAutosave'
-import { resetEditor, useEditor } from './store'
+import { queryKeys } from '../hooks/queryKeys'
+import { resetEditor, useEditor, useEditorSession } from './store'
 import { useEditorShortcuts } from './useEditorShortcuts'
 
-export function Editor(props: { board: Board; onReload: () => void }) {
-  // Load the board into the store before the first render, so nothing (e.g.
-  // autosave) ever observes the previous board's content.
-  useState(() => resetEditor(props.board.elements))
+interface EditorProps {
+  /** The freshest cached copy of the board; its first value seeds the editor. */
+  readonly board: Board
+  readonly onReload: () => void
+}
+
+/**
+ * Loads the board into the editor store before anything reads it, so nothing
+ * (autosave above all) ever observes the previous board's content. The store
+ * is reset in an effect — not during render — to keep other subscribers safe.
+ */
+export function Editor(props: EditorProps) {
+  const [initial] = useState(props.board)
+  const [session] = useState(() => ({}))
+  const loaded = useEditorSession() === session
+
+  useLayoutEffect(() => resetEditor(initial.elements, session), [initial, session])
+
+  return loaded ? <LoadedEditor {...props} initial={initial} /> : null
+}
+
+function LoadedEditor({ initial, ...props }: EditorProps & { initial: Board }) {
+  const { saveBoardContent } = useDependencies()
+  const queryClient = useQueryClient()
 
   const elements = useEditor((m) => m.elements)
-  const { status, retry } = useAutosave(props.board, elements)
+  const { status, retry } = useAutosave<Board, readonly DiagramElement[]>({
+    initial,
+    initialContent: initial.elements,
+    content: elements,
+    latest: props.board,
+    save: (base, content) => saveBoardContent.execute(base, content),
+    onSaved: (saved) => {
+      queryClient.setQueryData(queryKeys.board(saved.id), saved)
+      void queryClient.invalidateQueries({ queryKey: queryKeys.boards(saved.spaceId), exact: true })
+    },
+  })
   useEditorShortcuts()
 
   return (
-    <div className="fixed inset-0 select-none bg-white">
+    <div className="absolute inset-0 select-none overflow-hidden bg-white">
       <Canvas />
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
-        <Island className="pointer-events-auto flex items-center gap-1">
-          <Link
-            to="/"
-            title="К списку досок"
-            className="flex h-9 w-9 items-center justify-center rounded-md text-slate-700 hover:bg-slate-100"
-          >
-            <AppIcon name="back" />
-          </Link>
-          <span className="max-w-48 truncate pr-2 font-medium text-slate-800">{props.board.name}</span>
+        <Island className="pointer-events-auto flex h-11 items-center px-3">
+          <span className="max-w-48 truncate font-medium text-slate-800">{props.board.name}</span>
         </Island>
         <div className="pointer-events-auto">
           <Toolbar />

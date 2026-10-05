@@ -1,24 +1,31 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router'
-import { BOARD_NAME_MAX_LENGTH, type BoardSummary } from '@/domain/board/Board'
+import { NAME_MAX_LENGTH } from '@/domain/shared/name'
 import { errorMessage } from '../errors'
-import { useDeleteBoard, useRenameBoard } from '../hooks/useBoards'
 
-const dateFormat = new Intl.DateTimeFormat('ru', { dateStyle: 'medium', timeStyle: 'short' })
-
-export function BoardCard({ board }: { board: BoardSummary }) {
-  const rename = useRenameBoard()
-  const remove = useDeleteBoard()
+/** Card for a space, board or document: open, rename inline, delete with confirmation. */
+export function ItemCard(props: {
+  title: string
+  subtitle: string
+  to: string
+  icon?: ReactNode
+  rename: (name: string) => Promise<unknown>
+  remove: () => Promise<unknown>
+}) {
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [name, setName] = useState(board.name)
+  const [name, setName] = useState(props.title)
+  const [error, setError] = useState<unknown>(null)
+
+  const run = (action: () => Promise<unknown>, after?: () => void) => {
+    setError(null)
+    action().then(after, setError)
+  }
 
   const onRename = (e: FormEvent) => {
     e.preventDefault()
-    rename.mutate({ id: board.id, name }, { onSuccess: () => setEditing(false) })
+    run(() => props.rename(name), () => setEditing(false))
   }
-
-  const error = rename.error ?? remove.error
 
   return (
     <article className="flex h-full flex-col justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
@@ -27,7 +34,7 @@ export function BoardCard({ board }: { board: BoardSummary }) {
           <input
             autoFocus
             value={name}
-            maxLength={BOARD_NAME_MAX_LENGTH}
+            maxLength={NAME_MAX_LENGTH}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === 'Escape' && setEditing(false)}
             aria-label="Новое название"
@@ -38,23 +45,26 @@ export function BoardCard({ board }: { board: BoardSummary }) {
           </button>
         </form>
       ) : (
-        <Link to={`/boards/${board.id}`} className="group">
-          <h2 className="truncate text-lg font-medium text-slate-900 group-hover:text-indigo-600">{board.name}</h2>
-          <p className="text-sm text-slate-500">Изменена {dateFormat.format(board.updatedAt)}</p>
+        <Link to={props.to} className="group flex gap-3">
+          {props.icon && <span className="mt-0.5 text-slate-400 group-hover:text-indigo-500">{props.icon}</span>}
+          <span className="min-w-0">
+            <h3 className="truncate text-lg font-medium text-slate-900 group-hover:text-indigo-600">{props.title}</h3>
+            <p className="text-sm text-slate-500">{props.subtitle}</p>
+          </span>
         </Link>
       )}
 
-      {error && <p className="text-sm text-red-600">{errorMessage(error)}</p>}
+      {error !== null && <p className="text-sm text-red-600">{errorMessage(error)}</p>}
 
-      <div className="flex gap-3 text-sm">
-        <Link to={`/boards/${board.id}`} className="text-indigo-600 hover:underline">
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
+        <Link to={props.to} className="text-indigo-600 hover:underline">
           Открыть
         </Link>
         <button
           type="button"
           className="text-slate-600 hover:underline"
           onClick={() => {
-            setName(board.name)
+            setName(props.title)
             setEditing(true)
           }}
         >
@@ -62,7 +72,7 @@ export function BoardCard({ board }: { board: BoardSummary }) {
         </button>
         {confirmDelete ? (
           <span className="ml-auto flex gap-2">
-            <button type="button" className="font-medium text-red-600 hover:underline" onClick={() => remove.mutate(board.id)}>
+            <button type="button" className="font-medium text-red-600 hover:underline" onClick={() => run(props.remove)}>
               Удалить?
             </button>
             <button type="button" className="text-slate-500 hover:underline" onClick={() => setConfirmDelete(false)}>

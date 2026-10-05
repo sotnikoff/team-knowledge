@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { boardFromDto, boardToDto, InvalidBoardDataError } from './boardMapper'
+import { boardFromDto, boardToDto } from './boardMapper'
+import { InvalidDataError } from './common'
 
 const legacy = {
   schemaVersion: 1,
   id: 'b1',
+  spaceId: 's1',
   name: 'Old board',
   version: 3,
   createdAt: '2026-01-01T00:00:00.000Z',
@@ -58,6 +60,6 @@ describe('boardMapper', () => {
   it('rejects an unknown anchor', () => {
     const bad = structuredClone(legacy)
     Object.assign(bad.elements[1]!, { endBinding: { elementId: 'r', anchor: 'center' } })
-    expect(() => boardFromDto(bad)).toThrow(InvalidBoardDataError)
+    expect(() => boardFromDto(bad)).toThrow(InvalidDataError)
   })
 })

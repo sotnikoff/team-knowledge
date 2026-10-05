@@ -12,42 +12,51 @@ export abstract class DomainError extends Error {
   }
 }
 
-export class BoardNotFoundError extends DomainError {
-  readonly code = 'BOARD_NOT_FOUND'
-  readonly boardId: string
+/** Kinds of persisted entities, used to tell errors apart. */
+export type EntityKind = 'space' | 'board' | 'document'
 
-  constructor(boardId: string) {
-    super(`Board "${boardId}" not found`)
-    this.boardId = boardId
+export class NotFoundError extends DomainError {
+  readonly code = 'NOT_FOUND'
+  readonly entity: EntityKind
+  readonly id: string
+
+  constructor(entity: EntityKind, id: string) {
+    super(`${entity} "${id}" not found`)
+    this.entity = entity
+    this.id = id
   }
 }
 
-export class BoardAlreadyExistsError extends DomainError {
-  readonly code = 'BOARD_ALREADY_EXISTS'
-  readonly boardId: string
+export class AlreadyExistsError extends DomainError {
+  readonly code = 'ALREADY_EXISTS'
+  readonly entity: EntityKind
+  readonly id: string
 
-  constructor(boardId: string) {
-    super(`Board "${boardId}" already exists`)
-    this.boardId = boardId
+  constructor(entity: EntityKind, id: string) {
+    super(`${entity} "${id}" already exists`)
+    this.entity = entity
+    this.id = id
   }
 }
 
 /** Optimistic-concurrency failure: somebody saved a newer version first. */
-export class BoardConflictError extends DomainError {
-  readonly code = 'BOARD_CONFLICT'
-  readonly boardId: string
+export class VersionConflictError extends DomainError {
+  readonly code = 'VERSION_CONFLICT'
+  readonly entity: EntityKind
+  readonly id: string
 
-  constructor(boardId: string) {
-    super(`Board "${boardId}" was modified elsewhere`)
-    this.boardId = boardId
+  constructor(entity: EntityKind, id: string) {
+    super(`${entity} "${id}" was modified elsewhere`)
+    this.entity = entity
+    this.id = id
   }
 }
 
-export class InvalidBoardNameError extends DomainError {
-  readonly code = 'INVALID_BOARD_NAME'
+export class InvalidNameError extends DomainError {
+  readonly code = 'INVALID_NAME'
 
   constructor(reason: string) {
-    super(`Invalid board name: ${reason}`)
+    super(`Invalid name: ${reason}`)
   }
 }
 

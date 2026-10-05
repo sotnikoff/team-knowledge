@@ -79,6 +79,16 @@ export interface TextElement extends BaseElement {
   readonly fontSize: number
 }
 
+/**
+ * A text document placed on the board. Only the reference is stored — the
+ * content lives in the document itself. `height` mirrors the rendered card
+ * (the whole document, never scrolled) so hit-testing and bindings are exact.
+ */
+export interface DocumentElement extends BaseElement {
+  readonly type: 'document'
+  readonly documentId: string
+}
+
 export type DiagramElement =
   | RectangleElement
   | EllipseElement
@@ -87,6 +97,7 @@ export type DiagramElement =
   | ArrowElement
   | FreedrawElement
   | TextElement
+  | DocumentElement
 
 export type ElementType = DiagramElement['type']
 
@@ -99,7 +110,7 @@ export type LinearElement = LineElement | ArrowElement
 export type ShapeElement = RectangleElement | EllipseElement | DiamondElement
 
 /** Elements a line/arrow can be bound to. */
-export type BindableElement = ShapeElement | TextElement
+export type BindableElement = ShapeElement | TextElement | DocumentElement
 
 export const ELEMENT_TYPES: readonly ElementType[] = [
   'rectangle',
@@ -109,6 +120,7 @@ export const ELEMENT_TYPES: readonly ElementType[] = [
   'arrow',
   'freedraw',
   'text',
+  'document',
 ]
 
 export function isPointsElement(el: DiagramElement): el is PointsElement {
@@ -124,5 +136,5 @@ export function isShapeElement(el: DiagramElement): el is ShapeElement {
 }
 
 export function isBindableElement(el: DiagramElement): el is BindableElement {
-  return isShapeElement(el) || el.type === 'text'
+  return isShapeElement(el) || el.type === 'text' || el.type === 'document'
 }

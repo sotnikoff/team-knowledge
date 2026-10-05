@@ -108,6 +108,8 @@ export const elementRenderers: RendererRegistry = {
     ctx.stroke()
     ctx.restore()
   },
+  // Drawn by the DOM layer (`DocumentLayer`) as a real rich-text card.
+  document: () => {},
   text: (el, { ctx }) => {
     ctx.save()
     ctx.font = fontFor(el.fontSize)

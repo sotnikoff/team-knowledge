@@ -1,14 +1,26 @@
-import { DomainError, StorageUnavailableError } from '@/domain/shared/errors'
+import {
+  DomainError,
+  NotFoundError,
+  StorageUnavailableError,
+  VersionConflictError,
+  type EntityKind,
+} from '@/domain/shared/errors'
+
+const notFound: Record<EntityKind, string> = {
+  space: 'Зарисовка не найдена',
+  board: 'Доска не найдена',
+  document: 'Документ не найден',
+}
 
 const messages: Record<string, string> = {
-  BOARD_NOT_FOUND: 'Доска не найдена',
-  BOARD_ALREADY_EXISTS: 'Доска с таким id уже существует',
-  BOARD_CONFLICT: 'Доска была изменена в другом месте',
-  INVALID_BOARD_NAME: 'Некорректное название доски',
+  ALREADY_EXISTS: 'Такой объект уже существует',
+  INVALID_NAME: 'Некорректное название',
   STORAGE_UNAVAILABLE: 'Хранилище недоступно',
 }
 
 export function errorMessage(error: unknown): string {
+  if (error instanceof NotFoundError) return notFound[error.entity]
+  if (error instanceof VersionConflictError) return 'Изменено в другом месте — обновите страницу'
   if (error instanceof DomainError) return messages[error.code] ?? error.message
   return 'Что-то пошло не так'
 }

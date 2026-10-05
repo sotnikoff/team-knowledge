@@ -1,3 +1,5 @@
+import type { VersionedDto } from './common'
+
 /**
  * Wire format of a board. This is the JSON contract shared by every
  * persistence adapter (localStorage today, the HTTP API tomorrow), so the
@@ -28,7 +30,7 @@ export interface BindingDto {
 
 export interface ElementDto {
   id: string
-  type: 'rectangle' | 'ellipse' | 'diamond' | 'line' | 'arrow' | 'freedraw' | 'text'
+  type: 'rectangle' | 'ellipse' | 'diamond' | 'line' | 'arrow' | 'freedraw' | 'text' | 'document'
   x: number
   y: number
   width: number
@@ -42,19 +44,16 @@ export interface ElementDto {
   endBinding?: BindingDto | null
   /** rectangle | ellipse | diamond; absent in older data = '' */
   label?: string
+  /** document: id of the referenced text document */
+  documentId?: string
   /** text */
   text?: string
   fontSize?: number
 }
 
-export interface BoardSummaryDto {
-  id: string
+export interface BoardSummaryDto extends VersionedDto {
+  spaceId: string
   name: string
-  version: number
-  /** ISO-8601 */
-  createdAt: string
-  /** ISO-8601 */
-  updatedAt: string
 }
 
 export interface BoardDto extends BoardSummaryDto {

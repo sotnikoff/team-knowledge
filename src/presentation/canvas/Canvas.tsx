@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
 import * as editor from '@/application/editor/editorModel'
 import { shapeAt, topmostElementAt } from '@/application/editor/scene'
 import { panBy, screenToWorld, zoomAt } from '@/application/editor/viewport'
@@ -29,14 +29,17 @@ export function Canvas() {
     [ids],
   )
 
-  // Track the container size.
-  useEffect(() => {
+  // Track the container size. Measured synchronously on mount too, because the
+  // observer only reports on the next rendered frame.
+  useLayoutEffect(() => {
     const container = containerRef.current
     if (!container) return
-    const observer = new ResizeObserver(([entry]) => {
-      if (!entry) return
-      const { width, height } = entry.contentRect
+    const measure = (width: number, height: number) =>
       setSurface({ width, height, pixelRatio: window.devicePixelRatio || 1 })
+    const rect = container.getBoundingClientRect()
+    measure(rect.width, rect.height)
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry) measure(entry.contentRect.width, entry.contentRect.height)
     })
     observer.observe(container)
     return () => observer.disconnect()

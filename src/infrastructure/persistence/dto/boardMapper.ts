@@ -15,25 +15,25 @@ import {
   type BoardSummaryDto,
   type ElementDto,
 } from './BoardDto'
-
-/** Thrown when incoming data does not match the wire format. */
-export class InvalidBoardDataError extends Error {
-  constructor(message: string) {
-    super(`Invalid board data: ${message}`)
-    this.name = 'InvalidBoardDataError'
-  }
-}
+import {
+  asObject,
+  checkSchemaVersion,
+  field,
+  InvalidDataError,
+  isArray,
+  isNumber,
+  isObject,
+  isString,
+  optional,
+  parseString,
+  parseVersioned,
+  versionedToDto,
+} from './common'
 
 // ---------- domain -> DTO ----------
 
 export function summaryToDto(summary: BoardSummary): BoardSummaryDto {
-  return {
-    id: summary.id,
-    name: summary.name,
-    version: summary.version,
-    createdAt: summary.createdAt.toISOString(),
-    updatedAt: summary.updatedAt.toISOString(),
-  }
+  return { ...versionedToDto(summary), spaceId: summary.spaceId, name: summary.name }
 }
 
 export function boardToDto(board: Board): BoardDto {
@@ -51,53 +51,24 @@ function elementToDto(el: DiagramElement): ElementDto {
 
 // ---------- DTO -> domain (validating: never trust storage or network) ----------
 
-type Json = Record<string, unknown>
-
-const isObject = (v: unknown): v is Json => typeof v === 'object' && v !== null && !Array.isArray(v)
-
-function field<T>(obj: Json, key: string, guard: (v: unknown) => v is T, what: string): T {
-  const value = obj[key]
-  if (!guard(value)) throw new InvalidBoardDataError(`"${key}" must be ${what}`)
-  return value
-}
-
-const isString = (v: unknown): v is string => typeof v === 'string'
-const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
-const isArray = (v: unknown): v is unknown[] => Array.isArray(v)
 const isElementType = (v: unknown): v is ElementType => ELEMENT_TYPES.includes(v as ElementType)
 const isAnchor = (v: unknown): v is Anchor => ANCHORS.includes(v as Anchor)
 
-function optional<T>(obj: Json, key: string, parse: (v: unknown) => T, fallback: T): T {
-  const value = obj[key]
-  return value === undefined || value === null ? fallback : parse(value)
-}
-
 function parseBinding(raw: unknown): Binding {
-  if (!isObject(raw)) throw new InvalidBoardDataError('binding must be an object')
+  if (!isObject(raw)) throw new InvalidDataError('binding must be an object')
   return {
     elementId: field(raw, 'elementId', isString, 'a string'),
     anchor: field(raw, 'anchor', isAnchor, 'a known anchor'),
   }
 }
 
-function parseString(raw: unknown): string {
-  if (!isString(raw)) throw new InvalidBoardDataError('expected a string')
-  return raw
-}
-
-function parseDate(obj: Json, key: string): Date {
-  const date = new Date(field(obj, key, isString, 'an ISO date string'))
-  if (Number.isNaN(date.getTime())) throw new InvalidBoardDataError(`"${key}" is not a valid date`)
-  return date
-}
-
 function parsePoint(raw: unknown): Point {
-  if (!isObject(raw)) throw new InvalidBoardDataError('point must be an object')
+  if (!isObject(raw)) throw new InvalidDataError('point must be an object')
   return { x: field(raw, 'x', isNumber, 'a number'), y: field(raw, 'y', isNumber, 'a number') }
 }
 
 function parseStyle(raw: unknown): ElementStyle {
-  if (!isObject(raw)) throw new InvalidBoardDataError('"style" must be an object')
+  if (!isObject(raw)) throw new InvalidDataError('"style" must be an object')
   return {
     strokeColor: field(raw, 'strokeColor', isString, 'a string'),
     fillColor: field(raw, 'fillColor', isString, 'a string'),
@@ -107,7 +78,7 @@ function parseStyle(raw: unknown): ElementStyle {
 }
 
 function parseElement(raw: unknown): DiagramElement {
-  if (!isObject(raw)) throw new InvalidBoardDataError('element must be an object')
+  if (!isObject(raw)) throw new InvalidDataError('element must be an object')
   const base = {
     id: field(raw, 'id', isString, 'a string'),
     x: field(raw, 'x', isNumber, 'a number'),
@@ -134,6 +105,8 @@ function parseElement(raw: unknown): DiagramElement {
       }
     case 'freedraw':
       return { ...base, type, points: field(raw, 'points', isArray, 'an array').map(parsePoint) }
+    case 'document':
+      return { ...base, type, documentId: field(raw, 'documentId', isString, 'a string') }
     case 'text':
       return {
         ...base,
@@ -145,24 +118,19 @@ function parseElement(raw: unknown): DiagramElement {
 }
 
 export function summaryFromDto(raw: unknown): BoardSummary {
-  if (!isObject(raw)) throw new InvalidBoardDataError('board must be an object')
+  const obj = asObject(raw, 'board')
   return {
-    id: field(raw, 'id', isString, 'a string'),
-    name: field(raw, 'name', isString, 'a string'),
-    version: field(raw, 'version', isNumber, 'a number'),
-    createdAt: parseDate(raw, 'createdAt'),
-    updatedAt: parseDate(raw, 'updatedAt'),
+    ...parseVersioned(obj),
+    spaceId: field(obj, 'spaceId', isString, 'a string'),
+    name: field(obj, 'name', isString, 'a string'),
   }
 }
 
 export function boardFromDto(raw: unknown): Board {
-  if (!isObject(raw)) throw new InvalidBoardDataError('board must be an object')
-  const schemaVersion = field(raw, 'schemaVersion', isNumber, 'a number')
-  if (schemaVersion > BOARD_SCHEMA_VERSION) {
-    throw new InvalidBoardDataError(`unsupported schemaVersion ${schemaVersion}`)
-  }
+  const obj = asObject(raw, 'board')
+  checkSchemaVersion(obj, BOARD_SCHEMA_VERSION)
   return {
-    ...summaryFromDto(raw),
-    elements: field(raw, 'elements', isArray, 'an array').map(parseElement),
+    ...summaryFromDto(obj),
+    elements: field(obj, 'elements', isArray, 'an array').map(parseElement),
   }
 }

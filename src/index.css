@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&display=swap');
 @import 'tailwindcss';
+@plugin '@tailwindcss/typography';
 
 html,
 body,
@@ -12,4 +13,13 @@ body {
   background: #f8fafc;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Placeholder of the empty document editor (TipTap Placeholder extension). */
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: #94a3b8;
+  pointer-events: none;
 }
