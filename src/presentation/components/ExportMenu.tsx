@@ -55,7 +55,7 @@ export function ExportMenu(props: { boardName: string }) {
 
   const segment = (active: boolean) =>
     `flex-1 rounded-md px-2 py-1 text-sm disabled:opacity-40 ${
-      active ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+      active ? 'bg-surface text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
     }`
 
   return (
@@ -119,7 +119,7 @@ export function ExportMenu(props: { boardName: string }) {
             type="button"
             disabled={busy}
             onClick={() => void run()}
-            className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
           >
             {busy ? 'Готовлю…' : 'Скачать'}
           </button>

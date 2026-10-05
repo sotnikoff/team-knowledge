@@ -166,7 +166,7 @@ export function Canvas(props: { onOpenDocument: (documentId: string) => void }) 
       <DocumentLayer />
       <canvas
         ref={canvasRef}
-        className="relative block touch-none"
+        className="board-ink relative block touch-none"
         style={{ width: surface.width, height: surface.height, cursor }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}

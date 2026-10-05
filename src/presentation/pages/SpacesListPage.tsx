@@ -4,6 +4,7 @@ import { NAME_MAX_LENGTH } from '@/domain/shared/name'
 import { ItemCard } from '../components/ItemCard'
 import { formatUpdated } from '../format'
 import { errorMessage } from '../errors'
+import { ThemeToggle } from '../theme/ThemeToggle'
 import { useCreateSpace, useDeleteSpace, useRenameSpace, useSpaceList } from '../hooks/useSpaces'
 
 export function SpacesListPage() {
@@ -28,23 +29,26 @@ export function SpacesListPage() {
           <h1 className="text-3xl font-semibold text-slate-900">Зарисовки</h1>
           <p className="text-slate-500">Доски с диаграммами и документы — вместе</p>
         </div>
-        <form onSubmit={onSubmit} className="flex gap-2">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            maxLength={NAME_MAX_LENGTH}
-            placeholder="Название новой зарисовки"
-            aria-label="Название новой зарисовки"
-            className="w-64 rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-indigo-500"
-          />
-          <button
-            type="submit"
-            disabled={create.isPending}
-            className="rounded-md bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
-          >
-            Создать
-          </button>
-        </form>
+        <div className="flex items-center gap-3">
+          <form onSubmit={onSubmit} className="flex gap-2">
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={NAME_MAX_LENGTH}
+              placeholder="Название новой зарисовки"
+              aria-label="Название новой зарисовки"
+              className="w-64 rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-indigo-500"
+            />
+            <button
+              type="submit"
+              disabled={create.isPending}
+              className="rounded-md bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+            >
+              Создать
+            </button>
+          </form>
+          <ThemeToggle />
+        </div>
       </header>
 
       {create.error && <p className="mb-4 text-red-600">{errorMessage(create.error)}</p>}

@@ -36,7 +36,7 @@ function Swatch({ color, active, onClick }: { color: string; active: boolean; on
       aria-label={transparent ? 'Без заливки' : color}
       aria-pressed={active}
       onClick={onClick}
-      className={`h-7 w-7 rounded-md border ${active ? 'ring-2 ring-indigo-500 ring-offset-1' : 'border-slate-300'}`}
+      className={`board-ink h-7 w-7 rounded-md border ${active ? 'ring-2 ring-indigo-500 ring-offset-1' : 'border-slate-300'}`}
       style={{
         background: transparent
           ? 'repeating-conic-gradient(#e2e8f0 0% 25%, #fff 0% 50%) 50% / 10px 10px'

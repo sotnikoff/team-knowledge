@@ -2,6 +2,48 @@
 @import 'highlight.js/styles/github.css';
 @import 'tailwindcss';
 
+/* ---------- Themes ----------
+   Components use the regular Tailwind palette (slate/indigo) plus two semantic
+   tokens: `surface` (panels, cards, menus) and `canvas` (the work area). The
+   dark theme re-maps those variables under `.dark` (set on <html> by
+   `presentation/theme/theme.ts`), so components need no `dark:` variants.
+   Accent fills (indigo-500/600, red, emerald, amber) work in both themes. */
+@theme {
+  --color-surface: #ffffff;
+  --color-canvas: #ffffff;
+}
+
+.dark {
+  --color-surface: #1f2128;
+  --color-canvas: #121316;
+
+  /* slate, re-mapped for a dark UI: low numbers = backgrounds, high = text */
+  --color-slate-50: #1a1c21;
+  --color-slate-100: #272a31;
+  --color-slate-200: #343840;
+  --color-slate-300: #464b55;
+  --color-slate-400: #6b717d;
+  --color-slate-500: #959cab;
+  --color-slate-600: #b3b9c4;
+  --color-slate-700: #cdd2da;
+  --color-slate-800: #e1e5eb;
+  --color-slate-900: #f1f3f6;
+  --color-slate-950: #fafbfc;
+
+  /* indigo tints used for active/selected states */
+  --color-indigo-50: #23253b;
+  --color-indigo-100: #2d3056;
+  --color-indigo-700: #a5b4fc;
+  --color-indigo-800: #c7d2fe;
+}
+
+/* The board is drawn with its stored (light-theme) colours; in the dark theme
+   it is shown through the same transform Excalidraw uses: black ink becomes
+   light, hues are kept. Board data never depends on the theme. */
+.dark .board-ink {
+  filter: invert(93%) hue-rotate(180deg);
+}
+
 html,
 body,
 #root {
@@ -10,7 +52,7 @@ body,
 
 body {
   margin: 0;
-  background: #f8fafc;
+  background: var(--color-slate-50);
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -20,10 +62,17 @@ body {
    document looks the same in both places. */
 .document-prose {
   --doc-text: #1e293b;
+  --doc-heading: #0f172a;
   --doc-muted: #64748b;
   --doc-border: #e2e8f0;
   --doc-accent: #4f46e5;
+  --doc-quote: #475569;
+  --doc-quote-border: #c7d2fe;
   --doc-code-bg: #f6f8fa;
+  --doc-code-text: #24292f;
+  --doc-inline-code-bg: #f1f5f9;
+  --doc-inline-code-text: #be185d;
+  --doc-placeholder: #94a3b8;
   color: var(--doc-text);
   font-size: 1rem;
   line-height: 1.7;
@@ -37,7 +86,7 @@ body {
 .document-prose h1,
 .document-prose h2,
 .document-prose h3 {
-  color: #0f172a;
+  color: var(--doc-heading);
   font-weight: 700;
   line-height: 1.25;
   letter-spacing: -0.01em;
@@ -115,9 +164,9 @@ body {
 }
 
 .document-prose blockquote {
-  border-left: 3px solid #c7d2fe;
+  border-left: 3px solid var(--doc-quote-border);
   padding: 0.1em 0 0.1em 1em;
-  color: #475569;
+  color: var(--doc-quote);
 }
 
 .document-prose hr {
@@ -131,8 +180,8 @@ body {
   font-size: 0.875em;
 }
 .document-prose :not(pre) > code {
-  background: #f1f5f9;
-  color: #be185d;
+  background: var(--doc-inline-code-bg);
+  color: var(--doc-inline-code-text);
   border-radius: 4px;
   padding: 0.15em 0.35em;
 }
@@ -147,7 +196,7 @@ body {
 }
 .document-prose pre code {
   background: none;
-  color: #24292f;
+  color: var(--doc-code-text);
   padding: 0;
   font-size: 0.85em;
 }
@@ -167,6 +216,89 @@ body {
   content: attr(data-placeholder);
   float: left;
   height: 0;
-  color: #94a3b8;
+  color: var(--doc-placeholder);
   pointer-events: none;
+}
+
+/* ---------- Documents in the dark theme ---------- */
+.dark .document-prose {
+  --doc-text: #d4d8df;
+  --doc-heading: #f1f3f6;
+  --doc-muted: #8b919c;
+  --doc-border: #343840;
+  --doc-accent: #a5b4fc;
+  --doc-quote: #aab0bb;
+  --doc-quote-border: #4f46e5;
+  --doc-code-bg: #16181d;
+  --doc-code-text: #c9d1d9;
+  --doc-inline-code-bg: #2a2d35;
+  --doc-inline-code-text: #f472b6;
+  --doc-placeholder: #6b717d;
+}
+
+/* Syntax colours of highlight.js' "github-dark" theme (the light theme is
+   imported above; its rules are overridden here only under `.dark`). */
+.dark .hljs-doctag,
+.dark .hljs-keyword,
+.dark .hljs-meta .hljs-keyword,
+.dark .hljs-template-tag,
+.dark .hljs-template-variable,
+.dark .hljs-type,
+.dark .hljs-variable.language_ {
+  color: #ff7b72;
+}
+.dark .hljs-title,
+.dark .hljs-title.class_,
+.dark .hljs-title.class_.inherited__,
+.dark .hljs-title.function_ {
+  color: #d2a8ff;
+}
+.dark .hljs-attr,
+.dark .hljs-attribute,
+.dark .hljs-literal,
+.dark .hljs-meta,
+.dark .hljs-number,
+.dark .hljs-operator,
+.dark .hljs-variable,
+.dark .hljs-selector-attr,
+.dark .hljs-selector-class,
+.dark .hljs-selector-id {
+  color: #79c0ff;
+}
+.dark .hljs-regexp,
+.dark .hljs-string,
+.dark .hljs-meta .hljs-string {
+  color: #a5d6ff;
+}
+.dark .hljs-built_in,
+.dark .hljs-symbol {
+  color: #ffa657;
+}
+.dark .hljs-comment,
+.dark .hljs-code,
+.dark .hljs-formula {
+  color: #8b949e;
+}
+.dark .hljs-name,
+.dark .hljs-quote,
+.dark .hljs-selector-tag,
+.dark .hljs-selector-pseudo {
+  color: #7ee787;
+}
+.dark .hljs-subst {
+  color: #c9d1d9;
+}
+.dark .hljs-section {
+  color: #1f6feb;
+}
+.dark .hljs-bullet {
+  color: #f2cc60;
+}
+.dark .hljs-addition {
+  color: #aff5b4;
+  background-color: #033a16;
+}
+.dark .hljs-deletion {
+  color: #ffdcd7;
+  background-color: #67060c;
 }

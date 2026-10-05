@@ -50,7 +50,7 @@ export async function rasterizeHtml(
   const xhtml = new XMLSerializer().serializeToString(clone)
   // Styles set on <body> (font, color) don't reach the image: there is no body.
   const body = getComputedStyle(document.body)
-  const css = `${collectPageCss()}\n.export-root{font-family:${body.fontFamily};color:${body.color};-webkit-font-smoothing:antialiased}`
+  const css = `${collectPageCss()}\n.export-root{font-family:${body.fontFamily};color:#0f172a;-webkit-font-smoothing:antialiased}`
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width * scale}" height="${height * scale}" viewBox="0 0 ${width} ${height}">` +
     `<foreignObject x="0" y="0" width="100%" height="100%">` +

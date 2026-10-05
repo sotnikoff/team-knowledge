@@ -41,7 +41,7 @@ export function LinkButton(props: { editor: Editor; href: string | undefined }) 
       {open && (
         <form
           onSubmit={apply}
-          className="absolute left-0 top-10 z-20 flex w-80 gap-2 rounded-lg border border-slate-200 bg-white p-2 shadow-lg"
+          className="absolute left-0 top-10 z-20 flex w-80 gap-2 rounded-lg border border-slate-200 bg-surface p-2 shadow-lg"
         >
           <input
             autoFocus
@@ -52,7 +52,7 @@ export function LinkButton(props: { editor: Editor; href: string | undefined }) 
             aria-label="Адрес ссылки"
             className="min-w-0 flex-1 rounded border border-slate-300 px-2 py-1 text-sm outline-none focus:border-indigo-500"
           />
-          <button type="submit" className="rounded bg-indigo-600 px-2 text-sm text-white hover:bg-indigo-700">
+          <button type="submit" className="rounded bg-indigo-600 px-2 text-sm text-white hover:bg-indigo-500">
             {url.trim() === '' && props.href ? 'Убрать' : 'OK'}
           </button>
         </form>

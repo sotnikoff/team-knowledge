@@ -28,7 +28,7 @@ export function ItemCard(props: {
   }
 
   return (
-    <article className="flex h-full flex-col justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+    <article className="flex h-full flex-col justify-between gap-4 rounded-xl border border-slate-200 bg-surface p-4 shadow-sm transition-shadow hover:shadow-md">
       {editing ? (
         <form onSubmit={onRename} className="flex gap-2">
           <input
@@ -40,7 +40,7 @@ export function ItemCard(props: {
             aria-label="Новое название"
             className="min-w-0 flex-1 rounded-md border border-slate-300 px-2 py-1 outline-none focus:border-indigo-500"
           />
-          <button type="submit" className="text-sm text-indigo-600 hover:underline">
+          <button type="submit" className="text-sm text-indigo-700 hover:underline">
             OK
           </button>
         </form>
@@ -48,7 +48,7 @@ export function ItemCard(props: {
         <Link to={props.to} className="group flex gap-3">
           {props.icon && <span className="mt-0.5 text-slate-400 group-hover:text-indigo-500">{props.icon}</span>}
           <span className="min-w-0">
-            <h3 className="truncate text-lg font-medium text-slate-900 group-hover:text-indigo-600">{props.title}</h3>
+            <h3 className="truncate text-lg font-medium text-slate-900 group-hover:text-indigo-700">{props.title}</h3>
             <p className="text-sm text-slate-500">{props.subtitle}</p>
           </span>
         </Link>
@@ -57,7 +57,7 @@ export function ItemCard(props: {
       {error !== null && <p className="text-sm text-red-600">{errorMessage(error)}</p>}
 
       <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
-        <Link to={props.to} className="text-indigo-600 hover:underline">
+        <Link to={props.to} className="text-indigo-700 hover:underline">
           Открыть
         </Link>
         <button

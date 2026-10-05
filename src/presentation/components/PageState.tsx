@@ -12,7 +12,7 @@ export function LoadError({ error, onRetry }: { error: unknown; onRetry: () => v
     <div className="flex h-full min-h-64 flex-col items-center justify-center gap-3 text-slate-600">
       <p>{errorMessage(error)}</p>
       {!(error instanceof NotFoundError) && (
-        <button type="button" className="text-indigo-600 hover:underline" onClick={onRetry}>
+        <button type="button" className="text-indigo-700 hover:underline" onClick={onRetry}>
           Повторить
         </button>
       )}

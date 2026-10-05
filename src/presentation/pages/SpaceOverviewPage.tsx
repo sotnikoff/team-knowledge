@@ -92,7 +92,7 @@ function Section(props: {
         <button
           type="button"
           onClick={props.onCreate}
-          className="flex items-center gap-1 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+          className="flex items-center gap-1 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500"
         >
           <AppIcon name="plus" /> {props.createLabel}
         </button>

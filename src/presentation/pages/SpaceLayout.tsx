@@ -3,6 +3,7 @@ import { AppIcon } from '../components/icons'
 import { LoadError, Loading } from '../components/PageState'
 import { SpaceSidebar } from '../components/SpaceSidebar'
 import { useSpace } from '../hooks/useSpaces'
+import { ThemeToggle } from '../theme/ThemeToggle'
 
 /** A space: sidebar with its boards and documents + the opened item. */
 export function SpaceLayout() {
@@ -14,7 +15,7 @@ export function SpaceLayout() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-2">
         <LoadError error={space.error} onRetry={() => void space.refetch()} />
-        <Link to="/" className="text-indigo-600 hover:underline">
+        <Link to="/" className="text-indigo-700 hover:underline">
           К списку зарисовок
         </Link>
       </div>
@@ -32,13 +33,16 @@ export function SpaceLayout() {
         </Link>
         <Link
           to={`/spaces/${space.data.id}`}
-          className="truncate px-4 pb-2 pt-2 text-lg font-semibold text-slate-900 hover:text-indigo-600"
+          className="truncate px-4 pb-2 pt-2 text-lg font-semibold text-slate-900 hover:text-indigo-700"
         >
           {space.data.name}
         </Link>
         <SpaceSidebar spaceId={space.data.id} />
+        <div className="border-t border-slate-200 p-2">
+          <ThemeToggle withLabel />
+        </div>
       </aside>
-      <main className="relative min-w-0 flex-1 overflow-auto bg-white">
+      <main className="relative min-w-0 flex-1 overflow-auto bg-canvas">
         <Outlet />
       </main>
     </div>

@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 /** Floating white panel used for every editor overlay. */
 export function Island({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`rounded-lg border border-slate-200 bg-white p-1 shadow-md ${className}`}>{children}</div>
+    <div className={`rounded-lg border border-slate-200 bg-surface p-1 shadow-md ${className}`}>{children}</div>
   )
 }
 

@@ -22,12 +22,12 @@ export function SaveStatus(props: { status: Status; onRetry: () => void; onReloa
       <span className={`h-2 w-2 rounded-full ${dots[props.status]}`} />
       {labels[props.status]}
       {props.status === 'error' && (
-        <button type="button" className="text-indigo-600 hover:underline" onClick={props.onRetry}>
+        <button type="button" className="text-indigo-700 hover:underline" onClick={props.onRetry}>
           Повторить
         </button>
       )}
       {props.status === 'conflict' && (
-        <button type="button" className="text-indigo-600 hover:underline" onClick={props.onReload}>
+        <button type="button" className="text-indigo-700 hover:underline" onClick={props.onReload}>
           Загрузить актуальную
         </button>
       )}

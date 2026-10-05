@@ -69,7 +69,7 @@ function LoadedEditor({ initial, ...props }: EditorProps & { initial: Board }) {
   }
 
   return (
-    <div ref={root} className="absolute inset-0 select-none overflow-hidden bg-white">
+    <div ref={root} className="absolute inset-0 select-none overflow-hidden bg-canvas">
       <Canvas onOpenDocument={openDocument} />
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
         <Island className="pointer-events-auto flex h-11 items-center px-3">

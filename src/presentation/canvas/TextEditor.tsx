@@ -17,7 +17,7 @@ export function TextEditor() {
   return null
 }
 
-const baseClass = 'absolute resize-none overflow-hidden border-0 bg-transparent p-0 outline-none'
+const baseClass = 'board-ink absolute resize-none overflow-hidden border-0 bg-transparent p-0 outline-none'
 
 const finishOnEscape = (e: KeyboardEvent) => {
   if (e.key === 'Escape') commitTextEdit()
