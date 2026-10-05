@@ -38,7 +38,7 @@ export function shapeTool(type: 'rectangle' | 'ellipse' | 'diamond'): Tool {
             ),
           )
         },
-        end: () => finishCreation(id, (el) => el.width >= 2 || el.height >= 2),
+        end: () => finishCreation(id, (el) => el.width >= 2 || el.height >= 2, { clickedAt: world }),
       }
     },
   }

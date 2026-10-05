@@ -55,6 +55,7 @@ function DocumentCard({ element }: { element: DocumentElement }) {
   return (
     <article
       ref={ref}
+      data-element-id={element.id}
       className="document-card absolute rounded-xl border border-slate-200 bg-white px-7 py-6 shadow-md"
       style={{ left: element.x, top: element.y, width: element.width }}
     >

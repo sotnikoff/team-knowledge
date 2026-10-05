@@ -57,7 +57,7 @@ export function linearTool(type: 'line' | 'arrow'): Tool {
             (m) => editor.setBindingHint(m, hintFor(snapped.binding)),
           )
         },
-        end: () => finishCreation(id, (el) => Math.hypot(el.width, el.height) >= 4),
+        end: () => finishCreation(id, (el) => Math.hypot(el.width, el.height) >= 4, { clickedAt: world }),
       }
     },
   }

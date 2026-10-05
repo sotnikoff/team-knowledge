@@ -5,9 +5,9 @@ import { findElement, selectionBounds } from '@/application/editor/scene'
 import { anchorPoint } from '@/domain/element/binding'
 import { absolutePoints } from '@/domain/element/factory'
 import { elementBounds, handlePosition, RESIZE_HANDLES } from '@/domain/element/geometry'
-import { ANCHORS, isLinearElement, isShapeElement } from '@/domain/element/types'
+import { ANCHORS, isLinearElement } from '@/domain/element/types'
 import type { Bounds } from '@/domain/shared/geometry'
-import { renderElement, renderLabel } from './elementRenderers'
+import { drawElements } from './elementRenderers'
 import { HANDLE_SIZE } from './selection'
 
 export interface Surface {
@@ -17,7 +17,6 @@ export interface Surface {
 }
 
 const SELECTION_COLOR = '#6965db'
-const generator = rough.generator()
 
 export function renderScene(canvas: HTMLCanvasElement, rc: RoughCanvas, model: EditorModel, surface: Surface) {
   const ctx = canvas.getContext('2d')
@@ -32,12 +31,7 @@ export function renderScene(canvas: HTMLCanvasElement, rc: RoughCanvas, model: E
   ctx.scale(zoom, zoom)
   ctx.translate(scrollX, scrollY)
 
-  for (const el of model.elements) {
-    const editing = el.id === model.editingTextId
-    if (editing && el.type === 'text') continue
-    renderElement(el, { ctx, rc, gen: generator })
-    if (!editing && isShapeElement(el)) renderLabel(el, ctx)
-  }
+  drawElements(ctx, rc, model.elements, { editingId: model.editingTextId })
 
   drawSelection(ctx, model)
   drawBindingHint(ctx, model)

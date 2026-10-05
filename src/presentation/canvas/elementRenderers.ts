@@ -1,5 +1,6 @@
 import type { Drawable, Options } from 'roughjs/bin/core'
 import type { RoughGenerator } from 'roughjs/bin/generator'
+import rough from 'roughjs'
 import type { RoughCanvas } from 'roughjs/bin/canvas'
 import { diamondPoints, labelBox } from '@/domain/element/geometry'
 import { absolutePoints } from '@/domain/element/factory'
@@ -7,6 +8,8 @@ import {
   TRANSPARENT,
   type DiagramElement,
   type ElementOfType,
+  isShapeElement,
+  type ElementId,
   type ElementType,
   type ShapeElement,
 } from '@/domain/element/types'
@@ -140,4 +143,25 @@ export function renderLabel(el: ShapeElement, ctx: CanvasRenderingContext2D): vo
 
 export function renderElement(el: DiagramElement, r: RenderContext): void {
   ;(elementRenderers[el.type] as ElementRenderer<DiagramElement>)(el, r)
+}
+
+const generator = rough.generator()
+
+/**
+ * Draws elements (with shape labels) in order. Shared by the live board and by
+ * image export, so both always look the same. `ctx` must already carry the
+ * world -> pixels transform.
+ */
+export function drawElements(
+  ctx: CanvasRenderingContext2D,
+  rc: RoughCanvas,
+  elements: readonly DiagramElement[],
+  options: { editingId?: ElementId | null } = {},
+): void {
+  for (const el of elements) {
+    const editing = el.id === options.editingId
+    if (editing && el.type === 'text') continue
+    renderElement(el, { ctx, rc, gen: generator })
+    if (!editing && isShapeElement(el)) renderLabel(el, ctx)
+  }
 }

@@ -7,6 +7,7 @@ import type { DiagramElement } from '@/domain/element/types'
 import { useDependencies } from '../app/dependencies'
 import { Canvas } from '../canvas/Canvas'
 import { BottomBar } from '../components/BottomBar'
+import { ExportMenu } from '../components/ExportMenu'
 import { InsertDocumentMenu } from '../components/InsertDocumentMenu'
 import { Island } from '../components/Island'
 import { SaveStatus } from '../components/SaveStatus'
@@ -79,6 +80,7 @@ function LoadedEditor({ initial, ...props }: EditorProps & { initial: Board }) {
         </div>
         <div className="pointer-events-auto flex items-start gap-2">
           <InsertDocumentMenu spaceId={initial.spaceId} viewCenter={viewCenter} />
+          <ExportMenu boardName={props.board.name} />
           <Island className="flex h-11 items-center">
             <SaveStatus status={status} onRetry={retry} onReload={props.onReload} />
           </Island>

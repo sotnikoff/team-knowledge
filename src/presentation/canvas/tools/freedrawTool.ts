@@ -3,7 +3,7 @@ import { updateElements } from '@/application/editor/scene'
 import { createFreedraw, withAbsolutePoints } from '@/domain/element/factory'
 import { isPointsElement } from '@/domain/element/types'
 import type { Point } from '@/domain/shared/geometry'
-import { dispatch } from '../../editor/store'
+import { dispatch, getModel } from '../../editor/store'
 import { finishCreation } from './finishCreation'
 import type { Tool } from './types'
 
@@ -30,8 +30,15 @@ export const freedrawTool: Tool = {
           ),
         )
       },
-      // The pen stays active, like in Excalidraw.
-      end: () => finishCreation(id, (el) => isPointsElement(el) && el.points.length > 1, { keepTool: true }),
+      // The pen stays active, like in Excalidraw. A stroke shorter than a few
+      // screen pixels is a click: it selects the element under it instead.
+      end: () =>
+        finishCreation(
+          id,
+          (el) =>
+            isPointsElement(el) && el.points.length > 1 && Math.max(el.width, el.height) * getModel().viewport.zoom >= 3,
+          { keepTool: true, clickedAt: world },
+        ),
     }
   },
 }
