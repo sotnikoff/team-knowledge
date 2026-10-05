@@ -41,6 +41,25 @@ export function cubicAt(s: CubicSegment, t: number): Point {
   }
 }
 
+/** The point at `fraction` (0..1) of the total length of a polyline. */
+export function pointAlong(points: readonly Point[], fraction: number): Point {
+  const first = points[0]
+  if (!first) return { x: 0, y: 0 }
+  const lengths = points.slice(1).map((p, i) => Math.hypot(p.x - points[i]!.x, p.y - points[i]!.y))
+  let remaining = lengths.reduce((sum, l) => sum + l, 0) * fraction
+  for (let i = 0; i < lengths.length; i++) {
+    const length = lengths[i]!
+    if (remaining <= length && length > 0) {
+      const a = points[i]!
+      const b = points[i + 1]!
+      const t = remaining / length
+      return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }
+    }
+    remaining -= length
+  }
+  return points.at(-1)!
+}
+
 const STEPS_PER_SEGMENT = 16
 
 /**

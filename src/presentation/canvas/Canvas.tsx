@@ -169,6 +169,7 @@ export function Canvas(props: { onOpenDocument: (documentId: string) => void }) 
     if (removeBendAt(world)) return
     const hit = topmostElementAt(m.elements, world, HIT_TOLERANCE / m.viewport.zoom)
     if (hit?.type === 'document') return props.onOpenDocument(hit.documentId)
+    if (hit && isLinearElement(hit)) return startEditing(hit.id)
     const shape = hit?.type === 'text' ? hit : shapeAt(m.elements, world)
     if (shape) startEditing(shape.id)
     else if (!hit) startTextAt(world, toolContext)

@@ -41,6 +41,7 @@ export function createLinear(
     startBinding: null,
     endBinding: null,
     curved: true,
+    label: '',
   }
 }
 

@@ -1,9 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { anchorPoint, moveLinearEnd, syncBindings } from './binding'
-import { catmullRomSegments, cubicAt, traceLine } from './curve'
+import { catmullRomSegments, cubicAt, pointAlong, traceLine } from './curve'
 import { absolutePoints, createLinear, withAbsolutePoints } from './factory'
 import { hitTestElement } from './geometry'
-import { insertBend, isBendIndex, moveLinePoint, removeBend, segmentMidpoints, setCurved } from './linear'
+import {
+  insertBend,
+  isBendIndex,
+  lineLabelAnchor,
+  moveLinePoint,
+  removeBend,
+  segmentMidpoints,
+  setCurved,
+} from './linear'
 import { TRANSPARENT, type LinearElement, type ShapeElement } from './types'
 
 const style = { strokeColor: '#000', fillColor: TRANSPARENT, strokeWidth: 2, roughness: 1 }
@@ -107,5 +115,30 @@ describe('lines with bends', () => {
     const points = absolutePoints(synced)
     expect(points[1]).toEqual({ x: 100, y: 0 })
     expect(points.at(-1)).toEqual(anchorPoint(moved, 'left'))
+  })
+})
+
+describe('line labels', () => {
+  it('finds the point at a fraction of the length', () => {
+    const path = [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 30 },
+    ]
+    expect(pointAlong(path, 0.5)).toEqual({ x: 10, y: 10 })
+    expect(pointAlong(path, 1)).toEqual({ x: 10, y: 30 })
+  })
+
+  it('places the label at the middle of the line, bends included', () => {
+    expect(lineLabelAnchor(vLine(false))).toEqual({ x: 100, y: 0 })
+  })
+
+  it('new lines have no label; clicking the label selects the line', () => {
+    const plain = vLine(false)
+    expect(plain.label).toBe('')
+    // Far from both strokes of the V, just under its apex.
+    const underApex = { x: 100, y: 12 }
+    expect(hitTestElement(plain, underApex, 2)).toBe(false)
+    expect(hitTestElement({ ...plain, label: 'запрос' }, underApex, 2)).toBe(true)
   })
 })

@@ -104,6 +104,7 @@ function parseElement(raw: unknown): DiagramElement {
         startBinding: optional<Binding | null>(raw, 'startBinding', parseBinding, null),
         endBinding: optional<Binding | null>(raw, 'endBinding', parseBinding, null),
         curved: optional(raw, 'curved', parseBoolean, false),
+        label: optional(raw, 'label', parseString, ''),
       }
     case 'freedraw':
       return { ...base, type, points: field(raw, 'points', isArray, 'an array').map(parsePoint) }

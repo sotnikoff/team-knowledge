@@ -1,5 +1,5 @@
-import type { Point } from '../shared/geometry'
-import { catmullRomSegments, cubicAt, traceLine } from './curve'
+import type { Bounds, Point } from '../shared/geometry'
+import { catmullRomSegments, cubicAt, pointAlong, traceLine } from './curve'
 import { absolutePoints, withAbsolutePoints } from './factory'
 import type { LinearElement } from './types'
 
@@ -18,6 +18,28 @@ export function segmentMidpoints(el: LinearElement): Point[] {
   const points = absolutePoints(el)
   if (el.curved && points.length > 2) return catmullRomSegments(points).map((s) => cubicAt(s, 0.5))
   return points.slice(1).map((p, i) => ({ x: (points[i]!.x + p.x) / 2, y: (points[i]!.y + p.y) / 2 }))
+}
+
+/** Font size of line labels (world units); shared with the renderer. */
+export const LINE_LABEL_FONT_SIZE = 20
+export const LINE_LABEL_LINE_HEIGHT = 1.25
+
+/** Where the label sits: the middle of the drawn line, bends included. */
+export function lineLabelAnchor(el: LinearElement): Point {
+  return pointAlong(linePath(el), 0.5)
+}
+
+/**
+ * Approximate box of the label, for hit-testing only (the domain cannot
+ * measure text; the renderer measures it exactly).
+ */
+export function lineLabelBox(el: LinearElement): Bounds | null {
+  const lines = el.label.split('\n')
+  if (el.label.trim() === '') return null
+  const width = Math.max(...lines.map((line) => line.length)) * LINE_LABEL_FONT_SIZE * 0.55
+  const height = lines.length * LINE_LABEL_FONT_SIZE * LINE_LABEL_LINE_HEIGHT
+  const anchor = lineLabelAnchor(el)
+  return { x: anchor.x - width / 2, y: anchor.y - height / 2, width, height }
 }
 
 export function isBendIndex(el: LinearElement, index: number): boolean {

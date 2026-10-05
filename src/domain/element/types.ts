@@ -59,6 +59,8 @@ interface LinearBase extends BaseElement {
   readonly points: readonly Point[]
   /** Smooth curve through the points (true) or a broken line (false). */
   readonly curved: boolean
+  /** Text written along the line, at the middle of its length ('' = none). */
+  readonly label: string
   readonly startBinding: Binding | null
   readonly endBinding: Binding | null
 }

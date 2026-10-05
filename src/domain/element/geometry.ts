@@ -6,7 +6,7 @@ import {
   type Point,
 } from '../shared/geometry'
 import { absolutePoints } from './factory'
-import { linePath } from './linear'
+import { lineLabelBox, linePath } from './linear'
 import {
   TRANSPARENT,
   type DiagramElement,
@@ -62,8 +62,14 @@ export function diamondPoints(b: Bounds): Point[] {
 }
 
 const pointsGeometry = <E extends PointsElement>(): ElementGeometry<E> => ({
-  hitTest: (el, p, tol) =>
-    distanceToPolyline(p, isLinearElement(el) ? linePath(el) : absolutePoints(el)) <= tol + el.style.strokeWidth / 2,
+  hitTest: (el, p, tol) => {
+    if (!isLinearElement(el)) return distanceToPolyline(p, absolutePoints(el)) <= tol + el.style.strokeWidth / 2
+    const label = lineLabelBox(el)
+    return (
+      distanceToPolyline(p, linePath(el)) <= tol + el.style.strokeWidth / 2 ||
+      (label !== null && containsPoint(label, p, tol))
+    )
+  },
   resize: (el, target) => {
     const sx = el.width === 0 ? 1 : target.width / el.width
     const sy = el.height === 0 ? 1 : target.height / el.height

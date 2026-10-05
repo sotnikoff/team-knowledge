@@ -2,7 +2,14 @@ import * as editor from '@/application/editor/editorModel'
 import { findElement, updateElements } from '@/application/editor/scene'
 import { worldToScreen } from '@/application/editor/viewport'
 import { labelBox } from '@/domain/element/geometry'
-import { isShapeElement, type ShapeElement, type TextElement } from '@/domain/element/types'
+import { LINE_LABEL_FONT_SIZE, lineLabelAnchor } from '@/domain/element/linear'
+import {
+  isLinearElement,
+  isShapeElement,
+  type LinearElement,
+  type ShapeElement,
+  type TextElement,
+} from '@/domain/element/types'
 import type { KeyboardEvent } from 'react'
 import { dispatch, useEditor } from '../editor/store'
 import { commitTextEdit } from '../editor/textEditing'
@@ -14,6 +21,7 @@ export function TextEditor() {
   if (!element) return null
   if (element.type === 'text') return <FreeTextArea key={element.id} element={element} />
   if (isShapeElement(element)) return <LabelTextArea key={element.id} element={element} />
+  if (isLinearElement(element)) return <LineLabelTextArea key={element.id} element={element} />
   return null
 }
 
@@ -94,6 +102,48 @@ function LabelTextArea({ element }: { element: ShapeElement }) {
         font: fontFor(LABEL_FONT_SIZE * viewport.zoom),
         lineHeight: LINE_HEIGHT,
         color: element.style.strokeColor,
+      }}
+    />
+  )
+}
+
+/** Label of a line/arrow, centred on the middle of the line. */
+function LineLabelTextArea({ element }: { element: LinearElement }) {
+  const viewport = useEditor((m) => m.viewport)
+  const anchor = lineLabelAnchor(element)
+  const size = measureText(element.label, LINE_LABEL_FONT_SIZE)
+  const width = Math.max(size.width + LINE_LABEL_FONT_SIZE, LINE_LABEL_FONT_SIZE * 3)
+  const height = Math.max(size.height, LINE_LABEL_FONT_SIZE * LINE_HEIGHT)
+  const topLeft = worldToScreen(viewport, { x: anchor.x - width / 2, y: anchor.y - height / 2 })
+
+  const onChange = (label: string) =>
+    dispatch((m) =>
+      editor.updateLive(
+        m,
+        updateElements(m.elements, [element.id], (el) => (isLinearElement(el) ? { ...el, label } : el)),
+      ),
+    )
+
+  return (
+    <textarea
+      autoFocus
+      value={element.label}
+      onChange={(e) => onChange(e.target.value)}
+      onBlur={commitTextEdit}
+      onKeyDown={finishOnEscape}
+      spellCheck={false}
+      wrap="off"
+      className={`${baseClass} text-center whitespace-pre`}
+      style={{
+        left: topLeft.x,
+        top: topLeft.y,
+        width: width * viewport.zoom,
+        height: height * viewport.zoom,
+        font: fontFor(LINE_LABEL_FONT_SIZE * viewport.zoom),
+        lineHeight: LINE_HEIGHT,
+        color: element.style.strokeColor,
+        // Same plate as the rendered label; the line must not cross the text.
+        background: '#ffffff',
       }}
     />
   )

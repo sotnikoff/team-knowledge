@@ -5,11 +5,12 @@ import type { RoughCanvas } from 'roughjs/bin/canvas'
 import { diamondPoints, labelBox } from '@/domain/element/geometry'
 import { catmullRomSegments } from '@/domain/element/curve'
 import { absolutePoints } from '@/domain/element/factory'
-import { linePath } from '@/domain/element/linear'
+import { LINE_LABEL_FONT_SIZE, lineLabelAnchor, linePath } from '@/domain/element/linear'
 import {
   TRANSPARENT,
   type DiagramElement,
   type ElementOfType,
+  isLinearElement,
   isShapeElement,
   type ElementId,
   type ElementType,
@@ -165,6 +166,30 @@ export function renderLabel(el: ShapeElement, ctx: CanvasRenderingContext2D): vo
   ctx.restore()
 }
 
+/**
+ * Draws a line's label at the middle of the line, on a plate of the canvas
+ * colour so the line does not cross the text. (White is right in both themes:
+ * the dark theme shows the canvas through the `board-ink` inverting filter.)
+ */
+export function renderLineLabel(el: LinearElement, ctx: CanvasRenderingContext2D): void {
+  if (el.label.trim() === '') return
+  const anchor = lineLabelAnchor(el)
+  const lines = el.label.split('\n')
+  const lineHeight = LINE_LABEL_FONT_SIZE * LINE_HEIGHT
+  ctx.save()
+  ctx.font = fontFor(LINE_LABEL_FONT_SIZE)
+  const width = Math.max(...lines.map((line) => ctx.measureText(line).width))
+  const height = lines.length * lineHeight
+  const pad = 6
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(anchor.x - width / 2 - pad, anchor.y - height / 2 - pad / 2, width + pad * 2, height + pad)
+  ctx.fillStyle = el.style.strokeColor
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  lines.forEach((line, i) => ctx.fillText(line, anchor.x, anchor.y - height / 2 + (i + 0.5) * lineHeight))
+  ctx.restore()
+}
+
 export function renderElement(el: DiagramElement, r: RenderContext): void {
   ;(elementRenderers[el.type] as ElementRenderer<DiagramElement>)(el, r)
 }
@@ -187,5 +212,6 @@ export function drawElements(
     if (editing && el.type === 'text') continue
     renderElement(el, { ctx, rc, gen: generator })
     if (!editing && isShapeElement(el)) renderLabel(el, ctx)
+    if (!editing && isLinearElement(el)) renderLineLabel(el, ctx)
   }
 }

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import * as editor from '@/application/editor/editorModel'
 import type { ToolType } from '@/application/editor/editorModel'
-import { isShapeElement } from '@/domain/element/types'
+import { isLinearElement, isShapeElement } from '@/domain/element/types'
 import { findElement } from '@/application/editor/scene'
 import { dispatch, getModel } from './store'
 import { startEditing } from './textEditing'
@@ -62,7 +62,7 @@ export function useEditorShortcuts(options: { onOpenDocument: (documentId: strin
         if (el?.type === 'document') {
           e.preventDefault()
           onOpenDocument(el.documentId)
-        } else if (el && (isShapeElement(el) || el.type === 'text')) {
+        } else if (el && (isShapeElement(el) || isLinearElement(el) || el.type === 'text')) {
           e.preventDefault()
           startEditing(el.id)
         }

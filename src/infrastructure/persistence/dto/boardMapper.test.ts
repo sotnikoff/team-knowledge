@@ -42,7 +42,7 @@ describe('boardMapper', () => {
   it('reads data saved before labels and bindings existed', () => {
     const board = boardFromDto(legacy)
     expect(board.elements[0]).toMatchObject({ type: 'rectangle', label: '' })
-    expect(board.elements[1]).toMatchObject({ type: 'arrow', startBinding: null, endBinding: null, curved: false })
+    expect(board.elements[1]).toMatchObject({ type: 'arrow', startBinding: null, endBinding: null, curved: false, label: '' })
   })
 
   it('round-trips labels and bindings', () => {
