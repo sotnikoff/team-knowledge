@@ -102,6 +102,12 @@ const paths = {
       <path d="M4 20h4L19 9l-4-4L4 16z" />
     </Icon>
   ),
+  sidebar: (
+    <Icon>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M9 4v16" />
+    </Icon>
+  ),
   back: (
     <Icon>
       <path d="M15 18l-6-6 6-6" />

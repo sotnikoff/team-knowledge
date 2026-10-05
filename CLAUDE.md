@@ -147,6 +147,8 @@ src/
 Маршруты (`presentation/app/App.tsx`): `/` — список зарисовок; `/spaces/:spaceId` —
 `SpaceLayout` (боковая панель с досками и документами + `<Outlet/>`): index — обзор,
 `boards/:boardId` — редактор доски, `docs/:documentId` — документ.
+Боковую панель можно свернуть в узкую полоску (кнопка в её шапке); состояние —
+настройка этого браузера (`pages/useSidebarCollapsed.ts`, localStorage, как и тема).
 
 Автосохранение (`presentation/hooks/useAutosave.ts`) — одно на доски и документы:
 debounce, не больше одного запроса одновременно, побеждают последние данные, база
