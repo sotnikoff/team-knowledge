@@ -1,13 +1,16 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
 import * as editor from '@/application/editor/editorModel'
-import { shapeAt, topmostElementAt } from '@/application/editor/scene'
+import { findElement, shapeAt, topmostElementAt, updateElements } from '@/application/editor/scene'
+import { isBendIndex, removeBend } from '@/domain/element/linear'
+import { isLinearElement } from '@/domain/element/types'
+import type { Point } from '@/domain/shared/geometry'
 import { panBy, screenToWorld, zoomAt } from '@/application/editor/viewport'
 import { useDependencies } from '../app/dependencies'
 import { dispatch, getModel, subscribeToModel, useEditor } from '../editor/store'
 import { commitTextEdit, startEditing } from '../editor/textEditing'
 import { DocumentLayer } from './DocumentLayer'
 import { createRoughCanvas, renderScene, type Surface } from './renderScene'
-import { HIT_TOLERANCE } from './selection'
+import { HIT_TOLERANCE, lineHandleAt } from './selection'
 import { TextEditor } from './TextEditor'
 import { tools, type PointerInput, type ToolContext, type ToolSession } from './tools'
 import { startPan } from './tools/handTool'
@@ -16,6 +19,17 @@ import { hintFor, snapLineEnd } from './tools/snapping'
 import { startTextAt } from './tools/textTool'
 
 /** `onOpenDocument` is called on double click on a document card. */
+/** Double click on a bend of the selected line removes it. */
+function removeBendAt(world: Point): boolean {
+  const m = getModel()
+  const line = m.selectedIds.length === 1 ? findElement(m.elements, m.selectedIds[0]!) : null
+  if (!line || !isLinearElement(line)) return false
+  const handle = lineHandleAt(line, world, m.viewport.zoom)
+  if (handle?.kind !== 'point' || !isBendIndex(line, handle.index)) return false
+  dispatch((s) => editor.commit(s, updateElements(s.elements, [line.id], (el) => (isLinearElement(el) ? removeBend(el, handle.index) : el))))
+  return true
+}
+
 export function Canvas(props: { onOpenDocument: (documentId: string) => void }) {
   const { ids } = useDependencies()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -152,6 +166,7 @@ export function Canvas(props: { onOpenDocument: (documentId: string) => void }) 
     if (getModel().tool !== 'select') return
     const { world } = toInput(e)
     const m = getModel()
+    if (removeBendAt(world)) return
     const hit = topmostElementAt(m.elements, world, HIT_TOLERANCE / m.viewport.zoom)
     if (hit?.type === 'document') return props.onOpenDocument(hit.documentId)
     const shape = hit?.type === 'text' ? hit : shapeAt(m.elements, world)

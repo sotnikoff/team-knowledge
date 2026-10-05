@@ -25,6 +25,7 @@ import {
   isObject,
   isString,
   optional,
+  parseBoolean,
   parseString,
   parseVersioned,
   versionedToDto,
@@ -102,6 +103,7 @@ function parseElement(raw: unknown): DiagramElement {
         points: field(raw, 'points', isArray, 'an array').map(parsePoint),
         startBinding: optional<Binding | null>(raw, 'startBinding', parseBinding, null),
         endBinding: optional<Binding | null>(raw, 'endBinding', parseBinding, null),
+        curved: optional(raw, 'curved', parseBoolean, false),
       }
     case 'freedraw':
       return { ...base, type, points: field(raw, 'points', isArray, 'an array').map(parsePoint) }

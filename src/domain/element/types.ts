@@ -55,7 +55,10 @@ export interface Binding {
 
 /** `points` are relative to (x, y); width/height are their bounding box. */
 interface LinearBase extends BaseElement {
+  /** Ends + bend points, in order. */
   readonly points: readonly Point[]
+  /** Smooth curve through the points (true) or a broken line (false). */
+  readonly curved: boolean
   readonly startBinding: Binding | null
   readonly endBinding: Binding | null
 }

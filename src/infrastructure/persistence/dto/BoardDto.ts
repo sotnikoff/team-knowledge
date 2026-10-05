@@ -42,6 +42,8 @@ export interface ElementDto {
   /** line | arrow; absent in older data = not bound */
   startBinding?: BindingDto | null
   endBinding?: BindingDto | null
+  /** line | arrow; absent in older data = false (broken line) */
+  curved?: boolean
   /** rectangle | ellipse | diamond; absent in older data = '' */
   label?: string
   /** document: id of the referenced text document */

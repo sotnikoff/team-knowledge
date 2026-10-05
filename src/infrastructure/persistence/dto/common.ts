@@ -40,6 +40,11 @@ export function parseString(raw: unknown): string {
   return raw
 }
 
+export function parseBoolean(raw: unknown): boolean {
+  if (typeof raw !== 'boolean') throw new InvalidDataError('expected a boolean')
+  return raw
+}
+
 export function parseDate(obj: Json, key: string): Date {
   const date = new Date(field(obj, key, isString, 'an ISO date string'))
   if (Number.isNaN(date.getTime())) throw new InvalidDataError(`"${key}" is not a valid date`)

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import * as editor from '@/application/editor/editorModel'
 import { findElement } from '@/application/editor/scene'
-import { TRANSPARENT, type ElementStyle } from '@/domain/element/types'
+import { isLinearElement, TRANSPARENT, type ElementStyle } from '@/domain/element/types'
 import { dispatch, useEditor } from '../editor/store'
 import { Island } from './Island'
 
@@ -74,6 +74,12 @@ export function StylePanel() {
     (m) => m.selectedIds.length > 0 && m.elements.every((el) => !m.selectedIds.includes(el.id) || el.type === 'document'),
   )
 
+  // `undefined` = no line/arrow selected; otherwise the shape of the first one.
+  const curved = useEditor((m) => {
+    const line = m.elements.find((el) => m.selectedIds.includes(el.id) && isLinearElement(el))
+    return line && isLinearElement(line) ? line.curved : undefined
+  })
+
   if (!hasSelection && (tool === 'select' || tool === 'hand')) return null
   if (onlyDocuments) return null
 
@@ -117,6 +123,20 @@ export function StylePanel() {
           </OptionButton>
         ))}
       </Section>
+      {curved !== undefined && (
+        <Section title="Линия">
+          <OptionButton label="Плавная" active={curved} onClick={() => dispatch((m) => editor.setLinesCurved(m, true))}>
+            <svg width="22" height="14" viewBox="0 0 22 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M1 12C6 12 6 2 11 2s5 10 10 10" />
+            </svg>
+          </OptionButton>
+          <OptionButton label="Ломаная" active={!curved} onClick={() => dispatch((m) => editor.setLinesCurved(m, false))}>
+            <svg width="22" height="14" viewBox="0 0 22 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round">
+              <path d="M1 12L11 2l10 10" />
+            </svg>
+          </OptionButton>
+        </Section>
+      )}
     </Island>
   )
 }

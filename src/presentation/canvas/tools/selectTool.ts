@@ -8,32 +8,47 @@ import {
   updateElements,
 } from '@/application/editor/scene'
 import { moveLinearEnd } from '@/domain/element/binding'
+import { insertBend, moveLinePoint } from '@/domain/element/linear'
 import { elementBounds, resizeBounds, resizeElement } from '@/domain/element/geometry'
 import { isLinearElement, type ElementId, type LinearElement } from '@/domain/element/types'
 import { boundsFromPoints, containsPoint, type Point } from '@/domain/shared/geometry'
 import { dispatch, getModel } from '../../editor/store'
-import { handleAt, handleCursor, HIT_TOLERANCE, linearEndAt } from '../selection'
+import { handleAt, handleCursor, HIT_TOLERANCE, lineHandleAt } from '../selection'
 import { hintFor, snapLineEnd } from './snapping'
 import type { Tool, ToolSession } from './types'
 
-/** Drags one end of a line/arrow, (re)binding it to the shape it lands on. */
-function startEndpointDrag(el: LinearElement, world: Point): ToolSession | null {
-  const end = linearEndAt(el, world, getModel().viewport.zoom)
-  if (!end) return null
+const updateLine = (id: ElementId, update: (el: LinearElement) => LinearElement) =>
+  dispatch((m) =>
+    editor.updateLive(m, updateElements(m.elements, [id], (el) => (isLinearElement(el) ? update(el) : el))),
+  )
+
+/**
+ * Drags a point of a selected line/arrow. Ends (re)bind to the shape they land
+ * on; bends move freely. Dragging a segment midpoint pulls out a new bend —
+ * only once the pointer actually moves, so a plain click changes nothing.
+ */
+function startLineHandleDrag(el: LinearElement, world: Point): ToolSession | null {
+  const handle = lineHandleAt(el, world, getModel().viewport.zoom)
+  if (!handle) return null
   dispatch(editor.beginInteraction)
+  let index = handle.kind === 'point' ? handle.index : -1
   return {
     move: ({ world: p, altKey }) => {
+      if (index === -1) {
+        index = handle.index + 1
+        updateLine(el.id, (line) => insertBend(line, index, p))
+      }
+      const line = findElement(getModel().elements, el.id)
+      if (!line || !isLinearElement(line)) return
+      const last = line.points.length - 1
+      if (index !== 0 && index !== last) {
+        updateLine(el.id, (current) => moveLinePoint(current, index, p))
+        return
+      }
       const snapped = snapLineEnd(p, altKey, [el.id])
-      dispatch(
-        (m) =>
-          editor.updateLive(
-            m,
-            updateElements(m.elements, [el.id], (current) =>
-              isLinearElement(current) ? moveLinearEnd(current, end, snapped.point, snapped.binding) : current,
-            ),
-          ),
-        (m) => editor.setBindingHint(m, hintFor(snapped.binding)),
-      )
+      const end = index === 0 ? 'start' : 'end'
+      updateLine(el.id, (current) => moveLinearEnd(current, end, snapped.point, snapped.binding))
+      dispatch((m) => editor.setBindingHint(m, hintFor(snapped.binding)))
     },
     end: () => dispatch(editor.endInteraction),
   }
@@ -43,7 +58,7 @@ function startResize(id: ElementId, world: Point): ToolSession | null {
   const m = getModel()
   const original = findElement(m.elements, id)
   if (!original) return null
-  if (isLinearElement(original)) return startEndpointDrag(original, world)
+  if (isLinearElement(original)) return startLineHandleDrag(original, world)
   const handle = handleAt(elementBounds(original), world, m.viewport.zoom)
   if (!handle) return null
   dispatch(editor.beginInteraction)
@@ -124,7 +139,7 @@ export function hoverCursor(world: Point): string {
   if (m.selectedIds.length === 1) {
     const el = findElement(m.elements, m.selectedIds[0]!)
     if (el && isLinearElement(el)) {
-      if (linearEndAt(el, world, m.viewport.zoom)) return 'pointer'
+      if (lineHandleAt(el, world, m.viewport.zoom)) return 'pointer'
     } else {
       const handle = el && handleAt(elementBounds(el), world, m.viewport.zoom)
       if (handle) return handleCursor[handle]

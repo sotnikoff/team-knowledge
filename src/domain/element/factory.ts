@@ -1,4 +1,5 @@
 import { boundsOfPoints, type Point } from '../shared/geometry'
+import { traceLine } from './curve'
 import type {
   DocumentElement,
   ElementId,
@@ -39,6 +40,7 @@ export function createLinear(
     ],
     startBinding: null,
     endBinding: null,
+    curved: true,
   }
 }
 
@@ -68,11 +70,13 @@ export function createDocumentElement(
 }
 
 /**
- * Re-anchors a points element so that (x, y) is the top-left corner of its
- * points' bounding box and width/height match it.
+ * Re-anchors a points element so that (x, y) is the top-left corner of the
+ * bounding box of the drawn line (a smooth curve may bulge past its points)
+ * and width/height match it.
  */
 export function withAbsolutePoints<T extends PointsElement>(el: T, absolute: readonly Point[]): T {
-  const b = boundsOfPoints(absolute)
+  const curved = 'curved' in el && el.curved
+  const b = boundsOfPoints(traceLine(absolute, curved))
   return {
     ...el,
     x: b.x,

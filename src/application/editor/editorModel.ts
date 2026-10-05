@@ -1,4 +1,6 @@
 import { syncBindings } from '@/domain/element/binding'
+import { setCurved } from '@/domain/element/linear'
+import { isLinearElement } from '@/domain/element/types'
 import type { Binding, DiagramElement, ElementId, ElementStyle } from '@/domain/element/types'
 import { TRANSPARENT } from '@/domain/element/types'
 import type { Bounds } from '@/domain/shared/geometry'
@@ -147,6 +149,18 @@ export function applyStyle(m: EditorModel, patch: Partial<ElementStyle>): Editor
     style: { ...el.style, ...patch },
   }))
   return { ...commit(m, elements), style }
+}
+
+/** Makes the selected lines/arrows smooth curves or broken lines (one undo step). */
+export function setLinesCurved(m: EditorModel, curved: boolean): EditorModel {
+  const selected = new Set(m.selectedIds)
+  let changed = false
+  const elements = m.elements.map((el) => {
+    if (!selected.has(el.id) || !isLinearElement(el) || el.curved === curved) return el
+    changed = true
+    return setCurved(el, curved)
+  })
+  return changed ? commit(m, elements) : m
 }
 
 function keepExistingSelection(m: EditorModel): EditorModel {

@@ -3,7 +3,9 @@ import type { RoughGenerator } from 'roughjs/bin/generator'
 import rough from 'roughjs'
 import type { RoughCanvas } from 'roughjs/bin/canvas'
 import { diamondPoints, labelBox } from '@/domain/element/geometry'
+import { catmullRomSegments } from '@/domain/element/curve'
 import { absolutePoints } from '@/domain/element/factory'
+import { linePath } from '@/domain/element/linear'
 import {
   TRANSPARENT,
   type DiagramElement,
@@ -11,6 +13,7 @@ import {
   isShapeElement,
   type ElementId,
   type ElementType,
+  type LinearElement,
   type ShapeElement,
 } from '@/domain/element/types'
 import type { Point } from '@/domain/shared/geometry'
@@ -58,18 +61,41 @@ function drawCached(el: DiagramElement, r: RenderContext, build: () => Drawable[
   for (const d of drawables) r.rc.draw(d)
 }
 
-function arrowHead(points: readonly Point[], size: number): [Point, Point, Point] | null {
-  const tip = points.at(-1)
-  const from = points.at(-2)
-  if (!tip || !from) return null
+/**
+ * `traced` gives the direction at the tip (tangent of a curve); the head is
+ * capped by half of the last segment between `points`, so short ends stay sane.
+ */
+function arrowHead(traced: readonly Point[], points: readonly Point[], size: number): [Point, Point, Point] | null {
+  const tip = traced.at(-1)
+  const from = traced.at(-2)
+  const lastPoint = points.at(-2)
+  if (!tip || !from || !lastPoint) return null
   const angle = Math.atan2(tip.y - from.y, tip.x - from.x)
-  const length = Math.min(size, Math.hypot(tip.x - from.x, tip.y - from.y) / 2)
+  const length = Math.min(size, Math.hypot(tip.x - lastPoint.x, tip.y - lastPoint.y) / 2)
   const spread = Math.PI / 7
   return [
     { x: tip.x - length * Math.cos(angle - spread), y: tip.y - length * Math.sin(angle - spread) },
     tip,
     { x: tip.x - length * Math.cos(angle + spread), y: tip.y - length * Math.sin(angle + spread) },
   ]
+}
+
+/** SVG path of the exact spline used by hit-testing (`catmullRomSegments`). */
+function splinePath(points: readonly Point[]): string {
+  const segments = catmullRomSegments(points)
+  const start = points[0]!
+  return [
+    `M ${start.x} ${start.y}`,
+    ...segments.map((s) => `C ${s.c1.x} ${s.c1.y} ${s.c2.x} ${s.c2.y} ${s.to.x} ${s.to.y}`),
+  ].join(' ')
+}
+
+function lineShape(el: LinearElement, r: RenderContext): Drawable {
+  const points = absolutePoints(el)
+  // Lines are never filled, whatever the fill colour of the style.
+  const options = { ...roughOptions(el), fill: undefined }
+  if (el.curved && points.length > 2) return r.gen.path(splinePath(points), options)
+  return r.gen.linearPath(toPairs(points), options)
 }
 
 export const elementRenderers: RendererRegistry = {
@@ -81,13 +107,11 @@ export const elementRenderers: RendererRegistry = {
     ]),
   diamond: (el, r) =>
     drawCached(el, r, () => [r.gen.polygon(toPairs(diamondPoints(el)), roughOptions(el))]),
-  line: (el, r) =>
-    drawCached(el, r, () => [r.gen.linearPath(toPairs(absolutePoints(el)), roughOptions(el))]),
+  line: (el, r) => drawCached(el, r, () => [lineShape(el, r)]),
   arrow: (el, r) =>
     drawCached(el, r, () => {
-      const points = absolutePoints(el)
-      const shaft = r.gen.linearPath(toPairs(points), roughOptions(el))
-      const head = arrowHead(points, 12 + el.style.strokeWidth * 4)
+      const shaft = lineShape(el, r)
+      const head = arrowHead(linePath(el), absolutePoints(el), 12 + el.style.strokeWidth * 4)
       return head ? [shaft, r.gen.linearPath(toPairs(head), roughOptions(el))] : [shaft]
     }),
   freedraw: (el, { ctx }) => {

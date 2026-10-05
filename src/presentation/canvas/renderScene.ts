@@ -8,7 +8,7 @@ import { elementBounds, handlePosition, RESIZE_HANDLES } from '@/domain/element/
 import { ANCHORS, isLinearElement } from '@/domain/element/types'
 import type { Bounds } from '@/domain/shared/geometry'
 import { drawElements } from './elementRenderers'
-import { HANDLE_SIZE } from './selection'
+import { HANDLE_SIZE, visibleMidpoints } from './selection'
 
 export interface Surface {
   readonly width: number
@@ -52,13 +52,16 @@ function drawSelection(ctx: CanvasRenderingContext2D, model: EditorModel) {
   ctx.strokeStyle = SELECTION_COLOR
   ctx.lineWidth = 1 / zoom
 
-  // A single line/arrow is edited by its ends, not by a bounding box.
+  // A single line/arrow is edited by its points (ends + bends) and by the
+  // midpoints of its segments, which pull out new bends.
   const single = model.selectedIds.length === 1 ? findElement(model.elements, model.selectedIds[0]!) : null
   if (single && isLinearElement(single)) {
+    ctx.fillStyle = SELECTION_COLOR
+    ctx.globalAlpha = 0.45
+    for (const { point } of visibleMidpoints(single, zoom)) drawDot(ctx, point.x, point.y, 3.5 / zoom, false)
+    ctx.globalAlpha = 1
     ctx.fillStyle = '#ffffff'
-    for (const p of [absolutePoints(single)[0], absolutePoints(single).at(-1)]) {
-      if (p) drawDot(ctx, p.x, p.y, HANDLE_SIZE / 2 / zoom, true)
-    }
+    for (const p of absolutePoints(single)) drawDot(ctx, p.x, p.y, HANDLE_SIZE / 2 / zoom, true)
     ctx.restore()
     return
   }

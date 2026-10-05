@@ -1,5 +1,6 @@
 import { handlePosition, RESIZE_HANDLES, type ResizeHandle } from '@/domain/element/geometry'
 import { absolutePoints } from '@/domain/element/factory'
+import { segmentMidpoints } from '@/domain/element/linear'
 import type { LinearElement } from '@/domain/element/types'
 import type { Bounds, Point } from '@/domain/shared/geometry'
 
@@ -16,14 +17,32 @@ export function handleAt(bounds: Bounds, p: Point, zoom: number): ResizeHandle |
   return null
 }
 
-/** Which end of a line/arrow is under `p`, if any. */
-export function linearEndAt(el: LinearElement, p: Point, zoom: number): 'start' | 'end' | null {
+/** A point of a line (end or bend) or the middle of one of its segments. */
+export type LineHandle = { readonly kind: 'point' | 'midpoint'; readonly index: number }
+
+/** Segments shorter than this on screen get no midpoint handle (avoids clutter). */
+const MIN_SEGMENT_FOR_MIDPOINT = HANDLE_SIZE * 4
+
+export function visibleMidpoints(el: LinearElement, zoom: number): { index: number; point: Point }[] {
   const points = absolutePoints(el)
+  return segmentMidpoints(el)
+    .map((point, index) => ({ index, point }))
+    .filter(({ index }) => {
+      const a = points[index]!
+      const b = points[index + 1]!
+      return Math.hypot(b.x - a.x, b.y - a.y) * zoom >= MIN_SEGMENT_FOR_MIDPOINT
+    })
+}
+
+/** The handle of a selected line under `p`; points win over midpoints. */
+export function lineHandleAt(el: LinearElement, p: Point, zoom: number): LineHandle | null {
   const radius = HANDLE_SIZE / zoom
-  const near = (q: Point | undefined) => q !== undefined && Math.hypot(q.x - p.x, q.y - p.y) <= radius
-  if (near(points.at(-1))) return 'end'
-  if (near(points[0])) return 'start'
-  return null
+  const near = (q: Point) => Math.hypot(q.x - p.x, q.y - p.y) <= radius
+  const points = absolutePoints(el)
+  // Last first: a fresh line has its end right where the user clicked.
+  for (let i = points.length - 1; i >= 0; i--) if (near(points[i]!)) return { kind: 'point', index: i }
+  const mid = visibleMidpoints(el, zoom).find(({ point }) => near(point))
+  return mid ? { kind: 'midpoint', index: mid.index } : null
 }
 
 export const handleCursor: Record<ResizeHandle, string> = {
