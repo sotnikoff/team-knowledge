@@ -5,6 +5,7 @@ import { panBy, screenToWorld, zoomAt } from '@/application/editor/viewport'
 import { useDependencies } from '../app/dependencies'
 import { dispatch, getModel, subscribeToModel, useEditor } from '../editor/store'
 import { commitTextEdit, startEditing } from '../editor/textEditing'
+import { DocumentLayer } from './DocumentLayer'
 import { createRoughCanvas, renderScene, type Surface } from './renderScene'
 import { HIT_TOLERANCE } from './selection'
 import { TextEditor } from './TextEditor'
@@ -14,7 +15,8 @@ import { hoverCursor } from './tools/selectTool'
 import { hintFor, snapLineEnd } from './tools/snapping'
 import { startTextAt } from './tools/textTool'
 
-export function Canvas() {
+/** `onOpenDocument` is called on double click on a document card. */
+export function Canvas(props: { onOpenDocument: (documentId: string) => void }) {
   const { ids } = useDependencies()
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -151,6 +153,7 @@ export function Canvas() {
     const { world } = toInput(e)
     const m = getModel()
     const hit = topmostElementAt(m.elements, world, HIT_TOLERANCE / m.viewport.zoom)
+    if (hit?.type === 'document') return props.onOpenDocument(hit.documentId)
     const shape = hit?.type === 'text' ? hit : shapeAt(m.elements, world)
     if (shape) startEditing(shape.id)
     else if (!hit) startTextAt(world, toolContext)
@@ -160,9 +163,10 @@ export function Canvas() {
 
   return (
     <div ref={containerRef} className="absolute inset-0 overflow-hidden">
+      <DocumentLayer />
       <canvas
         ref={canvasRef}
-        className="block touch-none"
+        className="relative block touch-none"
         style={{ width: surface.width, height: surface.height, cursor }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}

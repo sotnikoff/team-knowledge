@@ -24,9 +24,9 @@ export function renderScene(canvas: HTMLCanvasElement, rc: RoughCanvas, model: E
   if (!ctx) return
   const { zoom, scrollX, scrollY } = model.viewport
 
+  // Transparent: document cards (DOM) live underneath the drawing.
   ctx.setTransform(surface.pixelRatio, 0, 0, surface.pixelRatio, 0, 0)
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, surface.width, surface.height)
+  ctx.clearRect(0, 0, surface.width, surface.height)
 
   ctx.save()
   ctx.scale(zoom, zoom)

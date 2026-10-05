@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createLinear, withAbsolutePoints } from './factory'
+import { createDocumentElement, createLinear, withAbsolutePoints } from './factory'
 import { hitTestElement, resizeBounds, resizeElement } from './geometry'
 import { TRANSPARENT, type DiagramElement, type ElementStyle } from './types'
 
@@ -83,5 +83,20 @@ describe('resizeElement', () => {
       { x: 20, y: 40 },
     ])
     expect(resized.x).toBe(5)
+  })
+})
+
+describe('document element', () => {
+  const doc = createDocumentElement({ id: 'd', documentId: 'doc-1', seed: 1, style, x: 0, y: 0, width: 400 })
+
+  it('is hit anywhere inside the card', () => {
+    expect(hitTestElement({ ...doc, height: 300 }, { x: 200, y: 150 }, 4)).toBe(true)
+    expect(hitTestElement({ ...doc, height: 300 }, { x: 200, y: 320 }, 4)).toBe(false)
+  })
+
+  it('resizes only horizontally, keeping a minimum width', () => {
+    const resized = resizeElement(doc, { x: 10, y: 50, width: 600, height: 999 })
+    expect(resized).toMatchObject({ x: 10, y: 0, width: 600, height: doc.height })
+    expect(resizeElement(doc, { x: 0, y: 0, width: 20, height: 10 }).width).toBe(160)
   })
 })

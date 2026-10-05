@@ -50,18 +50,16 @@ function DocumentEditor(props: { doc: Document; onReload: () => void }) {
   })
 
   return (
-    <div className="mx-auto max-w-3xl px-8 pb-24 pt-6">
-      <div className="mb-4 flex justify-end">
-        <SaveStatus status={status} onRetry={retry} onReload={props.onReload} />
-      </div>
-      {/* Remounts when the title changes elsewhere (e.g. renamed in the sidebar). */}
-      <TitleInput key={props.doc.title} doc={props.doc} onEnter={() => editor.current?.focusStart()} />
-      <RichTextEditor
-        initialContent={initial.content}
-        onChange={setContent}
-        ref={editor}
-      />
-    </div>
+    <RichTextEditor
+      initialContent={initial.content}
+      onChange={setContent}
+      ref={editor}
+      toolbarEnd={<SaveStatus status={status} onRetry={retry} onReload={props.onReload} />}
+      header={
+        // Remounts when the title changes elsewhere (e.g. renamed in the sidebar).
+        <TitleInput key={props.doc.title} doc={props.doc} onEnter={() => editor.current?.focusStart()} />
+      }
+    />
   )
 }
 

@@ -1,17 +1,20 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useLayoutEffect, useState } from 'react'
+import { useCallback, useLayoutEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router'
+import { screenToWorld } from '@/application/editor/viewport'
 import type { Board } from '@/domain/board/Board'
 import type { DiagramElement } from '@/domain/element/types'
 import { useDependencies } from '../app/dependencies'
 import { Canvas } from '../canvas/Canvas'
 import { BottomBar } from '../components/BottomBar'
+import { InsertDocumentMenu } from '../components/InsertDocumentMenu'
 import { Island } from '../components/Island'
 import { SaveStatus } from '../components/SaveStatus'
 import { StylePanel } from '../components/StylePanel'
 import { Toolbar } from '../components/Toolbar'
 import { useAutosave } from '../hooks/useAutosave'
 import { queryKeys } from '../hooks/queryKeys'
-import { resetEditor, useEditor, useEditorSession } from './store'
+import { getModel, resetEditor, useEditor, useEditorSession } from './store'
 import { useEditorShortcuts } from './useEditorShortcuts'
 
 interface EditorProps {
@@ -51,11 +54,22 @@ function LoadedEditor({ initial, ...props }: EditorProps & { initial: Board }) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.boards(saved.spaceId), exact: true })
     },
   })
-  useEditorShortcuts()
+  const navigate = useNavigate()
+  const openDocument = useCallback(
+    (documentId: string) => void navigate(`/spaces/${initial.spaceId}/docs/${documentId}`),
+    [navigate, initial.spaceId],
+  )
+  useEditorShortcuts({ onOpenDocument: openDocument })
+
+  const root = useRef<HTMLDivElement>(null)
+  const viewCenter = () => {
+    const rect = root.current?.getBoundingClientRect()
+    return screenToWorld(getModel().viewport, { x: (rect?.width ?? 0) / 2, y: (rect?.height ?? 0) / 2 })
+  }
 
   return (
-    <div className="absolute inset-0 select-none overflow-hidden bg-white">
-      <Canvas />
+    <div ref={root} className="absolute inset-0 select-none overflow-hidden bg-white">
+      <Canvas onOpenDocument={openDocument} />
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
         <Island className="pointer-events-auto flex h-11 items-center px-3">
           <span className="max-w-48 truncate font-medium text-slate-800">{props.board.name}</span>
@@ -63,9 +77,12 @@ function LoadedEditor({ initial, ...props }: EditorProps & { initial: Board }) {
         <div className="pointer-events-auto">
           <Toolbar />
         </div>
-        <Island className="pointer-events-auto flex h-11 items-center">
-          <SaveStatus status={status} onRetry={retry} onReload={props.onReload} />
-        </Island>
+        <div className="pointer-events-auto flex items-start gap-2">
+          <InsertDocumentMenu spaceId={initial.spaceId} viewCenter={viewCenter} />
+          <Island className="flex h-11 items-center">
+            <SaveStatus status={status} onRetry={retry} onReload={props.onReload} />
+          </Island>
+        </div>
       </div>
       <div className="pointer-events-auto absolute left-3 top-20">
         <StylePanel />

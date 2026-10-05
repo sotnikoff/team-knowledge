@@ -7,7 +7,7 @@ import {
   moveLinearEnd,
   syncBindings,
 } from './binding'
-import { absolutePoints, createLinear } from './factory'
+import { absolutePoints, createDocumentElement, createLinear } from './factory'
 import { translateElement } from './geometry'
 import { TRANSPARENT, type DiagramElement, type LinearElement, type ShapeElement } from './types'
 
@@ -98,5 +98,23 @@ describe('detachBindings', () => {
     const arrow = detachBindings(connect(box('a', 0, 0), box('b', 300, 0)), new Set(['a'])) as LinearElement
     expect(arrow.startBinding?.elementId).toBe('a')
     expect(arrow.endBinding).toBeNull()
+  })
+})
+
+describe('binding to a document card', () => {
+  it('snaps to the card and follows it when it grows', () => {
+    const card = { ...createDocumentElement({ id: 'card', documentId: 'd1', seed: 1, style, x: 0, y: 0 }), height: 200 }
+    const target = findBindingTarget([card], { x: 240, y: 205 }, { threshold: 10 })
+    expect(target).toEqual({ elementId: 'card', anchor: 'bottom' })
+
+    const arrow = moveLinearEnd(
+      createLinear({ id: 'arrow', type: 'arrow', seed: 1, style, origin: { x: 240, y: 400 } }),
+      'end',
+      anchorPoint(card, 'bottom'),
+      target,
+    )
+    const taller = { ...card, height: 350 }
+    const synced = findArrow(syncBindings([taller, arrow]))
+    expect(absolutePoints(synced).at(-1)).toEqual(anchorPoint(taller, 'bottom'))
   })
 })

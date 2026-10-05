@@ -62,4 +62,25 @@ describe('boardMapper', () => {
     Object.assign(bad.elements[1]!, { endBinding: { elementId: 'r', anchor: 'center' } })
     expect(() => boardFromDto(bad)).toThrow(InvalidDataError)
   })
+
+  it('round-trips a document card and requires its documentId', () => {
+    const board = boardFromDto(legacy)
+    const card = {
+      id: 'card',
+      type: 'document' as const,
+      documentId: 'doc-1',
+      x: 5,
+      y: 6,
+      width: 480,
+      height: 320,
+      seed: 3,
+      style: board.elements[0]!.style,
+    }
+    const withCard = { ...board, elements: [...board.elements, card] }
+    expect(boardFromDto(JSON.parse(JSON.stringify(boardToDto(withCard))))).toEqual(withCard)
+
+    const broken = structuredClone(legacy)
+    broken.elements.push({ ...broken.elements[0]!, id: 'x', type: 'document' })
+    expect(() => boardFromDto(broken)).toThrow(InvalidDataError)
+  })
 })

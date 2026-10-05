@@ -34,7 +34,8 @@ function isTyping(target: EventTarget | null): boolean {
   )
 }
 
-export function useEditorShortcuts(): void {
+export function useEditorShortcuts(options: { onOpenDocument: (documentId: string) => void }): void {
+  const { onOpenDocument } = options
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (isTyping(e.target)) return
@@ -58,7 +59,10 @@ export function useEditorShortcuts(): void {
         // Enter on a selected shape/text starts typing into it.
         const m = getModel()
         const el = m.selectedIds.length === 1 ? findElement(m.elements, m.selectedIds[0]!) : null
-        if (el && (isShapeElement(el) || el.type === 'text')) {
+        if (el?.type === 'document') {
+          e.preventDefault()
+          onOpenDocument(el.documentId)
+        } else if (el && (isShapeElement(el) || el.type === 'text')) {
           e.preventDefault()
           startEditing(el.id)
         }
@@ -71,5 +75,5 @@ export function useEditorShortcuts(): void {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
+  }, [onOpenDocument])
 }

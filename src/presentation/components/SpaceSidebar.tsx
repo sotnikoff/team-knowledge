@@ -10,9 +10,8 @@ import {
   useDocumentList,
   useRenameDocument,
 } from '../hooks/useDocuments'
+import { NEW_ITEM_NAME } from '../format'
 import { AppIcon, type IconName } from './icons'
-
-export const NEW_ITEM_NAME = 'Без названия'
 
 export function SpaceSidebar({ spaceId }: { spaceId: SpaceId }) {
   const navigate = useNavigate()

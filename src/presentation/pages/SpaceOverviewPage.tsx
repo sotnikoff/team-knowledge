@@ -2,8 +2,7 @@ import type { ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { AppIcon } from '../components/icons'
 import { ItemCard } from '../components/ItemCard'
-import { formatUpdated } from '../format'
-import { NEW_ITEM_NAME } from '../components/SpaceSidebar'
+import { formatUpdated, NEW_ITEM_NAME } from '../format'
 import { useBoardList, useCreateBoard, useDeleteBoard, useRenameBoard } from '../hooks/useBoards'
 import {
   useCreateDocument,

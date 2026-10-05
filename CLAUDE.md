@@ -154,10 +154,18 @@ debounce, не больше одного запроса одновременно
 
 ## Документы
 
-- `presentation/documents/RichTextEditor.tsx` — TipTap + StarterKit, **без постоянного
-  тулбара**: markdown-шорткаты (`# `, `- `, `1. `, `> `) и мини-панель при выделении
-  (`SelectionToolbar.tsx`: жирный, курсив, зачёркнутый, код, H1, H2, списки, цитата).
-  Новое форматирование — новая запись в массиве `actions`.
+- **Одна схема документа** — `presentation/documents/extensions.ts`
+  (`documentExtensions()`): StarterKit (с подчёркиванием и ссылками), блоки кода
+  `CodeBlockLowlight` + `lowlight`, чек-листы. Её используют и редактор, и статический
+  рендер карточек на доске — меняйте только здесь.
+- `RichTextEditor.tsx`: **постоянный тулбар** сверху (`EditorToolbar.tsx`, sticky) +
+  мини-панель при выделении (`SelectionToolbar.tsx`). Обе панели строятся из общих
+  `formatActions.tsx`; состояние кнопок — `useFormatState`. Новое форматирование —
+  новая запись в `formatActions` (+ кнопка в группе тулбара).
+- Блок кода: кнопка или ```` ``` ````; язык выбирается в тулбаре (список
+  `CODE_LANGUAGES`), подсветка lowlight + тема highlight.js (подключена в `index.css`).
+- Типографика — собственные стили `.document-prose` в `index.css` (одинаковые в
+  редакторе и на карточке).
 - Заголовок документа переименовывается отдельно (`RenameDocument`, по blur/Enter);
   Enter переводит фокус в текст.
 
@@ -201,11 +209,27 @@ debounce, не больше одного запроса одновременно
   (`presentation/canvas/tools/snapping.ts`); Alt — рисовать без привязки.
   `EditorModel.bindingHint` подсвечивает цель и её точки.
 
+### Документ на доске
+
+- `DocumentElement { type: 'document', documentId }` — доска хранит **только ссылку**,
+  содержимое берётся из документа (React Query, общий кэш со страницей документа).
+- Рисуется не на canvas, а DOM-слоем `presentation/canvas/DocumentLayer.tsx` **под**
+  прозрачным canvas: `transform: scale(zoom) translate(scroll)` — та же формула, что
+  `worldToScreen`. Поэтому стрелки и фигуры рисуются поверх карточек, а ввод
+  (выделение, перемещение, привязки) обрабатывает canvas как для любого элемента.
+- Карточка всегда показывает документ целиком; её измеренная высота пишется в
+  `element.height` (`updateLive`, без шага истории), чтобы hit-test, рамка и привязки
+  совпадали с видимым. Resize меняет только ширину (`geometryHandlers.document`).
+- Вставка — `InsertDocumentMenu` (существующий документ зарисовки или новый).
+  Двойной клик / Enter на карточке → `Canvas.onOpenDocument` → страница документа.
+  Удалённый документ — карточка «Документ удалён»; удаление карточки документ не трогает.
+
 ### Как добавить тип фигуры
 
 1. `domain/element/types.ts` — интерфейс + в union `DiagramElement` + `ELEMENT_TYPES`.
 2. `domain/element/geometry.ts` — запись в `geometryHandlers`.
-3. `presentation/canvas/elementRenderers.ts` — запись в `elementRenderers`.
+3. `presentation/canvas/elementRenderers.ts` — запись в `elementRenderers` (если элемент
+   рисуется DOM-слоем, как документ, — пустой рендерер и свой слой в `Canvas`).
 4. `infrastructure/persistence/dto` — поле в `ElementDto` и ветка в `parseElement`.
    Новые поля делайте необязательными в JSON с дефолтом в mapper — тогда
    старые данные читаются без миграции и `schemaVersion` не меняется.

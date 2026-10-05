@@ -51,8 +51,10 @@ export function useDeleteDocument(spaceId: SpaceId) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: DocumentId) => deleteDocument.execute(id),
-    onSuccess: (_, id) => {
-      queryClient.removeQueries({ queryKey: queryKeys.document(id) })
+    onSuccess: async (_, id) => {
+      // Invalidate rather than remove: open views (e.g. cards on boards) refetch
+      // and show that the document is gone instead of a stale copy.
+      await queryClient.invalidateQueries({ queryKey: queryKeys.document(id) })
       return queryClient.invalidateQueries({ queryKey: queryKeys.documents(spaceId), exact: true })
     },
   })
