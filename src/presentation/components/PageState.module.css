@@ -10,8 +10,10 @@
 }
 
 .loading {
-  font-family: 'Caveat', var(--font-ui);
-  font-size: 1.5rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   animation: breathe 1.6s var(--ease) infinite;
 }
 

@@ -12,7 +12,7 @@ import { errorMessage } from '../errors'
 import { useAutosave } from '../hooks/useAutosave'
 import { useDocument, useRenameDocument } from '../hooks/useDocuments'
 import { queryKeys } from '../hooks/queryKeys'
-import { Scribble } from '../ui/Scribble'
+import { TitleRule } from '../ui/TitleRule'
 import styles from './DocumentPage.module.css'
 import { useI18n } from '../i18n/i18n'
 
@@ -96,7 +96,7 @@ function TitleInput(props: { doc: Document; onEnter: () => void }) {
         }}
         className={styles.title}
       />
-      <Scribble className={styles.underline} />
+      <TitleRule className={styles.underline} />
       {rename.error && <p className={styles.error}>{errorMessage(rename.error, t)}</p>}
     </div>
   )

@@ -14,10 +14,10 @@
 
 .underline {
   display: block;
-  width: 120px;
-  height: 10px;
+  width: 56px;
+  height: 6px;
   margin: var(--space-1) 0 var(--space-10);
-  color: var(--accent);
+  background: var(--marker);
 }
 
 .section {
@@ -43,8 +43,8 @@
 .count {
   margin-left: var(--space-2);
   color: var(--ink-faint);
-  font-family: var(--font-ui);
-  font-size: var(--text-md);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
   font-weight: 500;
 }
 
@@ -57,10 +57,11 @@
 
 .empty {
   padding: var(--space-8);
-  border: 2px dashed var(--line-strong);
-  border-radius: var(--radius-xl);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-md);
   color: var(--ink-muted);
   text-align: center;
-  font-family: 'Caveat', var(--font-ui);
-  font-size: 1.45rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 0.04em;
 }

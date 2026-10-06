@@ -1,50 +1,52 @@
 /* ==========================================================================
-   Design tokens — "warm sketchbook".
+   Design tokens — "blueprint / engineering notebook".
    Every colour/size in component CSS modules comes from here (`var(--…)`).
-   The dark theme ("night notebook") only re-defines tokens under `.dark`,
-   the class `presentation/theme/theme.ts` puts on <html>.
+   The dark theme (a real blueprint: white lines on cyan-blue paper) only
+   re-defines tokens under `.dark`, set on <html> by `presentation/theme/theme.ts`.
    ========================================================================== */
 
 :root {
   /* Surfaces */
-  --paper: #f6f1e7; /* page / canvas background */
-  --sheet: #fffdf8; /* panels, cards, menus */
-  --spread: #efe7d8; /* sidebar */
-  --sheet-hover: #f3ecdf;
-  --sheet-pressed: #ebe2d2;
+  --paper: #f3f5f8; /* page / canvas background */
+  --sheet: #ffffff; /* panels, cards, menus */
+  --spread: #e9eef4; /* sidebar */
+  --sheet-hover: #edf1f6;
+  --sheet-pressed: #e1e7ef;
 
-  /* Ink */
-  --ink: #1f1b16;
-  --ink-soft: #3d362e;
-  --ink-muted: #6b6157;
-  --ink-faint: #9a8f82;
-  --line: #e3d9c8;
-  --line-strong: #cfc2ad;
+  /* Ink — navy, like a technical pen */
+  --ink: #14213d;
+  --ink-soft: #27365a;
+  --ink-muted: #5b6886;
+  --ink-faint: #93a0b8;
+  --line: #d6dee9;
+  --line-strong: #b4c1d3;
 
-  /* Accent — terracotta */
-  --accent: #c2562f;
-  --accent-hover: #a9461f;
-  --accent-ink: #9a3c18; /* accent text on paper */
-  --accent-tint: #f5e2d8;
-  --accent-tint-strong: #efd1c2;
-  --on-accent: #fffaf4;
+  /* Accent — cobalt; marker — signal yellow */
+  --accent: #2453ff;
+  --accent-hover: #1a41d6;
+  --accent-ink: #1d44db;
+  --accent-tint: #e4eaff;
+  --accent-tint-strong: #cbd6ff;
+  --on-accent: #ffffff;
+  --marker: #ffd23f;
+  --on-marker: #14213d;
 
   /* Status */
-  --success: #4f7a4a;
-  --danger: #b3261e;
-  --danger-tint: #f7dfdc;
-  --warning: #c98a1b;
+  --success: #1f8a5b;
+  --danger: #d6342c;
+  --danger-tint: #fde4e2;
+  --warning: #e0a100;
 
   /* Typography */
-  --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-ui: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Space Grotesk', 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   --text-xs: 0.75rem;
   --text-sm: 0.8125rem;
   --text-md: 0.9375rem;
   --text-lg: 1.125rem;
   --text-xl: 1.5rem;
-  --text-2xl: 2.25rem;
+  --text-2xl: 2.5rem;
 
   /* Spacing — 4px scale */
   --space-1: 4px;
@@ -57,21 +59,22 @@
   --space-10: 40px;
   --space-12: 48px;
 
-  /* Shape */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
+  /* Shape — crisp, drafted corners */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
   --radius-pill: 999px;
 
-  /* Paper-like shadows: warm, soft, slightly offset downwards */
-  --shadow-sm: 0 1px 0 rgb(80 60 30 / 0.06), 0 1px 2px rgb(80 60 30 / 0.08);
-  --shadow-md: 0 1px 0 rgb(80 60 30 / 0.05), 0 4px 12px -2px rgb(80 60 30 / 0.12);
-  --shadow-lg: 0 2px 0 rgb(80 60 30 / 0.04), 0 14px 32px -8px rgb(80 60 30 / 0.22);
-  --focus-ring: 0 0 0 3px rgb(194 86 47 / 0.35);
+  /* Hard offset shadows, no blur — like a second plate in print */
+  --shadow-sm: 0 1px 0 rgb(20 33 61 / 0.08);
+  --shadow-md: 3px 3px 0 rgb(20 33 61 / 0.1);
+  --shadow-lg: 6px 6px 0 rgb(20 33 61 / 0.14);
+  --focus-ring: 0 0 0 3px rgb(36 83 255 / 0.3);
 
-  /* Canvas grid dots */
-  --grid-dot: rgb(120 100 70 / 0.16);
+  /* Graph paper: fine lines every 20px, stronger every 100px */
+  --grid-minor: rgb(36 83 255 / 0.06);
+  --grid-major: rgb(36 83 255 / 0.12);
 
   /* Motion */
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -83,36 +86,40 @@
   --z-popover: 30;
 }
 
+/* Blueprint: cyan-blue paper, white lines, yellow marker as the accent. */
 .dark {
-  --paper: #171411;
-  --sheet: #211d19;
-  --spread: #1b1815;
-  --sheet-hover: #2a2520;
-  --sheet-pressed: #322c26;
+  --paper: #0d2a4d;
+  --sheet: #12365f;
+  --spread: #0a2343;
+  --sheet-hover: #18406d;
+  --sheet-pressed: #1d4a7c;
 
-  --ink: #ede6d8;
-  --ink-soft: #d9d0c0;
-  --ink-muted: #a99e8f;
-  --ink-faint: #7a7062;
-  --line: #352f28;
-  --line-strong: #4a4239;
+  --ink: #eef4ff;
+  --ink-soft: #d3e0f5;
+  --ink-muted: #9fb6d8;
+  --ink-faint: #6d89b3;
+  --line: #24507f;
+  --line-strong: #3a6a9e;
 
-  --accent: #e07a52;
-  --accent-hover: #ea8f6a;
-  --accent-ink: #f0a07d;
-  --accent-tint: #3a2519;
-  --accent-tint-strong: #4a2e1f;
-  --on-accent: #1a110c;
+  --accent: #ffd23f;
+  --accent-hover: #ffdd6b;
+  --accent-ink: #ffd23f;
+  --accent-tint: #1f4a6e;
+  --accent-tint-strong: #2b5880;
+  --on-accent: #0d2a4d;
+  --marker: #ffd23f;
+  --on-marker: #0d2a4d;
 
-  --success: #8fbf86;
-  --danger: #f08a80;
-  --danger-tint: #3d1d1a;
-  --warning: #e3b05a;
+  --success: #6ee7b0;
+  --danger: #ff8a80;
+  --danger-tint: #4a2a3a;
+  --warning: #ffd23f;
 
-  --shadow-sm: 0 1px 0 rgb(0 0 0 / 0.3), 0 1px 2px rgb(0 0 0 / 0.35);
-  --shadow-md: 0 1px 0 rgb(0 0 0 / 0.25), 0 6px 16px -4px rgb(0 0 0 / 0.5);
-  --shadow-lg: 0 2px 0 rgb(0 0 0 / 0.2), 0 18px 36px -10px rgb(0 0 0 / 0.65);
-  --focus-ring: 0 0 0 3px rgb(224 122 82 / 0.4);
+  --shadow-sm: 0 1px 0 rgb(0 0 0 / 0.25);
+  --shadow-md: 3px 3px 0 rgb(0 10 30 / 0.45);
+  --shadow-lg: 6px 6px 0 rgb(0 10 30 / 0.55);
+  --focus-ring: 0 0 0 3px rgb(255 210 63 / 0.4);
 
-  --grid-dot: rgb(237 230 216 / 0.07);
+  --grid-minor: rgb(255 255 255 / 0.05);
+  --grid-major: rgb(255 255 255 / 0.11);
 }

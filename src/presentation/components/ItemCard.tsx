@@ -16,6 +16,8 @@ const linkStyle = buttonClass('link', 'sm')
 export function ItemCard(props: {
   title: string
   subtitle: string
+  /** Position in its list; shown as a drawing number (№ 01). */
+  index?: number
   to: string
   icon?: ReactNode
   rename: (name: string) => Promise<unknown>
@@ -39,6 +41,11 @@ export function ItemCard(props: {
 
   return (
     <article className={styles.card}>
+      {props.index !== undefined && (
+        <span className={styles.stamp} aria-hidden="true">
+          № {String(props.index + 1).padStart(2, '0')}
+        </span>
+      )}
       {editing ? (
         <form onSubmit={onRename} className={styles.renameForm}>
           <Input

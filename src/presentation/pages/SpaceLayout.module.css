@@ -10,8 +10,6 @@
   flex-shrink: 0;
   background: var(--spread);
   border-right: 1px solid var(--line);
-  /* faint "page edge" on the binding side */
-  box-shadow: inset -6px 0 8px -8px rgb(80 60 30 / 0.25);
 }
 
 .rail {

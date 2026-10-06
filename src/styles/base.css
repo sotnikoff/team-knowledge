@@ -23,7 +23,6 @@ body {
   font-size: var(--text-md);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: 'cv11', 'ss01';
 }
 
 img,

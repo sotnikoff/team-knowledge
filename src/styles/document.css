@@ -11,7 +11,7 @@
   --doc-accent: var(--accent-ink);
   --doc-quote: var(--ink-muted);
   --doc-quote-border: var(--accent);
-  --doc-code-bg: #faf6ee;
+  --doc-code-bg: #f5f8fc;
   --doc-code-text: #24292f;
   --doc-inline-code-bg: var(--accent-tint);
   --doc-inline-code-text: var(--accent-ink);
@@ -165,8 +165,8 @@
 }
 
 .dark .document-prose {
-  --doc-code-bg: #1a1714;
-  --doc-code-text: #e6dccb;
+  --doc-code-bg: #0a2343;
+  --doc-code-text: #dbe7fb;
 }
 
 /* Syntax colours of highlight.js' "github-dark" theme (the light theme is

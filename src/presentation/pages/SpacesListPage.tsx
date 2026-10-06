@@ -10,7 +10,7 @@ import { useI18n } from '../i18n/i18n'
 import { LanguageSelect } from '../i18n/LanguageSelect'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
-import { Scribble } from '../ui/Scribble'
+import { TitleRule } from '../ui/TitleRule'
 import styles from './SpacesListPage.module.css'
 
 export function SpacesListPage() {
@@ -35,9 +35,9 @@ export function SpacesListPage() {
       <div className={styles.topbar}>
         <span className={styles.brand}>
           <span className={styles.mark} aria-hidden="true">
-            tk
+            TK
           </span>
-          Team Knowledge
+          Team/Knowledge
         </span>
         <div className={styles.prefs}>
           <ThemeToggle />
@@ -48,7 +48,7 @@ export function SpacesListPage() {
       <header className={styles.hero}>
         <div>
           <h1 className={styles.title}>{t('spaces.title')}</h1>
-          <Scribble className={styles.underline} />
+          <TitleRule className={styles.underline} />
           <p className={styles.subtitle}>{t('spaces.subtitle')}</p>
         </div>
         <form onSubmit={onSubmit} className={styles.create}>
@@ -76,9 +76,10 @@ export function SpacesListPage() {
         <div className={styles.empty}>{t('spaces.empty')}</div>
       ) : (
         <ul className={styles.grid}>
-          {spaces.data.map((space) => (
+          {spaces.data.map((space, index) => (
             <li key={space.id}>
               <ItemCard
+                index={index}
                 title={space.name}
                 subtitle={formatUpdated(space.updatedAt, i18n)}
                 to={`/spaces/${space.id}`}

@@ -4,9 +4,17 @@
   overflow: hidden;
   user-select: none;
   background-color: var(--paper);
-  /* Dotted sketchbook grid; fixed to the screen like a notebook page under the drawing. */
-  background-image: radial-gradient(var(--grid-dot) 1.2px, transparent 1.3px);
-  background-size: 22px 22px;
+  /* Graph paper: fine 20px cells, stronger lines every 100px. */
+  background-image:
+    linear-gradient(var(--grid-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(var(--grid-minor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
+  background-size:
+    100px 100px,
+    100px 100px,
+    20px 20px,
+    20px 20px;
 }
 
 .topBar {

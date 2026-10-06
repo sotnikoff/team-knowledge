@@ -1,4 +1,5 @@
 /* A sheet of paper with a strip of washi tape; lifts a little when hovered. */
+/* A drawing sheet: cobalt edge on top, hard offset shadow, number stamp. */
 .card {
   position: relative;
   display: flex;
@@ -9,31 +10,28 @@
   min-height: 148px;
   padding: var(--space-6) var(--space-5) var(--space-4);
   background: var(--sheet);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm) var(--radius-sm) var(--radius-lg) var(--radius-sm);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--line-strong);
+  border-top: 3px solid var(--accent);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
   transition:
     transform var(--dur) var(--ease),
     box-shadow var(--dur) var(--ease);
 }
 
-.card::before {
-  content: '';
-  position: absolute;
-  top: -9px;
-  left: 50%;
-  width: 64px;
-  height: 18px;
-  transform: translateX(-50%) rotate(-2deg);
-  background: var(--accent-tint-strong);
-  opacity: 0.85;
-  border-radius: 2px;
-  box-shadow: var(--shadow-sm);
+.card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-lg);
 }
 
-.card:hover {
-  transform: translateY(-2px) rotate(-0.4deg);
-  box-shadow: var(--shadow-lg);
+.stamp {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-3);
+  color: var(--ink-faint);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
 }
 
 .main {
@@ -73,9 +71,10 @@
 }
 
 .subtitle {
-  margin-top: 2px;
+  margin-top: var(--space-1);
   color: var(--ink-muted);
-  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
 }
 
 .renameForm {
@@ -93,7 +92,7 @@
   gap: var(--space-1);
   min-height: 32px;
   padding-top: var(--space-3);
-  border-top: 1px dashed var(--line);
+  border-top: 1px solid var(--line);
 }
 
 .push {

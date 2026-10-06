@@ -17,10 +17,3 @@
   color: var(--ink);
 }
 
-.toggle svg {
-  transition: transform var(--dur) var(--ease);
-}
-
-.toggle:hover svg {
-  transform: rotate(-20deg);
-}

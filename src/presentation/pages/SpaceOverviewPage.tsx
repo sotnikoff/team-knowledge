@@ -13,7 +13,7 @@ import {
 import { useSpace } from '../hooks/useSpaces'
 import { useI18n } from '../i18n/i18n'
 import { Button } from '../ui/Button'
-import { Scribble } from '../ui/Scribble'
+import { TitleRule } from '../ui/TitleRule'
 import styles from './SpaceOverviewPage.module.css'
 
 export function SpaceOverviewPage() {
@@ -37,7 +37,7 @@ export function SpaceOverviewPage() {
   return (
     <div className={styles.page}>
       <h1 className={styles.title}>{space.data?.name}</h1>
-      <Scribble className={styles.underline} />
+      <TitleRule className={styles.underline} />
 
       <Section
         title={t('sidebar.boards')}
@@ -47,9 +47,10 @@ export function SpaceOverviewPage() {
           createBoard.mutate(t('common.untitled'), { onSuccess: (b) => void navigate(`${base}/boards/${b.id}`) })
         }
       >
-        {boards.data?.map((b) => (
+        {boards.data?.map((b, index) => (
           <ItemCard
             key={b.id}
+            index={index}
             icon={<AppIcon name="board" />}
             title={b.name}
             subtitle={formatUpdated(b.updatedAt, i18n)}
@@ -68,9 +69,10 @@ export function SpaceOverviewPage() {
           createDocument.mutate(t('common.untitled'), { onSuccess: (d) => void navigate(`${base}/docs/${d.id}`) })
         }
       >
-        {documents.data?.map((d) => (
+        {documents.data?.map((d, index) => (
           <ItemCard
             key={d.id}
+            index={index}
             icon={<AppIcon name="document" />}
             title={d.title}
             subtitle={formatUpdated(d.updatedAt, i18n)}
@@ -97,7 +99,7 @@ function Section(props: {
       <header className={styles.sectionHeader}>
         <h2 className={styles.sectionTitle}>
           {props.title}
-          {count > 0 && <span className={styles.count}>{count}</span>}
+          {count > 0 && <span className={styles.count}>· {String(count).padStart(2, '0')}</span>}
         </h2>
         <Button variant="primary" size="sm" onClick={props.onCreate}>
           <AppIcon name="plus" /> {props.createLabel}

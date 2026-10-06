@@ -21,10 +21,10 @@
 
 .underline {
   display: block;
-  width: 120px;
-  height: 10px;
+  width: 56px;
+  height: 6px;
   margin-top: var(--space-1);
-  color: var(--accent);
+  background: var(--marker);
 }
 
 .error {
