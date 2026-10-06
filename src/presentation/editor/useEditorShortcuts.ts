@@ -6,6 +6,7 @@ import { isLinearElement, isShapeElement } from '@/domain/element/types'
 import { findElement } from '@/application/editor/scene'
 import { dispatch, getModel } from './store'
 import { startEditing } from './textEditing'
+import { ZOOM_STEP, zoomBy } from './zoom'
 
 /** Tools as they appear on the toolbar; the number row 1…9, 0 picks them in this order. */
 export const TOOLBAR_ORDER: readonly ToolType[] = [
@@ -110,6 +111,10 @@ export function useEditorShortcuts(options: { onOpenDocument: (documentId: strin
           e.preventDefault()
           startEditing(el.id)
         }
+      } else if (!mod && (code === 'Minus' || code === 'Equal')) {
+        // Number-row − / = (the + is on the same key); Ctrl/⌘ ± stays the browser's page zoom.
+        e.preventDefault()
+        zoomBy(code === 'Equal' ? ZOOM_STEP : 1 / ZOOM_STEP)
       } else if (key === 'escape') {
         dispatch((m) => editor.select(editor.setTool(m, 'select'), []))
       } else if (!mod && !e.altKey && toolShortcuts[code]) {
