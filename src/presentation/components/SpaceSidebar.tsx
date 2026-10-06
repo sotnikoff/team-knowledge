@@ -10,10 +10,11 @@ import {
   useDocumentList,
   useRenameDocument,
 } from '../hooks/useDocuments'
-import { NEW_ITEM_NAME } from '../format'
 import { AppIcon, type IconName } from './icons'
+import { useI18n } from '../i18n/i18n'
 
 export function SpaceSidebar({ spaceId }: { spaceId: SpaceId }) {
+  const { t } = useI18n()
   const navigate = useNavigate()
   const { boardId, documentId } = useParams()
   const base = `/spaces/${spaceId}`
@@ -32,11 +33,12 @@ export function SpaceSidebar({ spaceId }: { spaceId: SpaceId }) {
 
   return (
     <nav className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 pb-4">
-      {error && <p className="px-2 text-sm text-red-600">{errorMessage(error)}</p>}
+      {error && <p className="px-2 text-sm text-red-600">{errorMessage(error, t)}</p>}
       <Section
-        title="Доски"
+        title={t('sidebar.boards')}
+        createLabel={t('sidebar.newBoard')}
         onCreate={() =>
-          createBoard.mutate(NEW_ITEM_NAME, { onSuccess: (b) => void navigate(`${base}/boards/${b.id}`) })
+          createBoard.mutate(t('common.untitled'), { onSuccess: (b) => void navigate(`${base}/boards/${b.id}`) })
         }
       >
         {boards.data?.map((b) => (
@@ -54,9 +56,10 @@ export function SpaceSidebar({ spaceId }: { spaceId: SpaceId }) {
         ))}
       </Section>
       <Section
-        title="Документы"
+        title={t('sidebar.documents')}
+        createLabel={t('sidebar.newDocument')}
         onCreate={() =>
-          createDocument.mutate(NEW_ITEM_NAME, { onSuccess: (d) => void navigate(`${base}/docs/${d.id}`) })
+          createDocument.mutate(t('common.untitled'), { onSuccess: (d) => void navigate(`${base}/docs/${d.id}`) })
         }
       >
         {documents.data?.map((d) => (
@@ -77,15 +80,15 @@ export function SpaceSidebar({ spaceId }: { spaceId: SpaceId }) {
   )
 }
 
-function Section(props: { title: string; onCreate: () => void; children: ReactNode }) {
+function Section(props: { title: string; createLabel: string; onCreate: () => void; children: ReactNode }) {
   return (
     <section>
       <header className="flex items-center justify-between px-2 py-1">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{props.title}</h2>
         <button
           type="button"
-          title={`Создать: ${props.title.toLowerCase()}`}
-          aria-label={`Создать: ${props.title.toLowerCase()}`}
+          title={props.createLabel}
+          aria-label={props.createLabel}
           onClick={props.onCreate}
           className="rounded p-0.5 text-slate-500 hover:bg-slate-200 hover:text-slate-800"
         >
@@ -104,6 +107,7 @@ function SidebarItem(props: {
   rename: (name: string) => Promise<unknown>
   remove: () => Promise<unknown>
 }) {
+  const { t } = useI18n()
   const [mode, setMode] = useState<'view' | 'rename' | 'confirm'>('view')
   const [name, setName] = useState(props.name)
   const [error, setError] = useState<unknown>(null)
@@ -120,7 +124,7 @@ function SidebarItem(props: {
           autoFocus
           value={name}
           maxLength={NAME_MAX_LENGTH}
-          aria-label="Новое название"
+          aria-label={t('common.newName')}
           onChange={(e) => setName(e.target.value)}
           onBlur={submitRename}
           onKeyDown={(e) => {
@@ -129,7 +133,7 @@ function SidebarItem(props: {
           }}
           className="w-full rounded border border-indigo-400 px-2 py-1 text-sm outline-none"
         />
-        {error !== null && <p className="px-1 text-xs text-red-600">{errorMessage(error)}</p>}
+        {error !== null && <p className="px-1 text-xs text-red-600">{errorMessage(error, t)}</p>}
       </li>
     )
   }
@@ -158,16 +162,16 @@ function SidebarItem(props: {
             autoFocus
             className="rounded bg-red-600 px-1.5 text-xs text-white"
           >
-            Удалить?
+            {t('common.deleteConfirm')}
           </button>
         ) : (
           <>
-            <IconAction label="Переименовать" icon="edit" onClick={() => (setName(props.name), setMode('rename'))} />
-            <IconAction label="Удалить" icon="trash" onClick={() => setMode('confirm')} />
+            <IconAction label={t('common.rename')} icon="edit" onClick={() => (setName(props.name), setMode('rename'))} />
+            <IconAction label={t('common.delete')} icon="trash" onClick={() => setMode('confirm')} />
           </>
         )}
       </span>
-      {error !== null && <p className="px-2 text-xs text-red-600">{errorMessage(error)}</p>}
+      {error !== null && <p className="px-2 text-xs text-red-600">{errorMessage(error, t)}</p>}
     </li>
   )
 }

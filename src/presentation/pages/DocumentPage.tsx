@@ -12,13 +12,15 @@ import { errorMessage } from '../errors'
 import { useAutosave } from '../hooks/useAutosave'
 import { useDocument, useRenameDocument } from '../hooks/useDocuments'
 import { queryKeys } from '../hooks/queryKeys'
+import { useI18n } from '../i18n/i18n'
 
 export function DocumentPage() {
+  const { t } = useI18n()
   const { documentId = '' } = useParams()
   const { data: doc, error, isPending, refetch } = useDocument(documentId)
   const [generation, setGeneration] = useState(0)
 
-  if (isPending) return <Loading>Загрузка документа…</Loading>
+  if (isPending) return <Loading>{t('document.loading')}</Loading>
   if (error) return <LoadError error={error} onRetry={() => void refetch()} />
 
   const reload = async () => {
@@ -65,6 +67,7 @@ function DocumentEditor(props: { doc: Document; onReload: () => void }) {
 
 /** The title is renamed on blur/Enter, independently of content autosave. */
 function TitleInput(props: { doc: Document; onEnter: () => void }) {
+  const { t } = useI18n()
   const rename = useRenameDocument()
   const [title, setTitle] = useState(props.doc.title)
 
@@ -78,8 +81,8 @@ function TitleInput(props: { doc: Document; onEnter: () => void }) {
       <input
         value={title}
         maxLength={NAME_MAX_LENGTH}
-        aria-label="Название документа"
-        placeholder="Без названия"
+        aria-label={t('document.title')}
+        placeholder={t('common.untitled')}
         onChange={(e) => setTitle(e.target.value)}
         onBlur={commit}
         onKeyDown={(e) => {
@@ -91,7 +94,7 @@ function TitleInput(props: { doc: Document; onEnter: () => void }) {
         }}
         className="w-full border-0 bg-transparent text-4xl font-bold text-slate-900 outline-none placeholder:text-slate-300"
       />
-      {rename.error && <p className="text-sm text-red-600">{errorMessage(rename.error)}</p>}
+      {rename.error && <p className="text-sm text-red-600">{errorMessage(rename.error, t)}</p>}
     </div>
   )
 }

@@ -9,7 +9,8 @@ import { common, createLowlight } from 'lowlight'
 export const lowlight = createLowlight(common)
 
 /** Languages offered in the code block picker (all are in lowlight's `common`). */
-export const CODE_LANGUAGES: readonly { id: string; label: string }[] = [
+/** `label: null` = translated in the UI (`format.codePlain`). */
+export const CODE_LANGUAGES: readonly { id: string; label: string | null }[] = [
   { id: 'typescript', label: 'TypeScript' },
   { id: 'javascript', label: 'JavaScript' },
   { id: 'json', label: 'JSON' },
@@ -28,7 +29,7 @@ export const CODE_LANGUAGES: readonly { id: string; label: string }[] = [
   { id: 'xml', label: 'HTML / XML' },
   { id: 'css', label: 'CSS' },
   { id: 'markdown', label: 'Markdown' },
-  { id: 'plaintext', label: 'Текст' },
+  { id: 'plaintext', label: null },
 ]
 
 /**

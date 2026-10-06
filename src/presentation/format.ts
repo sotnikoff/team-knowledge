@@ -1,8 +1,12 @@
-/** Name given to boards and documents created with one click. */
-export const NEW_ITEM_NAME = 'Без названия'
+import type { I18n } from './i18n/i18n'
 
-const dateFormat = new Intl.DateTimeFormat('ru', { dateStyle: 'medium', timeStyle: 'short' })
+const formats = new Map<string, Intl.DateTimeFormat>()
 
-export function formatUpdated(date: Date): string {
-  return `Изменено ${dateFormat.format(date)}`
+export function formatUpdated(date: Date, { language, t }: I18n): string {
+  let format = formats.get(language)
+  if (!format) {
+    format = new Intl.DateTimeFormat(language, { dateStyle: 'medium', timeStyle: 'short' })
+    formats.set(language, format)
+  }
+  return t('common.updated', { date: format.format(date) })
 }

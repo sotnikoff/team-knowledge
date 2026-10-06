@@ -6,13 +6,14 @@ import type { SpaceId } from '@/domain/space/Space'
 import { useDependencies } from '../app/dependencies'
 import { dispatch } from '../editor/store'
 import { errorMessage } from '../errors'
-import { NEW_ITEM_NAME } from '../format'
 import { useCreateDocument, useDocumentList } from '../hooks/useDocuments'
 import { AppIcon } from './icons'
 import { Island } from './Island'
+import { useI18n } from '../i18n/i18n'
 
 /** Puts a document of the space onto the board as a card. */
 export function InsertDocumentMenu(props: { spaceId: SpaceId; viewCenter: () => Point }) {
+  const { t } = useI18n()
   const { ids } = useDependencies()
   const [open, setOpen] = useState(false)
   const documents = useDocumentList(props.spaceId)
@@ -40,14 +41,14 @@ export function InsertDocumentMenu(props: { spaceId: SpaceId; viewCenter: () => 
       <Island className="flex">
         <button
           type="button"
-          title="Добавить документ на доску"
+          title={t('insertDocument.title')}
           aria-expanded={open}
           onClick={() => setOpen((o) => !o)}
           className={`flex h-9 items-center gap-1.5 rounded-md px-2.5 text-sm ${
             open ? 'bg-indigo-100 text-indigo-700' : 'text-slate-700 hover:bg-slate-100'
           }`}
         >
-          <AppIcon name="document" /> Документ
+          <AppIcon name="document" /> {t('insertDocument.button')}
         </button>
       </Island>
       {open && (
@@ -55,10 +56,10 @@ export function InsertDocumentMenu(props: { spaceId: SpaceId; viewCenter: () => 
           <button
             type="button"
             disabled={create.isPending}
-            onClick={() => create.mutate(NEW_ITEM_NAME, { onSuccess: (doc) => insert(doc.id) })}
+            onClick={() => create.mutate(t('common.untitled'), { onSuccess: (doc) => insert(doc.id) })}
             className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm font-medium text-indigo-700 hover:bg-indigo-50"
           >
-            <AppIcon name="plus" /> Новый документ
+            <AppIcon name="plus" /> {t('insertDocument.new')}
           </button>
           {(documents.data?.length ?? 0) > 0 && <div className="my-1 h-px bg-slate-100" />}
           <ul className="max-h-72 overflow-y-auto">
@@ -77,7 +78,7 @@ export function InsertDocumentMenu(props: { spaceId: SpaceId; viewCenter: () => 
               </li>
             ))}
           </ul>
-          {create.error && <p className="px-2 py-1 text-sm text-red-600">{errorMessage(create.error)}</p>}
+          {create.error && <p className="px-2 py-1 text-sm text-red-600">{errorMessage(create.error, t)}</p>}
         </Island>
       )}
     </div>

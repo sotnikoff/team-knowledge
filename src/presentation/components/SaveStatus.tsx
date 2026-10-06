@@ -1,11 +1,12 @@
 import type { SaveStatus as Status } from '../hooks/useAutosave'
+import { useI18n, type MessageKey } from '../i18n/i18n'
 
-const labels: Record<Status, string> = {
-  saved: 'Сохранено',
-  pending: 'Есть изменения…',
-  saving: 'Сохранение…',
-  error: 'Ошибка сохранения',
-  conflict: 'Доска изменена в другом месте',
+const labels: Record<Status, MessageKey> = {
+  saved: 'save.saved',
+  pending: 'save.pending',
+  saving: 'save.saving',
+  error: 'save.error',
+  conflict: 'save.conflict',
 }
 
 const dots: Record<Status, string> = {
@@ -17,18 +18,19 @@ const dots: Record<Status, string> = {
 }
 
 export function SaveStatus(props: { status: Status; onRetry: () => void; onReload: () => void }) {
+  const { t } = useI18n()
   return (
     <div className="flex items-center gap-2 px-2 text-sm text-slate-600" role="status">
       <span className={`h-2 w-2 rounded-full ${dots[props.status]}`} />
-      {labels[props.status]}
+      {t(labels[props.status])}
       {props.status === 'error' && (
         <button type="button" className="text-indigo-700 hover:underline" onClick={props.onRetry}>
-          Повторить
+          {t('common.retry')}
         </button>
       )}
       {props.status === 'conflict' && (
         <button type="button" className="text-indigo-700 hover:underline" onClick={props.onReload}>
-          Загрузить актуальную
+          {t('save.reload')}
         </button>
       )}
     </div>

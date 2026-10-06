@@ -1,4 +1,5 @@
 import type { Editor } from '@tiptap/react'
+import { useI18n } from '../i18n/i18n'
 import type { FormatAction } from './formatActions'
 
 export function ToolbarButton(props: {
@@ -7,11 +8,14 @@ export function ToolbarButton(props: {
   active?: boolean
   disabled?: boolean
 }) {
+  const { t } = useI18n()
+  const { action } = props
+  const label = action.shortcut ? `${t(action.label)} (${action.shortcut})` : t(action.label)
   return (
     <button
       type="button"
-      title={props.action.label}
-      aria-label={props.action.label}
+      title={label}
+      aria-label={label}
       aria-pressed={props.action.isActive ? Boolean(props.active) : undefined}
       disabled={props.disabled}
       // Keep the editor selection while clicking.
@@ -21,7 +25,7 @@ export function ToolbarButton(props: {
         props.active ? 'bg-indigo-100 text-indigo-700' : 'text-slate-700 hover:bg-slate-100'
       }`}
     >
-      {props.action.icon}
+      {typeof action.icon === 'function' ? action.icon(t) : action.icon}
     </button>
   )
 }

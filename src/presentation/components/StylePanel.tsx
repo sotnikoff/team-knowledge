@@ -4,18 +4,19 @@ import { findElement } from '@/application/editor/scene'
 import { isLinearElement, TRANSPARENT, type ElementStyle } from '@/domain/element/types'
 import { dispatch, useEditor } from '../editor/store'
 import { Island } from './Island'
+import { useI18n, type MessageKey } from '../i18n/i18n'
 
 const strokeColors = ['#1e1e1e', '#e03131', '#2f9e44', '#1971c2', '#f08c00']
 const fillColors = [TRANSPARENT, '#ffc9c9', '#b2f2bb', '#a5d8ff', '#ffec99']
-const widths = [
-  { value: 1, label: 'Тонкая' },
-  { value: 2, label: 'Средняя' },
-  { value: 4, label: 'Толстая' },
+const widths: { value: number; label: MessageKey }[] = [
+  { value: 1, label: 'style.thin' },
+  { value: 2, label: 'style.medium' },
+  { value: 4, label: 'style.thick' },
 ]
-const roughnesses = [
-  { value: 0, label: 'Ровно' },
-  { value: 1, label: 'Небрежно' },
-  { value: 2, label: 'Очень небрежно' },
+const roughnesses: { value: number; label: MessageKey }[] = [
+  { value: 0, label: 'style.architect' },
+  { value: 1, label: 'style.artist' },
+  { value: 2, label: 'style.cartoonist' },
 ]
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -28,12 +29,13 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 function Swatch({ color, active, onClick }: { color: string; active: boolean; onClick: () => void }) {
+  const { t } = useI18n()
   const transparent = color === TRANSPARENT
   return (
     <button
       type="button"
-      title={transparent ? 'Без заливки' : color}
-      aria-label={transparent ? 'Без заливки' : color}
+      title={transparent ? t('style.noFill') : color}
+      aria-label={transparent ? t('style.noFill') : color}
       aria-pressed={active}
       onClick={onClick}
       className={`board-ink h-7 w-7 rounded-md border ${active ? 'ring-2 ring-indigo-500 ring-offset-1' : 'border-slate-300'}`}
@@ -64,6 +66,7 @@ function OptionButton(props: { label: string; active: boolean; onClick: () => vo
 }
 
 export function StylePanel() {
+  const { t } = useI18n()
   const tool = useEditor((m) => m.tool)
   const hasSelection = useEditor((m) => m.selectedIds.length > 0)
   // Show the first selected element's style, or the style for new elements.
@@ -87,21 +90,21 @@ export function StylePanel() {
 
   return (
     <Island className="flex w-52 flex-col gap-3 p-3">
-      <Section title="Обводка">
+      <Section title={t('style.stroke')}>
         {strokeColors.map((c) => (
           <Swatch key={c} color={c} active={style.strokeColor === c} onClick={() => apply({ strokeColor: c })} />
         ))}
       </Section>
-      <Section title="Заливка">
+      <Section title={t('style.fill')}>
         {fillColors.map((c) => (
           <Swatch key={c} color={c} active={style.fillColor === c} onClick={() => apply({ fillColor: c })} />
         ))}
       </Section>
-      <Section title="Толщина">
+      <Section title={t('style.width')}>
         {widths.map((w) => (
           <OptionButton
             key={w.value}
-            label={w.label}
+            label={t(w.label)}
             active={style.strokeWidth === w.value}
             onClick={() => apply({ strokeWidth: w.value })}
           >
@@ -109,11 +112,11 @@ export function StylePanel() {
           </OptionButton>
         ))}
       </Section>
-      <Section title="Стиль линий">
+      <Section title={t('style.sloppiness')}>
         {roughnesses.map((r) => (
           <OptionButton
             key={r.value}
-            label={r.label}
+            label={t(r.label)}
             active={style.roughness === r.value}
             onClick={() => apply({ roughness: r.value })}
           >
@@ -124,13 +127,13 @@ export function StylePanel() {
         ))}
       </Section>
       {curved !== undefined && (
-        <Section title="Линия">
-          <OptionButton label="Плавная" active={curved} onClick={() => dispatch((m) => editor.setLinesCurved(m, true))}>
+        <Section title={t('style.line')}>
+          <OptionButton label={t('style.curved')} active={curved} onClick={() => dispatch((m) => editor.setLinesCurved(m, true))}>
             <svg width="22" height="14" viewBox="0 0 22 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
               <path d="M1 12C6 12 6 2 11 2s5 10 10 10" />
             </svg>
           </OptionButton>
-          <OptionButton label="Ломаная" active={!curved} onClick={() => dispatch((m) => editor.setLinesCurved(m, false))}>
+          <OptionButton label={t('style.sharp')} active={!curved} onClick={() => dispatch((m) => editor.setLinesCurved(m, false))}>
             <svg width="22" height="14" viewBox="0 0 22 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round">
               <path d="M1 12L11 2l10 10" />
             </svg>

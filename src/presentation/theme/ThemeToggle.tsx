@@ -1,4 +1,5 @@
 import { setTheme, useTheme } from './theme'
+import { useI18n } from '../i18n/i18n'
 
 const sun = (
   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
@@ -16,8 +17,9 @@ const moon = (
 /** Switches between light and dark theme. */
 export function ThemeToggle({ withLabel = false }: { withLabel?: boolean }) {
   const theme = useTheme()
+  const { t } = useI18n()
   const next = theme === 'dark' ? 'light' : 'dark'
-  const label = next === 'dark' ? 'Тёмная тема' : 'Светлая тема'
+  const label = t(next === 'dark' ? 'theme.dark' : 'theme.light')
   return (
     <button
       type="button"

@@ -2,6 +2,7 @@ import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { NAME_MAX_LENGTH } from '@/domain/shared/name'
 import { errorMessage } from '../errors'
+import { useI18n } from '../i18n/i18n'
 
 /** Card for a space, board or document: open, rename inline, delete with confirmation. */
 export function ItemCard(props: {
@@ -12,6 +13,7 @@ export function ItemCard(props: {
   rename: (name: string) => Promise<unknown>
   remove: () => Promise<unknown>
 }) {
+  const { t } = useI18n()
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [name, setName] = useState(props.title)
@@ -37,7 +39,7 @@ export function ItemCard(props: {
             maxLength={NAME_MAX_LENGTH}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === 'Escape' && setEditing(false)}
-            aria-label="Новое название"
+            aria-label={t('common.newName')}
             className="min-w-0 flex-1 rounded-md border border-slate-300 px-2 py-1 outline-none focus:border-indigo-500"
           />
           <button type="submit" className="text-sm text-indigo-700 hover:underline">
@@ -54,11 +56,11 @@ export function ItemCard(props: {
         </Link>
       )}
 
-      {error !== null && <p className="text-sm text-red-600">{errorMessage(error)}</p>}
+      {error !== null && <p className="text-sm text-red-600">{errorMessage(error, t)}</p>}
 
       <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
         <Link to={props.to} className="text-indigo-700 hover:underline">
-          Открыть
+          {t('common.open')}
         </Link>
         <button
           type="button"
@@ -68,20 +70,20 @@ export function ItemCard(props: {
             setEditing(true)
           }}
         >
-          Переименовать
+          {t('common.rename')}
         </button>
         {confirmDelete ? (
           <span className="ml-auto flex gap-2">
             <button type="button" className="font-medium text-red-600 hover:underline" onClick={() => run(props.remove)}>
-              Удалить?
+              {t('common.deleteConfirm')}
             </button>
             <button type="button" className="text-slate-500 hover:underline" onClick={() => setConfirmDelete(false)}>
-              Отмена
+              {t('common.cancel')}
             </button>
           </span>
         ) : (
           <button type="button" className="ml-auto text-red-600 hover:underline" onClick={() => setConfirmDelete(true)}>
-            Удалить
+            {t('common.delete')}
           </button>
         )}
       </div>

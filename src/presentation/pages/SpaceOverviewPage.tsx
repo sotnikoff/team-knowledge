@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { AppIcon } from '../components/icons'
 import { ItemCard } from '../components/ItemCard'
-import { formatUpdated, NEW_ITEM_NAME } from '../format'
+import { formatUpdated } from '../format'
 import { useBoardList, useCreateBoard, useDeleteBoard, useRenameBoard } from '../hooks/useBoards'
 import {
   useCreateDocument,
@@ -11,8 +11,11 @@ import {
   useRenameDocument,
 } from '../hooks/useDocuments'
 import { useSpace } from '../hooks/useSpaces'
+import { useI18n } from '../i18n/i18n'
 
 export function SpaceOverviewPage() {
+  const i18n = useI18n()
+  const { t } = i18n
   const { spaceId = '' } = useParams()
   const navigate = useNavigate()
   const base = `/spaces/${spaceId}`
@@ -33,11 +36,11 @@ export function SpaceOverviewPage() {
       <h1 className="mb-8 text-3xl font-semibold text-slate-900">{space.data?.name}</h1>
 
       <Section
-        title="Доски"
-        createLabel="Новая доска"
-        empty="Досок пока нет"
+        title={t('sidebar.boards')}
+        createLabel={t('sidebar.newBoard')}
+        empty={t('sidebar.noBoards')}
         onCreate={() =>
-          createBoard.mutate(NEW_ITEM_NAME, { onSuccess: (b) => void navigate(`${base}/boards/${b.id}`) })
+          createBoard.mutate(t('common.untitled'), { onSuccess: (b) => void navigate(`${base}/boards/${b.id}`) })
         }
       >
         {boards.data?.map((b) => (
@@ -45,7 +48,7 @@ export function SpaceOverviewPage() {
             key={b.id}
             icon={<AppIcon name="board" />}
             title={b.name}
-            subtitle={formatUpdated(b.updatedAt)}
+            subtitle={formatUpdated(b.updatedAt, i18n)}
             to={`${base}/boards/${b.id}`}
             rename={(name) => renameBoard.mutateAsync({ id: b.id, name })}
             remove={() => deleteBoard.mutateAsync(b.id)}
@@ -54,11 +57,11 @@ export function SpaceOverviewPage() {
       </Section>
 
       <Section
-        title="Документы"
-        createLabel="Новый документ"
-        empty="Документов пока нет"
+        title={t('sidebar.documents')}
+        createLabel={t('sidebar.newDocument')}
+        empty={t('sidebar.noDocuments')}
         onCreate={() =>
-          createDocument.mutate(NEW_ITEM_NAME, { onSuccess: (d) => void navigate(`${base}/docs/${d.id}`) })
+          createDocument.mutate(t('common.untitled'), { onSuccess: (d) => void navigate(`${base}/docs/${d.id}`) })
         }
       >
         {documents.data?.map((d) => (
@@ -66,7 +69,7 @@ export function SpaceOverviewPage() {
             key={d.id}
             icon={<AppIcon name="document" />}
             title={d.title}
-            subtitle={formatUpdated(d.updatedAt)}
+            subtitle={formatUpdated(d.updatedAt, i18n)}
             to={`${base}/docs/${d.id}`}
             rename={(title) => renameDocument.mutateAsync({ id: d.id, title })}
             remove={() => deleteDocument.mutateAsync(d.id)}

@@ -6,8 +6,12 @@ import { formatUpdated } from '../format'
 import { errorMessage } from '../errors'
 import { ThemeToggle } from '../theme/ThemeToggle'
 import { useCreateSpace, useDeleteSpace, useRenameSpace, useSpaceList } from '../hooks/useSpaces'
+import { useI18n } from '../i18n/i18n'
+import { LanguageSelect } from '../i18n/LanguageSelect'
 
 export function SpacesListPage() {
+  const i18n = useI18n()
+  const { t } = i18n
   const spaces = useSpaceList()
   const create = useCreateSpace()
   const rename = useRenameSpace()
@@ -17,7 +21,7 @@ export function SpacesListPage() {
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault()
-    create.mutate(name.trim() || 'Без названия', {
+    create.mutate(name.trim() || t('common.untitled'), {
       onSuccess: (space) => void navigate(`/spaces/${space.id}`),
     })
   }
@@ -26,8 +30,8 @@ export function SpacesListPage() {
     <main className="mx-auto max-w-5xl px-6 py-10">
       <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold text-slate-900">Зарисовки</h1>
-          <p className="text-slate-500">Доски с диаграммами и документы — вместе</p>
+          <h1 className="text-3xl font-semibold text-slate-900">{t('spaces.title')}</h1>
+          <p className="text-slate-500">{t('spaces.subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
           <form onSubmit={onSubmit} className="flex gap-2">
@@ -35,8 +39,8 @@ export function SpacesListPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={NAME_MAX_LENGTH}
-              placeholder="Название новой зарисовки"
-              aria-label="Название новой зарисовки"
+              placeholder={t('spaces.newPlaceholder')}
+              aria-label={t('spaces.newPlaceholder')}
               className="w-64 rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-indigo-500"
             />
             <button
@@ -44,22 +48,23 @@ export function SpacesListPage() {
               disabled={create.isPending}
               className="rounded-md bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
             >
-              Создать
+              {t('common.create')}
             </button>
           </form>
           <ThemeToggle />
+          <LanguageSelect />
         </div>
       </header>
 
-      {create.error && <p className="mb-4 text-red-600">{errorMessage(create.error)}</p>}
+      {create.error && <p className="mb-4 text-red-600">{errorMessage(create.error, t)}</p>}
 
       {spaces.isPending ? (
-        <p className="text-slate-500">Загрузка…</p>
+        <p className="text-slate-500">{t('common.loading')}</p>
       ) : spaces.error ? (
-        <p className="text-red-600">{errorMessage(spaces.error)}</p>
+        <p className="text-red-600">{errorMessage(spaces.error, t)}</p>
       ) : spaces.data.length === 0 ? (
         <div className="rounded-xl border-2 border-dashed border-slate-200 p-12 text-center text-slate-500">
-          Пока нет ни одной зарисовки. Создайте первую!
+          {t('spaces.empty')}
         </div>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -67,7 +72,7 @@ export function SpacesListPage() {
             <li key={space.id}>
               <ItemCard
                 title={space.name}
-                subtitle={formatUpdated(space.updatedAt)}
+                subtitle={formatUpdated(space.updatedAt, i18n)}
                 to={`/spaces/${space.id}`}
                 rename={(newName) => rename.mutateAsync({ id: space.id, name: newName })}
                 remove={() => remove.mutateAsync(space.id)}

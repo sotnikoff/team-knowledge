@@ -5,9 +5,11 @@ import {
   EXPORT_FORMATS,
   exportFileName,
   exportImage,
+  NothingToExportError,
   type ExportFormat,
 } from '../export/exportImage'
 import { Island } from './Island'
+import { useI18n } from '../i18n/i18n'
 
 type Scope = 'all' | 'selection'
 
@@ -15,6 +17,7 @@ const SCALES = [1, 2, 3] as const
 
 /** "Экспорт" popover: whole board or selection, PNG / JPEG / BMP. */
 export function ExportMenu(props: { boardName: string }) {
+  const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const [scope, setScope] = useState<Scope>('all')
   const [format, setFormat] = useState<ExportFormat>('png')
@@ -47,7 +50,7 @@ export function ExportMenu(props: { boardName: string }) {
       downloadBlob(blob, exportFileName(props.boardName, format))
       setOpen(false)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Не удалось экспортировать')
+      setError(t(e instanceof NothingToExportError ? 'export.nothing' : 'export.failed'))
     } finally {
       setBusy(false)
     }
@@ -63,7 +66,7 @@ export function ExportMenu(props: { boardName: string }) {
       <Island className="flex">
         <button
           type="button"
-          title="Экспорт в картинку"
+          title={t('export.title')}
           aria-expanded={open}
           disabled={isEmpty}
           onClick={toggle}
@@ -74,29 +77,29 @@ export function ExportMenu(props: { boardName: string }) {
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />
           </svg>
-          Экспорт
+          {t('export.button')}
         </button>
       </Island>
       {open && (
         <Island className="absolute right-0 top-12 z-20 flex w-72 flex-col gap-3 p-3">
-          <Field label="Что экспортировать">
+          <Field label={t('export.what')}>
             <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
               <button type="button" className={segment(scope === 'all')} aria-pressed={scope === 'all'} onClick={() => setScope('all')}>
-                Весь холст
+                {t('export.all')}
               </button>
               <button
                 type="button"
                 className={segment(scope === 'selection')}
                 aria-pressed={scope === 'selection'}
                 disabled={selectedCount === 0}
-                title={selectedCount === 0 ? 'Сначала выделите элементы' : undefined}
+                title={selectedCount === 0 ? t('export.selectFirst') : undefined}
                 onClick={() => setScope('selection')}
               >
-                Выделенное{selectedCount > 0 ? ` (${selectedCount})` : ''}
+                {selectedCount > 0 ? t('export.selectionCount', { count: selectedCount }) : t('export.selection')}
               </button>
             </div>
           </Field>
-          <Field label="Формат">
+          <Field label={t('export.format')}>
             <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
               {EXPORT_FORMATS.map((f) => (
                 <button key={f.id} type="button" className={segment(format === f.id)} aria-pressed={format === f.id} onClick={() => setFormat(f.id)}>
@@ -105,7 +108,7 @@ export function ExportMenu(props: { boardName: string }) {
               ))}
             </div>
           </Field>
-          <Field label="Масштаб">
+          <Field label={t('export.scale')}>
             <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
               {SCALES.map((s) => (
                 <button key={s} type="button" className={segment(scale === s)} aria-pressed={scale === s} onClick={() => setScale(s)}>
@@ -121,7 +124,7 @@ export function ExportMenu(props: { boardName: string }) {
             onClick={() => void run()}
             className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
           >
-            {busy ? 'Готовлю…' : 'Скачать'}
+            {busy ? t('export.preparing') : t('export.download')}
           </button>
         </Island>
       )}

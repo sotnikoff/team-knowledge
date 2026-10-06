@@ -6,6 +6,7 @@ import { NotFoundError } from '@/domain/shared/errors'
 import { StaticDocument } from '../documents/StaticDocument'
 import { dispatch, useEditor } from '../editor/store'
 import { useDocument } from '../hooks/useDocuments'
+import { useI18n } from '../i18n/i18n'
 
 /**
  * Document cards of the board, rendered as DOM under the (transparent) canvas
@@ -35,6 +36,7 @@ export function DocumentLayer() {
 }
 
 function DocumentCard({ element }: { element: DocumentElement }) {
+  const { t } = useI18n()
   const { data: doc, error, isPending } = useDocument(element.documentId)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -67,7 +69,7 @@ function DocumentCard({ element }: { element: DocumentElement }) {
         </div>
       ) : error ? (
         <p className="text-slate-500">
-          {error instanceof NotFoundError ? 'Документ удалён' : 'Не удалось загрузить документ'}
+          {t(error instanceof NotFoundError ? 'document.deleted' : 'document.loadFailed')}
         </p>
       ) : (
         <>

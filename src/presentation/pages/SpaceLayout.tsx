@@ -5,20 +5,23 @@ import { SpaceSidebar } from '../components/SpaceSidebar'
 import { useSpace } from '../hooks/useSpaces'
 import { ThemeToggle } from '../theme/ThemeToggle'
 import { useSidebarCollapsed } from './useSidebarCollapsed'
+import { useI18n } from '../i18n/i18n'
+import { LanguageSelect } from '../i18n/LanguageSelect'
 
 /** A space: sidebar with its boards and documents + the opened item. */
 export function SpaceLayout() {
   const { spaceId = '' } = useParams()
   const space = useSpace(spaceId)
   const [collapsed, setCollapsed] = useSidebarCollapsed()
+  const { t } = useI18n()
 
-  if (space.isPending) return <Loading>Загрузка зарисовки…</Loading>
+  if (space.isPending) return <Loading>{t('spaces.loading')}</Loading>
   if (space.error) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-2">
         <LoadError error={space.error} onRetry={() => void space.refetch()} />
         <Link to="/" className="text-indigo-700 hover:underline">
-          К списку зарисовок
+          {t('spaces.backToList')}
         </Link>
       </div>
     )
@@ -29,7 +32,7 @@ export function SpaceLayout() {
       {collapsed ? (
         // Collapsed: a thin rail, so nothing overlaps the board or the document toolbar.
         <aside className="flex w-12 shrink-0 flex-col items-center gap-1 border-r border-slate-200 bg-slate-50 py-2">
-          <SidebarButton label="Показать панель" onClick={() => setCollapsed(false)} />
+          <SidebarButton label={t('sidebar.show')} onClick={() => setCollapsed(false)} />
           <div className="mt-auto">
             <ThemeToggle />
           </div>
@@ -38,9 +41,9 @@ export function SpaceLayout() {
         <aside className="flex w-64 shrink-0 flex-col border-r border-slate-200 bg-slate-50">
           <div className="flex items-center justify-between pl-3 pr-1 pt-2">
             <Link to="/" className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800">
-              <AppIcon name="back" /> Все зарисовки
+              <AppIcon name="back" /> {t('spaces.all')}
             </Link>
-            <SidebarButton label="Скрыть панель" onClick={() => setCollapsed(true)} />
+            <SidebarButton label={t('sidebar.hide')} onClick={() => setCollapsed(true)} />
           </div>
           <Link
             to={`/spaces/${space.data.id}`}
@@ -50,7 +53,10 @@ export function SpaceLayout() {
           </Link>
           <SpaceSidebar spaceId={space.data.id} />
           <div className="border-t border-slate-200 p-2">
+            <div className="flex items-center justify-between gap-1">
             <ThemeToggle withLabel />
+            <LanguageSelect />
+          </div>
           </div>
         </aside>
       )}

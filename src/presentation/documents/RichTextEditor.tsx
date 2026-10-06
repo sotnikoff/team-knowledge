@@ -5,6 +5,7 @@ import { EditorToolbar } from './EditorToolbar'
 import { documentExtensions } from './extensions'
 import { fromEditorContent, toEditorContent } from './richTextAdapter'
 import { SelectionToolbar } from './SelectionToolbar'
+import { useI18n } from '../i18n/i18n'
 
 export interface RichTextEditorHandle {
   focusStart(): void
@@ -27,8 +28,9 @@ export function RichTextEditor({
   toolbarEnd?: ReactNode
   ref?: Ref<RichTextEditorHandle>
 }) {
+  const { t } = useI18n()
   const editor = useEditor({
-    extensions: documentExtensions({ placeholder: 'Начните писать… или выберите стиль на панели сверху' }),
+    extensions: documentExtensions({ placeholder: t('document.placeholder') }),
     content: toEditorContent(initialContent),
     editorProps: {
       attributes: { class: 'document-prose min-h-[50vh] outline-none' },

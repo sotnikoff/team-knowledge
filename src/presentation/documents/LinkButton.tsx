@@ -1,5 +1,6 @@
 import type { Editor } from '@tiptap/react'
 import { useState, type FormEvent } from 'react'
+import { useI18n } from '../i18n/i18n'
 
 const linkIcon = (
   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
@@ -9,6 +10,7 @@ const linkIcon = (
 
 /** Link button with a small URL popover (no blocking `window.prompt`). */
 export function LinkButton(props: { editor: Editor; href: string | undefined }) {
+  const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const [url, setUrl] = useState('')
 
@@ -24,8 +26,8 @@ export function LinkButton(props: { editor: Editor; href: string | undefined }) 
     <span className="relative">
       <button
         type="button"
-        title="Ссылка"
-        aria-label="Ссылка"
+        title={t('format.link')}
+        aria-label={t('format.link')}
         aria-pressed={Boolean(props.href)}
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => {
@@ -49,11 +51,11 @@ export function LinkButton(props: { editor: Editor; href: string | undefined }) 
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
             placeholder="https://…"
-            aria-label="Адрес ссылки"
+            aria-label={t('format.linkUrl')}
             className="min-w-0 flex-1 rounded border border-slate-300 px-2 py-1 text-sm outline-none focus:border-indigo-500"
           />
           <button type="submit" className="rounded bg-indigo-600 px-2 text-sm text-white hover:bg-indigo-500">
-            {url.trim() === '' && props.href ? 'Убрать' : 'OK'}
+            {url.trim() === '' && props.href ? t('format.linkRemove') : 'OK'}
           </button>
         </form>
       )}

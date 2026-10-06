@@ -5,24 +5,29 @@ import {
   VersionConflictError,
   type EntityKind,
 } from '@/domain/shared/errors'
+import type { MessageKey, Translate } from './i18n/i18n'
 
-const notFound: Record<EntityKind, string> = {
-  space: 'Зарисовка не найдена',
-  board: 'Доска не найдена',
-  document: 'Документ не найден',
+const notFound: Record<EntityKind, MessageKey> = {
+  space: 'errors.notFound.space',
+  board: 'errors.notFound.board',
+  document: 'errors.notFound.document',
 }
 
-const messages: Record<string, string> = {
-  ALREADY_EXISTS: 'Такой объект уже существует',
-  INVALID_NAME: 'Некорректное название',
-  STORAGE_UNAVAILABLE: 'Хранилище недоступно',
+const byCode: Record<string, MessageKey> = {
+  ALREADY_EXISTS: 'errors.alreadyExists',
+  INVALID_NAME: 'errors.invalidName',
+  STORAGE_UNAVAILABLE: 'errors.storage',
 }
 
-export function errorMessage(error: unknown): string {
-  if (error instanceof NotFoundError) return notFound[error.entity]
-  if (error instanceof VersionConflictError) return 'Изменено в другом месте — обновите страницу'
-  if (error instanceof DomainError) return messages[error.code] ?? error.message
-  return 'Что-то пошло не так'
+/** Domain error -> text in the UI language (`t` from `useI18n()`). */
+export function errorMessage(error: unknown, t: Translate): string {
+  if (error instanceof NotFoundError) return t(notFound[error.entity])
+  if (error instanceof VersionConflictError) return t('errors.conflict')
+  if (error instanceof DomainError) {
+    const key = byCode[error.code]
+    return key ? t(key) : error.message
+  }
+  return t('errors.unknown')
 }
 
 /** Only infrastructure hiccups are worth retrying; domain errors are final. */

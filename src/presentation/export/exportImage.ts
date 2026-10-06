@@ -33,9 +33,17 @@ const BACKGROUND = '#ffffff'
  * Renders the given elements to an image the way they look on the board:
  * document cards underneath, drawings on top, white background.
  */
+/** Nothing selected/drawn; the UI shows its own localized message. */
+export class NothingToExportError extends Error {
+  constructor() {
+    super('Nothing to export')
+    this.name = 'NothingToExportError'
+  }
+}
+
 export async function exportImage(options: ExportOptions): Promise<Blob> {
   const content = unionBounds(options.elements.map(elementBounds))
-  if (!content) throw new Error('Нечего экспортировать')
+  if (!content) throw new NothingToExportError()
 
   const area = {
     x: content.x - PADDING,
