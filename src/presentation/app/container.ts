@@ -35,6 +35,7 @@ import { LocalStorageDocumentRepository } from '@/infrastructure/persistence/loc
 import { LocalStorageProjectRepository } from '@/infrastructure/persistence/local/LocalStorageProjectRepository'
 import { LocalStorageSpaceRepository } from '@/infrastructure/persistence/local/LocalStorageSpaceRepository'
 import { purgeLegacyData } from '@/infrastructure/persistence/local/prefix'
+import { JsonElementClipboardFormat } from '@/infrastructure/clipboard/JsonElementClipboardFormat'
 import { CryptoIdGenerator } from '@/infrastructure/system/CryptoIdGenerator'
 import { SystemClock } from '@/infrastructure/system/SystemClock'
 import type { AppDependencies } from './dependencies'
@@ -113,5 +114,6 @@ export function createContainer(config: AppConfig = readConfig()): AppDependenci
     deleteDocument: new DeleteDocument(documents),
 
     ids,
+    clipboard: new JsonElementClipboardFormat(),
   }
 }

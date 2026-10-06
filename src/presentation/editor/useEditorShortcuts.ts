@@ -68,7 +68,8 @@ export function layerShortcutLabel(move: LayerMove): string {
   return mod + keys[move]
 }
 
-function isTyping(target: EventTarget | null): boolean {
+/** Focus is in a text field: keys and clipboard belong to it, not to the board. */
+export function isTyping(target: EventTarget | null): boolean {
   return (
     target instanceof HTMLElement &&
     (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))

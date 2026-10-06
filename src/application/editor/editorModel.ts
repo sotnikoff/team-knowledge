@@ -1,11 +1,13 @@
 import { syncBindings } from '@/domain/element/binding'
+import { cloneElements } from '@/domain/element/clone'
+import { elementBounds } from '@/domain/element/geometry'
 import { arrowStyleOf, setCurved, withArrowStyle, type ArrowStyle } from '@/domain/element/linear'
 import { reorderElements, type LayerMove } from '@/domain/element/order'
 import type { TechKind } from '@/domain/element/tech'
 import { isLinearElement } from '@/domain/element/types'
 import type { Binding, DiagramElement, ElementId, ElementStyle } from '@/domain/element/types'
 import { TRANSPARENT } from '@/domain/element/types'
-import type { Bounds } from '@/domain/shared/geometry'
+import { unionBounds, type Bounds, type Point } from '@/domain/shared/geometry'
 import * as history from './history'
 import { updateElements } from './scene'
 import { initialViewport, type Viewport } from './viewport'
@@ -199,6 +201,34 @@ export function setArrowStyle(m: EditorModel, patch: Partial<ArrowStyle>): Edito
   const changed = elements.some((el, i) => el !== m.elements[i])
   const arrowStyle = { ...m.arrowStyle, ...patch }
   return { ...(changed ? commit(m, elements) : m), arrowStyle }
+}
+
+/** The selected elements, in stacking order (what gets copied to the clipboard). */
+export function selectedElements(m: EditorModel): DiagramElement[] {
+  const selected = new Set(m.selectedIds)
+  return m.elements.filter((el) => selected.has(el.id))
+}
+
+/**
+ * Adds copies of `elements` on top, centred on `at` (the mouse), selected, as
+ * one undo step. Copies get new ids from `newId`; see `cloneElements`.
+ */
+export function pasteElements(
+  m: EditorModel,
+  elements: readonly DiagramElement[],
+  at: Point,
+  newId: () => ElementId,
+): EditorModel {
+  const bounds = unionBounds(elements.map(elementBounds))
+  if (!bounds) return m
+  const offset = { x: at.x - (bounds.x + bounds.width / 2), y: at.y - (bounds.y + bounds.height / 2) }
+  const copies = cloneElements(elements, newId, offset)
+  return {
+    ...commit(m, [...m.elements, ...copies]),
+    tool: 'select',
+    selectedIds: copies.map((el) => el.id),
+    editingTextId: null,
+  }
 }
 
 function keepExistingSelection(m: EditorModel): EditorModel {

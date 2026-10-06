@@ -50,6 +50,17 @@ export function boardToDto(board: Board): BoardDto {
   }
 }
 
+/** Board elements in the shared wire format (also used for the clipboard). */
+export function elementsToDto(elements: readonly DiagramElement[]): ElementDto[] {
+  return elements.map(elementToDto)
+}
+
+/** Validates elements in the wire format; throws `InvalidDataError` on anything malformed. */
+export function elementsFromDto(raw: unknown): DiagramElement[] {
+  if (!isArray(raw)) throw new InvalidDataError('elements must be an array')
+  return raw.map(parseElement)
+}
+
 function elementToDto(el: DiagramElement): ElementDto {
   // Elements are plain data already; copying detaches them from the caller.
   return structuredClone(el) as ElementDto

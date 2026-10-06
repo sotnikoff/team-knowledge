@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react'
+import type { ElementClipboardFormat } from '@/application/ports/ElementClipboardFormat'
 import type { IdGenerator } from '@/application/ports/IdGenerator'
 import type {
   CreateBoard,
@@ -59,6 +60,8 @@ export interface AppDependencies {
 
   /** Ids of board elements only; entity ids are assigned by the repositories. */
   readonly ids: IdGenerator
+  /** Board elements as clipboard text (copy/paste between boards and tabs). */
+  readonly clipboard: ElementClipboardFormat
 }
 
 export const DependenciesContext = createContext<AppDependencies | null>(null)

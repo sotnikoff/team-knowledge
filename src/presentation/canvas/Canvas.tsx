@@ -6,6 +6,7 @@ import { isLinearElement } from '@/domain/element/types'
 import type { Point } from '@/domain/shared/geometry'
 import { panBy, screenToWorld, zoomAt } from '@/application/editor/viewport'
 import { useDependencies } from '../app/dependencies'
+import { boardPointer } from '../editor/boardPointer'
 import { dispatch, getModel, useEditor } from '../editor/store'
 import { commitTextEdit, startEditing } from '../editor/textEditing'
 import { renderOverlay, type Surface } from './renderScene'
@@ -53,8 +54,10 @@ export function Canvas(props: { onOpenDocument: (documentId: string) => void }) 
   useLayoutEffect(() => {
     const container = containerRef.current
     if (!container) return
-    const measure = (width: number, height: number) =>
+    const measure = (width: number, height: number) => {
       setSurface({ width, height, pixelRatio: window.devicePixelRatio || 1 })
+      boardPointer.resize(width, height)
+    }
     const rect = container.getBoundingClientRect()
     measure(rect.width, rect.height)
     const observer = new ResizeObserver(([entry]) => {
@@ -131,6 +134,7 @@ export function Canvas(props: { onOpenDocument: (documentId: string) => void }) 
 
   const onPointerMove = (e: PointerEvent<HTMLCanvasElement>) => {
     const input = toInput(e)
+    boardPointer.move(input.screen)
     if (session.current) session.current.move(input)
     else if (tool === 'select') setHover(hoverCursor(input.world))
     else if (tool === 'line' || tool === 'arrow') {
@@ -171,7 +175,10 @@ export function Canvas(props: { onOpenDocument: (documentId: string) => void }) 
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        onPointerLeave={() => dispatch((m) => (m.interactionBase ? m : editor.setBindingHint(m, null)))}
+        onPointerLeave={() => {
+          boardPointer.leave()
+          dispatch((m) => (m.interactionBase ? m : editor.setBindingHint(m, null)))
+        }}
         onDoubleClick={onDoubleClick}
         onContextMenu={(e) => e.preventDefault()}
       />

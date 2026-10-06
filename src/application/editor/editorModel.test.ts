@@ -54,6 +54,18 @@ describe('editorModel', () => {
     expect(m.elements[1]).toMatchObject({ startArrowhead: 'arrow', endArrowhead: 'arrow' })
   })
 
+  it('pastes copies centred on the given point, selected, as one undo step', () => {
+    let m = editor.select(editor.createEditorModel([el('a', 0), el('b', 20)]), ['a', 'b'])
+    let n = 0
+    m = editor.pasteElements(m, editor.selectedElements(m), { x: 115, y: 105 }, () => `copy-${++n}`)
+    expect(m.elements.map((e) => e.id)).toEqual(['a', 'b', 'copy-1', 'copy-2'])
+    // The pair spans x 0…30, y 0…10: its centre (15, 5) lands on (115, 105).
+    expect(m.elements.slice(2).map((e) => [e.x, e.y])).toEqual([[100, 100], [120, 100]])
+    expect(m.selectedIds).toEqual(['copy-1', 'copy-2'])
+    m = editor.undo(m)
+    expect(m.elements.map((e) => e.id)).toEqual(['a', 'b'])
+  })
+
   it('does not record an interaction that changed nothing', () => {
     let m = editor.createEditorModel([el('a')])
     m = editor.endInteraction(editor.beginInteraction(m))

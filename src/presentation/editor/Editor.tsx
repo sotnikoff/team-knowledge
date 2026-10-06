@@ -16,6 +16,7 @@ import { useAutosave } from '../hooks/useAutosave'
 import { queryKeys } from '../hooks/queryKeys'
 import { getModel, resetEditor, useEditor, useEditorSession } from './store'
 import { useEditorShortcuts } from './useEditorShortcuts'
+import { useBoardClipboard } from './useBoardClipboard'
 import { BoardTitle } from './BoardTitle'
 import styles from './Editor.module.css'
 
@@ -62,6 +63,7 @@ function LoadedEditor({ initial, ...props }: EditorProps & { initial: Board }) {
     [navigate, initial.spaceId],
   )
   useEditorShortcuts({ onOpenDocument: openDocument })
+  useBoardClipboard()
 
   const root = useRef<HTMLDivElement>(null)
   const viewCenter = () => {
