@@ -1,4 +1,4 @@
-import { useCallback, useState, type ReactNode } from 'react'
+import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { getModel, useEditor } from '../editor/store'
 import {
   ClipboardUnavailableError,
@@ -9,7 +9,9 @@ import {
   exportImage,
   NothingToExportError,
   type ExportFormat,
+  type ExportTheme,
 } from '../export/exportImage'
+import type { DiagramElement, ElementId } from '@/domain/element/types'
 import { useI18n } from '../i18n/i18n'
 import { Button } from '../ui/Button'
 import { cx } from '../ui/cx'
@@ -17,6 +19,7 @@ import { Panel } from '../ui/Panel'
 import { Popover } from '../ui/Popover'
 import { SegmentedControl } from '../ui/SegmentedControl'
 import styles from './ExportMenu.module.css'
+import { ExportPreview } from './ExportPreview'
 
 type Scope = 'all' | 'selection'
 type Action = 'download' | 'copy'
@@ -26,13 +29,22 @@ const COPIED_FEEDBACK_MS = 900
 
 const SCALES = [1, 2, 3] as const
 
-/** "Экспорт" popover: whole board or selection, PNG / JPEG / BMP, or a PNG straight to the clipboard. */
+function elementsToExport(elements: readonly DiagramElement[], selectedIds: readonly ElementId[], scope: Scope) {
+  if (scope === 'all') return elements
+  const selected = new Set(selectedIds)
+  return elements.filter((el) => selected.has(el.id))
+}
+
+const findCardNode = (id: string) => document.querySelector<HTMLElement>(`[data-element-id="${CSS.escape(id)}"]`)
+
+/** "Экспорт" popover with a live preview: whole board or selection, light or dark, PNG / JPEG / BMP, or a PNG straight to the clipboard. */
 export function ExportMenu(props: { boardName: string }) {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const [scope, setScope] = useState<Scope>('all')
   const [format, setFormat] = useState<ExportFormat>('png')
   const [scale, setScale] = useState<number>(2)
+  const [theme, setTheme] = useState<ExportTheme>('light')
   const [busy, setBusy] = useState<Action | null>(null)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -49,17 +61,16 @@ export function ExportMenu(props: { boardName: string }) {
 
   const run = async (action: Action) => {
     const m = getModel()
-    const selected = new Set(m.selectedIds)
-    const elements = scope === 'selection' ? m.elements.filter((el) => selected.has(el.id)) : m.elements
     setBusy(action)
     setError(null)
     setCopied(false)
     // The clipboard only reliably takes PNG, whatever format is chosen for files.
     const image = exportImage({
-      elements,
+      elements: elementsToExport(m.elements, m.selectedIds, scope),
       format: action === 'copy' ? 'png' : format,
       scale,
-      findCardNode: (id) => document.querySelector<HTMLElement>(`[data-element-id="${CSS.escape(id)}"]`),
+      theme,
+      findCardNode,
     })
     try {
       if (action === 'copy') {
@@ -112,6 +123,7 @@ export function ExportMenu(props: { boardName: string }) {
         </Panel>
       }
     >
+      {open && <ScopePreview scope={scope} theme={theme} />}
       <Field label={t('export.what')}>
         <SegmentedControl<Scope>
           label={t('export.what')}
@@ -125,6 +137,17 @@ export function ExportMenu(props: { boardName: string }) {
               disabled: selectedCount === 0,
               title: selectedCount === 0 ? t('export.selectFirst') : undefined,
             },
+          ]}
+        />
+      </Field>
+      <Field label={t('export.theme')}>
+        <SegmentedControl<ExportTheme>
+          label={t('export.theme')}
+          value={theme}
+          onChange={setTheme}
+          options={[
+            { value: 'light', label: t('export.themeLight') },
+            { value: 'dark', label: t('export.themeDark') },
           ]}
         />
       </Field>
@@ -161,6 +184,14 @@ export function ExportMenu(props: { boardName: string }) {
       </div>
     </Popover>
   )
+}
+
+/** Mounted only while the menu is open, so the closed menu does not re-render on every board change. */
+function ScopePreview(props: { scope: Scope; theme: ExportTheme }) {
+  const elements = useEditor((m) => m.elements)
+  const selectedIds = useEditor((m) => m.selectedIds)
+  const toExport = useMemo(() => elementsToExport(elements, selectedIds, props.scope), [elements, selectedIds, props.scope])
+  return <ExportPreview elements={toExport} theme={props.theme} findCardNode={findCardNode} />
 }
 
 function Field(props: { label: string; children: ReactNode }) {

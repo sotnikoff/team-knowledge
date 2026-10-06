@@ -33,12 +33,16 @@ export function resetCssCache(): void {
   cachedCss = null
 }
 
-/** `scale` sets the pixel density, so the card stays sharp at 2x/3x. */
+/**
+ * `scale` sets the pixel density, so the card stays sharp at 2x/3x. `dark`
+ * renders it with the dark-theme tokens, whatever theme the page is in.
+ */
 export async function rasterizeHtml(
   node: HTMLElement,
   width: number,
   height: number,
   scale: number,
+  dark = false,
 ): Promise<HTMLImageElement> {
   const clone = node.cloneNode(true) as HTMLElement
   // Place the copy at the origin of the image, keeping its own size/styles.
@@ -50,11 +54,11 @@ export async function rasterizeHtml(
   const xhtml = new XMLSerializer().serializeToString(clone)
   // Styles set on <body> (font, color) don't reach the image: there is no body.
   const body = getComputedStyle(document.body)
-  const css = `${collectPageCss()}\n.export-root{font-family:${body.fontFamily};color:#0f172a;-webkit-font-smoothing:antialiased}`
+  const css = `${collectPageCss()}\n.export-root{font-family:${body.fontFamily};color:var(--ink);-webkit-font-smoothing:antialiased}`
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width * scale}" height="${height * scale}" viewBox="0 0 ${width} ${height}">` +
     `<foreignObject x="0" y="0" width="100%" height="100%">` +
-    `<div xmlns="http://www.w3.org/1999/xhtml" class="export-root" style="width:${width}px;height:${height}px">` +
+    `<div xmlns="http://www.w3.org/1999/xhtml" class="export-root${dark ? ' dark' : ''}" style="width:${width}px;height:${height}px">` +
     `<style>${escapeForXml(css)}</style>${xhtml}</div></foreignObject></svg>`
 
   const image = new Image()

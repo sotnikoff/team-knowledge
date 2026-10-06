@@ -58,6 +58,35 @@
   gap: var(--space-2);
 }
 
+.preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 148px;
+  padding: var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: repeating-conic-gradient(var(--sheet-hover) 0% 25%, var(--sheet) 0% 50%) 50% / 12px 12px;
+  overflow: hidden;
+}
+
+.preview img {
+  min-width: 0;
+  max-width: 100%;
+  max-height: 100%;
+  box-shadow: var(--shadow-sm);
+  transition: opacity var(--dur-fast) var(--ease);
+}
+
+.previewStale {
+  opacity: 0.5;
+}
+
+.previewNote {
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+}
+
 .error {
   color: var(--danger);
   font-size: var(--text-sm);
