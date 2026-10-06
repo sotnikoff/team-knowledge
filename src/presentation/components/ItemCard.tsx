@@ -12,7 +12,7 @@ import styles from './ItemCard.module.css'
 
 const linkStyle = buttonClass('link', 'sm')
 
-/** Card for a space, board or document: open, rename inline, delete with confirmation. */
+/** Card for a project or space: open, rename inline, export to JSON, delete with confirmation. */
 export function ItemCard(props: {
   title: string
   subtitle: string
@@ -22,8 +22,11 @@ export function ItemCard(props: {
   icon?: ReactNode
   rename: (name: string) => Promise<unknown>
   remove: () => Promise<unknown>
+  /** Downloads the item as a JSON file. */
+  exportJson?: () => Promise<unknown>
 }) {
   const { t } = useI18n()
+  const { exportJson } = props
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [name, setName] = useState(props.title)
@@ -90,6 +93,11 @@ export function ItemCard(props: {
             </>
           ) : (
             <>
+              {exportJson && (
+                <IconButton size="sm" label={t('archive.export')} onClick={() => run(exportJson)}>
+                  <AppIcon name="download" />
+                </IconButton>
+              )}
               <IconButton
                 size="sm"
                 label={t('common.rename')}

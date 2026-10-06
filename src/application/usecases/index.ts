@@ -23,3 +23,6 @@ export { OpenDocument } from './documents/OpenDocument'
 export { SaveDocumentContent } from './documents/SaveDocumentContent'
 export { RenameDocument } from './documents/RenameDocument'
 export { DeleteDocument } from './documents/DeleteDocument'
+
+export { ExportArchive } from './archive/ExportArchive'
+export { ImportArchive, type ImportTarget, type Imported } from './archive/ImportArchive'

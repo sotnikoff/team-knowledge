@@ -3,7 +3,6 @@ import { getModel, useEditor } from '../editor/store'
 import {
   ClipboardUnavailableError,
   copyImageToClipboard,
-  downloadBlob,
   EXPORT_FORMATS,
   exportFileName,
   exportImage,
@@ -12,6 +11,7 @@ import {
   type ExportTheme,
 } from '../export/exportImage'
 import type { DiagramElement, ElementId } from '@/domain/element/types'
+import { downloadBlob } from '../files'
 import { useI18n } from '../i18n/i18n'
 import { Button } from '../ui/Button'
 import { cx } from '../ui/cx'

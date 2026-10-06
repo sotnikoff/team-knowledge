@@ -12,6 +12,8 @@ import {
   CreateProject,
   CreateSpace,
   DeleteBoard,
+  ExportArchive,
+  ImportArchive,
   DeleteDocument,
   DeleteProject,
   DeleteSpace,
@@ -35,6 +37,7 @@ import { LocalStorageDocumentRepository } from '@/infrastructure/persistence/loc
 import { LocalStorageProjectRepository } from '@/infrastructure/persistence/local/LocalStorageProjectRepository'
 import { LocalStorageSpaceRepository } from '@/infrastructure/persistence/local/LocalStorageSpaceRepository'
 import { purgeLegacyData } from '@/infrastructure/persistence/local/prefix'
+import { JsonArchiveFormat } from '@/infrastructure/archive/JsonArchiveFormat'
 import { JsonElementClipboardFormat } from '@/infrastructure/clipboard/JsonElementClipboardFormat'
 import { CryptoIdGenerator } from '@/infrastructure/system/CryptoIdGenerator'
 import { SystemClock } from '@/infrastructure/system/SystemClock'
@@ -114,6 +117,10 @@ export function createContainer(config: AppConfig = readConfig()): AppDependenci
     deleteDocument: new DeleteDocument(documents),
 
     ids,
+    exportArchive: new ExportArchive(projects, spaces, boards, documents),
+    importArchive: new ImportArchive(projects, spaces, boards, documents),
+    archiveFormat: new JsonArchiveFormat(),
+
     clipboard: new JsonElementClipboardFormat(),
   }
 }

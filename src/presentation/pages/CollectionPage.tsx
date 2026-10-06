@@ -21,7 +21,7 @@ interface Named {
 
 /**
  * A top-level list page (projects, spaces of a project): brand bar, title,
- * "create" form and a grid of cards with rename/delete.
+ * "create" and "import" controls and a grid of cards with rename/export/delete.
  */
 export function CollectionPage<T extends Named>(props: {
   /** Link back up to the parent level, shown above the title. */
@@ -35,10 +35,14 @@ export function CollectionPage<T extends Named>(props: {
   create: { readonly isPending: boolean; readonly error: unknown; readonly submit: (name: string) => void }
   rename: (item: T, name: string) => Promise<unknown>
   remove: (item: T) => Promise<unknown>
+  /** Downloads an item as a JSON file. */
+  exportJson: (item: T) => Promise<unknown>
+  /** Imports a JSON file as a new item of this list. */
+  importJson: { readonly isPending: boolean; readonly error: unknown; readonly run: () => void }
 }) {
   const i18n = useI18n()
   const { t } = i18n
-  const { list, create } = props
+  const { list, create, importJson } = props
   const [name, setName] = useState('')
 
   const onSubmit = (e: FormEvent) => {
@@ -84,10 +88,20 @@ export function CollectionPage<T extends Named>(props: {
           <Button type="submit" variant="primary" disabled={create.isPending}>
             {t('common.create')}
           </Button>
+          <Button
+            type="button"
+            variant="subtle"
+            title={t('archive.importHint')}
+            disabled={importJson.isPending}
+            onClick={importJson.run}
+          >
+            <AppIcon name="upload" /> {t('archive.import')}
+          </Button>
         </form>
       </header>
 
       {create.error != null && <p className={styles.error}>{errorMessage(create.error, t)}</p>}
+      {importJson.error != null && <p className={styles.error}>{errorMessage(importJson.error, t)}</p>}
 
       {list.isPending ? (
         <p className={styles.muted}>{t('common.loading')}</p>
@@ -106,6 +120,7 @@ export function CollectionPage<T extends Named>(props: {
                 to={props.hrefOf(item)}
                 rename={(newName) => props.rename(item, newName)}
                 remove={() => props.remove(item)}
+                exportJson={() => props.exportJson(item)}
               />
             </li>
           ))}

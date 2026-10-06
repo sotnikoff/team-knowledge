@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react'
+import type { ArchiveFormat } from '@/application/ports/ArchiveFormat'
 import type { ElementClipboardFormat } from '@/application/ports/ElementClipboardFormat'
 import type { IdGenerator } from '@/application/ports/IdGenerator'
 import type {
@@ -7,6 +8,8 @@ import type {
   CreateProject,
   CreateSpace,
   DeleteBoard,
+  ExportArchive,
+  ImportArchive,
   DeleteDocument,
   DeleteProject,
   DeleteSpace,
@@ -57,6 +60,11 @@ export interface AppDependencies {
   readonly saveDocumentContent: SaveDocumentContent
   readonly renameDocument: RenameDocument
   readonly deleteDocument: DeleteDocument
+
+  /** JSON export/import of a project, space, board or document (always imported as a copy). */
+  readonly exportArchive: ExportArchive
+  readonly importArchive: ImportArchive
+  readonly archiveFormat: ArchiveFormat
 
   /** Ids of board elements only; entity ids are assigned by the repositories. */
   readonly ids: IdGenerator

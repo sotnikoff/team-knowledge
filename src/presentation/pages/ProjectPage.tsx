@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router'
 import { ErrorPage, Loading } from '../components/PageState'
+import { useExportArchive, useImportArchive } from '../hooks/useArchive'
 import { useProject } from '../hooks/useProjects'
 import { useCreateSpace, useDeleteSpace, useRenameSpace, useSpaceList } from '../hooks/useSpaces'
 import { useI18n } from '../i18n/i18n'
@@ -15,6 +16,8 @@ export function ProjectPage() {
   const create = useCreateSpace(projectId)
   const rename = useRenameSpace()
   const remove = useDeleteSpace(projectId)
+  const exportJson = useExportArchive()
+  const importJson = useImportArchive()
 
   if (project.isPending) return <Loading>{t('projects.loading')}</Loading>
   if (project.error) {
@@ -44,6 +47,16 @@ export function ProjectPage() {
       }}
       rename={(space, name) => rename.mutateAsync({ id: space.id, name })}
       remove={(space) => remove.mutateAsync(space.id)}
+      exportJson={(space) => exportJson.mutateAsync({ kind: 'space', id: space.id, name: space.name })}
+      importJson={{
+        isPending: importJson.isPending,
+        error: importJson.error,
+        run: () =>
+          importJson.mutate(
+            { kind: 'space', projectId },
+            { onSuccess: (imported) => imported?.kind === 'space' && void navigate(`/spaces/${imported.space.id}`) },
+          ),
+      }}
     />
   )
 }

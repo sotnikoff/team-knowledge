@@ -56,3 +56,30 @@ export class StorageUnavailableError extends DomainError {
     super(message, options)
   }
 }
+
+/** Kinds of export files (archives). */
+export type ArchiveFileKind = 'project' | 'space' | 'board' | 'document'
+
+/**
+ * An imported file cannot be used: it is not an export of this app (or is
+ * damaged / from a newer version), or it holds a different level than the
+ * place it is imported into.
+ */
+export class InvalidFileError extends DomainError {
+  readonly code = 'INVALID_FILE'
+  readonly reason: 'unreadable' | 'wrongKind'
+  readonly expected: ArchiveFileKind | null
+  readonly actual: ArchiveFileKind | null
+
+  constructor(
+    reason: 'unreadable' | 'wrongKind',
+    details: { expected?: ArchiveFileKind; actual?: ArchiveFileKind; cause?: unknown } = {},
+  ) {
+    super(reason === 'unreadable' ? 'Not an export file of this app' : `Expected a ${details.expected} file, got ${details.actual}`, {
+      cause: details.cause,
+    })
+    this.reason = reason
+    this.expected = details.expected ?? null
+    this.actual = details.actual ?? null
+  }
+}

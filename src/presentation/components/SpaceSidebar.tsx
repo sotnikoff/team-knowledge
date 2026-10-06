@@ -10,6 +10,7 @@ import {
   useDocumentList,
   useRenameDocument,
 } from '../hooks/useDocuments'
+import { useExportArchive, useImportArchive } from '../hooks/useArchive'
 import { Button } from '../ui/Button'
 import { cx } from '../ui/cx'
 import { IconButton } from '../ui/IconButton'
@@ -34,7 +35,11 @@ export function SpaceSidebar({ spaceId }: { spaceId: SpaceId }) {
   const renameDocument = useRenameDocument()
   const deleteDocument = useDeleteDocument(spaceId)
 
-  const error = createBoard.error ?? createDocument.error ?? boards.error ?? documents.error
+  const exportJson = useExportArchive()
+  const importJson = useImportArchive()
+
+  const error =
+    createBoard.error ?? createDocument.error ?? importJson.error ?? exportJson.error ?? boards.error ?? documents.error
 
   return (
     <nav className={styles.nav}>
@@ -45,6 +50,13 @@ export function SpaceSidebar({ spaceId }: { spaceId: SpaceId }) {
         onCreate={() =>
           createBoard.mutate(t('common.untitled'), { onSuccess: (b) => void navigate(`${base}/boards/${b.id}`) })
         }
+        importLabel={t('archive.importBoard')}
+        onImport={() =>
+          importJson.mutate(
+            { kind: 'board', spaceId },
+            { onSuccess: (imported) => imported?.kind === 'board' && void navigate(`${base}/boards/${imported.board.id}`) },
+          )
+        }
       >
         {boards.data?.map((b) => (
           <SidebarItem
@@ -53,6 +65,7 @@ export function SpaceSidebar({ spaceId }: { spaceId: SpaceId }) {
             name={b.name}
             to={`${base}/boards/${b.id}`}
             rename={(name) => renameBoard.mutateAsync({ id: b.id, name })}
+            exportJson={() => exportJson.mutate({ kind: 'board', id: b.id, name: b.name })}
             remove={async () => {
               await deleteBoard.mutateAsync(b.id)
               if (boardId === b.id) void navigate(base)
@@ -66,6 +79,16 @@ export function SpaceSidebar({ spaceId }: { spaceId: SpaceId }) {
         onCreate={() =>
           createDocument.mutate(t('common.untitled'), { onSuccess: (d) => void navigate(`${base}/docs/${d.id}`) })
         }
+        importLabel={t('archive.importDocument')}
+        onImport={() =>
+          importJson.mutate(
+            { kind: 'document', spaceId },
+            {
+              onSuccess: (imported) =>
+                imported?.kind === 'document' && void navigate(`${base}/docs/${imported.document.id}`),
+            },
+          )
+        }
       >
         {documents.data?.map((d) => (
           <SidebarItem
@@ -74,6 +97,7 @@ export function SpaceSidebar({ spaceId }: { spaceId: SpaceId }) {
             name={d.title}
             to={`${base}/docs/${d.id}`}
             rename={(title) => renameDocument.mutateAsync({ id: d.id, title })}
+            exportJson={() => exportJson.mutate({ kind: 'document', id: d.id, name: d.title })}
             remove={async () => {
               await deleteDocument.mutateAsync(d.id)
               if (documentId === d.id) void navigate(base)
@@ -85,14 +109,26 @@ export function SpaceSidebar({ spaceId }: { spaceId: SpaceId }) {
   )
 }
 
-function Section(props: { title: string; createLabel: string; onCreate: () => void; children: ReactNode }) {
+function Section(props: {
+  title: string
+  createLabel: string
+  onCreate: () => void
+  importLabel: string
+  onImport: () => void
+  children: ReactNode
+}) {
   return (
     <section className={styles.section}>
       <header className={styles.sectionHeader}>
         <h2 className={styles.sectionTitle}>{props.title}</h2>
-        <IconButton label={props.createLabel} size="sm" onClick={props.onCreate}>
-          <AppIcon name="plus" />
-        </IconButton>
+        <span className={styles.sectionActions}>
+          <IconButton label={props.importLabel} size="sm" onClick={props.onImport}>
+            <AppIcon name="upload" />
+          </IconButton>
+          <IconButton label={props.createLabel} size="sm" onClick={props.onCreate}>
+            <AppIcon name="plus" />
+          </IconButton>
+        </span>
       </header>
       <ul className={styles.list}>{props.children}</ul>
     </section>
@@ -105,6 +141,7 @@ function SidebarItem(props: {
   to: string
   rename: (name: string) => Promise<unknown>
   remove: () => Promise<unknown>
+  exportJson: () => void
 }) {
   const { t } = useI18n()
   const [mode, setMode] = useState<'view' | 'rename' | 'confirm'>('view')
@@ -160,6 +197,9 @@ function SidebarItem(props: {
           </Button>
         ) : (
           <>
+            <IconButton size="sm" label={t('archive.export')} onClick={props.exportJson}>
+              <AppIcon name="download" />
+            </IconButton>
             <IconButton size="sm" label={t('common.rename')} onClick={() => (setName(props.name), setMode('rename'))}>
               <AppIcon name="edit" />
             </IconButton>

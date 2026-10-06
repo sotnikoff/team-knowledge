@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router'
+import { useExportArchive, useImportArchive } from '../hooks/useArchive'
 import { useCreateProject, useDeleteProject, useProjectList, useRenameProject } from '../hooks/useProjects'
 import { useI18n } from '../i18n/i18n'
 import { CollectionPage } from './CollectionPage'
@@ -11,6 +12,8 @@ export function ProjectsListPage() {
   const create = useCreateProject()
   const rename = useRenameProject()
   const remove = useDeleteProject()
+  const exportJson = useExportArchive()
+  const importJson = useImportArchive()
 
   return (
     <CollectionPage
@@ -27,6 +30,16 @@ export function ProjectsListPage() {
       }}
       rename={(project, name) => rename.mutateAsync({ id: project.id, name })}
       remove={(project) => remove.mutateAsync(project.id)}
+      exportJson={(project) => exportJson.mutateAsync({ kind: 'project', id: project.id, name: project.name })}
+      importJson={{
+        isPending: importJson.isPending,
+        error: importJson.error,
+        run: () =>
+          importJson.mutate(
+            { kind: 'project' },
+            { onSuccess: (imported) => imported?.kind === 'project' && void navigate(`/projects/${imported.project.id}`) },
+          ),
+      }}
     />
   )
 }

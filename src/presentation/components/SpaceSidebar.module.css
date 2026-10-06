@@ -132,3 +132,9 @@
   color: var(--danger);
   font-size: var(--text-xs);
 }
+
+.sectionActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}

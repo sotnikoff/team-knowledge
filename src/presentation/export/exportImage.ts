@@ -4,6 +4,7 @@ import { elementBounds } from '@/domain/element/geometry'
 import type { DiagramElement, DocumentElement } from '@/domain/element/types'
 import { unionBounds, type Bounds } from '@/domain/shared/geometry'
 import { drawElements } from '../canvas/elementRenderers'
+import { safeFileName } from '../files'
 import { encodeBmp } from './bmp'
 import { rasterizeHtml, resetCssCache } from './rasterizeHtml'
 
@@ -184,19 +185,8 @@ export async function copyImageToClipboard(png: Promise<Blob>): Promise<void> {
   await Promise.all([png, write])
 }
 
-/** Saves a blob as a file via a temporary link. */
-export function downloadBlob(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  link.click()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
-
 /** File name from a board name: keeps letters, digits, spaces and dashes. */
 export function exportFileName(boardName: string, format: ExportFormat): string {
-  const base = boardName.replace(/[^\p{L}\p{N} _-]+/gu, '').trim() || 'board'
   const extension = EXPORT_FORMATS.find((f) => f.id === format)!.extension
-  return `${base}.${extension}`
+  return safeFileName(boardName, 'board', extension)
 }

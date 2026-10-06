@@ -108,6 +108,16 @@ const paths = {
       <path d="M9 4v16" />
     </Icon>
   ),
+  download: (
+    <Icon>
+      <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />
+    </Icon>
+  ),
+  upload: (
+    <Icon>
+      <path d="M12 15V4M7 9l5-5 5 5M5 20h14" />
+    </Icon>
+  ),
   back: (
     <Icon>
       <path d="M15 18l-6-6 6-6" />
