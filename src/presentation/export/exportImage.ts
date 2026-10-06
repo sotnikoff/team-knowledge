@@ -104,6 +104,28 @@ function encode(canvas: HTMLCanvasElement, format: ExportFormat): Promise<Blob> 
   )
 }
 
+export class ClipboardUnavailableError extends Error {
+  constructor() {
+    super('Copying images to the clipboard is not supported')
+    this.name = 'ClipboardUnavailableError'
+  }
+}
+
+/**
+ * Puts a PNG on the clipboard. The clipboard item is created right away with the
+ * still-pending image, so the browser (Safari especially) still counts the call
+ * as part of the click that started it.
+ */
+export async function copyImageToClipboard(png: Promise<Blob>): Promise<void> {
+  if (typeof ClipboardItem === 'undefined' || !navigator.clipboard?.write) {
+    png.catch(() => {})
+    throw new ClipboardUnavailableError()
+  }
+  const write = navigator.clipboard.write([new ClipboardItem({ 'image/png': png })])
+  // Report the export's own error (e.g. nothing to export) in preference to the clipboard's.
+  await Promise.all([png, write])
+}
+
 /** Saves a blob as a file via a temporary link. */
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)

@@ -1,6 +1,8 @@
 import { useCallback, useState, type ReactNode } from 'react'
 import { getModel, useEditor } from '../editor/store'
 import {
+  ClipboardUnavailableError,
+  copyImageToClipboard,
   downloadBlob,
   EXPORT_FORMATS,
   exportFileName,
@@ -17,47 +19,71 @@ import { SegmentedControl } from '../ui/SegmentedControl'
 import styles from './ExportMenu.module.css'
 
 type Scope = 'all' | 'selection'
+type Action = 'download' | 'copy'
+
+/** How long "Copied" stays visible before the menu closes. */
+const COPIED_FEEDBACK_MS = 900
 
 const SCALES = [1, 2, 3] as const
 
-/** "Экспорт" popover: whole board or selection, PNG / JPEG / BMP. */
+/** "Экспорт" popover: whole board or selection, PNG / JPEG / BMP, or a PNG straight to the clipboard. */
 export function ExportMenu(props: { boardName: string }) {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const [scope, setScope] = useState<Scope>('all')
   const [format, setFormat] = useState<ExportFormat>('png')
   const [scale, setScale] = useState<number>(2)
-  const [busy, setBusy] = useState(false)
+  const [busy, setBusy] = useState<Action | null>(null)
+  const [copied, setCopied] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const selectedCount = useEditor((m) => m.selectedIds.length)
   const isEmpty = useEditor((m) => m.elements.length === 0)
 
   const toggle = () => {
     setError(null)
+    setCopied(false)
     // Default to the selection when there is one.
     if (!open) setScope(getModel().selectedIds.length > 0 ? 'selection' : 'all')
     setOpen((o) => !o)
   }
 
-  const run = async () => {
+  const run = async (action: Action) => {
     const m = getModel()
     const selected = new Set(m.selectedIds)
     const elements = scope === 'selection' ? m.elements.filter((el) => selected.has(el.id)) : m.elements
-    setBusy(true)
+    setBusy(action)
     setError(null)
+    setCopied(false)
+    // The clipboard only reliably takes PNG, whatever format is chosen for files.
+    const image = exportImage({
+      elements,
+      format: action === 'copy' ? 'png' : format,
+      scale,
+      findCardNode: (id) => document.querySelector<HTMLElement>(`[data-element-id="${CSS.escape(id)}"]`),
+    })
     try {
-      const blob = await exportImage({
-        elements,
-        format,
-        scale,
-        findCardNode: (id) => document.querySelector<HTMLElement>(`[data-element-id="${CSS.escape(id)}"]`),
-      })
-      downloadBlob(blob, exportFileName(props.boardName, format))
-      setOpen(false)
+      if (action === 'copy') {
+        await copyImageToClipboard(image)
+        setCopied(true)
+        setTimeout(() => setOpen(false), COPIED_FEEDBACK_MS)
+      } else {
+        downloadBlob(await image, exportFileName(props.boardName, format))
+        setOpen(false)
+      }
     } catch (e) {
-      setError(t(e instanceof NothingToExportError ? 'export.nothing' : 'export.failed'))
+      setError(
+        t(
+          e instanceof NothingToExportError
+            ? 'export.nothing'
+            : e instanceof ClipboardUnavailableError
+              ? 'export.copyUnsupported'
+              : action === 'copy'
+                ? 'export.copyFailed'
+                : 'export.failed',
+        ),
+      )
     } finally {
-      setBusy(false)
+      setBusy(null)
     }
   }
 
@@ -119,9 +145,20 @@ export function ExportMenu(props: { boardName: string }) {
         />
       </Field>
       {error && <p className={styles.error}>{error}</p>}
-      <Button variant="primary" disabled={busy} onClick={() => void run()} className={styles.download}>
-        {busy ? t('export.preparing') : t('export.download')}
-      </Button>
+      <div className={styles.actions}>
+        <Button variant="primary" disabled={busy !== null} onClick={() => void run('download')}>
+          {busy === 'download' ? t('export.preparing') : t('export.download')}
+        </Button>
+        <Button
+          variant="subtle"
+          disabled={busy !== null}
+          onClick={() => void run('copy')}
+          title={t('export.copyHint')}
+          aria-live="polite"
+        >
+          {busy === 'copy' ? t('export.preparing') : copied ? t('export.copied') : t('export.copy')}
+        </Button>
+      </div>
     </Popover>
   )
 }
