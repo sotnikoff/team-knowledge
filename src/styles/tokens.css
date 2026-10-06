@@ -86,40 +86,40 @@
   --z-popover: 30;
 }
 
-/* Blueprint: cyan-blue paper, white lines, yellow marker as the accent. */
+/* Night blueprint: deep navy-black paper, white lines, yellow marker as the accent. */
 .dark {
-  --paper: #0d2a4d;
-  --sheet: #12365f;
-  --spread: #0a2343;
-  --sheet-hover: #18406d;
-  --sheet-pressed: #1d4a7c;
+  --paper: #070f1c;
+  --sheet: #0d1a2e;
+  --spread: #050b16;
+  --sheet-hover: #13233b;
+  --sheet-pressed: #192d4a;
 
-  --ink: #eef4ff;
-  --ink-soft: #d3e0f5;
-  --ink-muted: #9fb6d8;
-  --ink-faint: #6d89b3;
-  --line: #24507f;
-  --line-strong: #3a6a9e;
+  --ink: #e6eefc;
+  --ink-soft: #c5d3ea;
+  --ink-muted: #8ba1c3;
+  --ink-faint: #5b7096;
+  --line: #1a2c46;
+  --line-strong: #2a4265;
 
   --accent: #ffd23f;
   --accent-hover: #ffdd6b;
   --accent-ink: #ffd23f;
-  --accent-tint: #1f4a6e;
-  --accent-tint-strong: #2b5880;
-  --on-accent: #0d2a4d;
+  --accent-tint: #1c2a3f;
+  --accent-tint-strong: #26385a;
+  --on-accent: #070f1c;
   --marker: #ffd23f;
-  --on-marker: #0d2a4d;
+  --on-marker: #070f1c;
 
   --success: #6ee7b0;
   --danger: #ff8a80;
-  --danger-tint: #4a2a3a;
+  --danger-tint: #3a1a22;
   --warning: #ffd23f;
 
-  --shadow-sm: 0 1px 0 rgb(0 0 0 / 0.25);
-  --shadow-md: 3px 3px 0 rgb(0 10 30 / 0.45);
-  --shadow-lg: 6px 6px 0 rgb(0 10 30 / 0.55);
+  --shadow-sm: 0 1px 0 rgb(0 0 0 / 0.4);
+  --shadow-md: 3px 3px 0 rgb(0 0 0 / 0.55);
+  --shadow-lg: 6px 6px 0 rgb(0 0 0 / 0.65);
   --focus-ring: 0 0 0 3px rgb(255 210 63 / 0.4);
 
-  --grid-minor: rgb(255 255 255 / 0.05);
-  --grid-major: rgb(255 255 255 / 0.11);
+  --grid-minor: rgb(140 170 220 / 0.05);
+  --grid-major: rgb(140 170 220 / 0.1);
 }

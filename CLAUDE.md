@@ -169,13 +169,17 @@ debounce, не больше одного запроса одновременно
 
 ## Дизайн-система и темы
 
-Стиль — «тёплый скетчбук»: бумага, чернила, терракотовый акцент; заголовки Fraunces,
-интерфейс Inter, холст Caveat, код JetBrains Mono. **Tailwind не используется.**
+Стиль — «чертёжный» (инженерная тетрадь / blueprint): холодная бумага в миллиметровку,
+тёмно-синие чернила, кобальтовый акцент и жёлтый маркер (`--marker`), чёткие углы и
+жёсткие тени без размытия. Заголовки Space Grotesk, интерфейс IBM Plex Sans,
+номера/метаданные/код IBM Plex Mono, холст — рукописный Caveat. Тёмная тема — «ночной
+чертёж»: глубокий почти чёрно-синий фон, белые линии, жёлтый акцент.
+**Tailwind не используется.**
 
 - **Токены** — `src/styles/tokens.css`: цвета (`--paper`, `--sheet`, `--spread`, `--ink*`,
-  `--line*`, `--accent*`, `--danger`…), типографика, отступы (шкала 4px), радиусы,
-  тени, анимации, z-index. Тёмная тема («ночная тетрадь») — только переопределение
-  токенов под `.dark` (класс ставит `presentation/theme/theme.ts`).
+  `--line*`, `--accent*`, `--marker`, `--danger`…), сетка доски (`--grid-minor/major`),
+  типографика, отступы (шкала 4px), радиусы, тени, анимации, z-index. Тёмная тема —
+  только переопределение токенов под `.dark` (класс ставит `presentation/theme/theme.ts`).
 - Глобальные стили — `src/styles/`: `base.css` (reset, фокус `:focus-visible` через
   `outline` — `box-shadow` компоненты перебивают), `document.css` (`.document-prose`,
   цвета highlight.js), `board.css` (`.board-ink`). Подключаются из `src/index.css`.
@@ -184,12 +188,12 @@ debounce, не больше одного запроса одновременно
   палитра элементов доски в `StylePanel`: это данные).
 - **Примитивы `presentation/ui/`** — использовать их, а не голые элементы: `Button`
   (+ `buttonClass` для ссылок), `IconButton`, `Panel`, `Input`, `Select`,
-  `SegmentedControl`, `Popover` (закрывается по Escape и клику снаружи), `Scribble`.
+  `SegmentedControl`, `Popover` (закрывается по Escape и клику снаружи), `TitleRule`.
 - Глобальные (не модульные) классы оставлены там, где их ищут извне: `.document-prose`
   (TipTap, статический рендер, экспорт), `.document-card`, `.board-ink`.
 - **Холст:** цвета элементов хранятся «светлыми», тема на данные не влияет. В тёмной теме
   canvas, inline-редактор текста и образцы цветов (класс `board-ink`) показываются через
-  `filter: invert(93%) hue-rotate(180deg)`, как в Excalidraw. Точечная сетка — фон
+  `filter: invert(93%) hue-rotate(180deg)`, как в Excalidraw. Миллиметровка — фон
   контейнера доски (`editor/Editor.module.css`), не canvas.
 - Тема по умолчанию системная, выбор хранится в localStorage (`team-knowledge:theme` —
   настройка интерфейса, мимо портов). Экспорт в картинку всегда в светлой теме:
