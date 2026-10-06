@@ -27,18 +27,6 @@ export class NotFoundError extends DomainError {
   }
 }
 
-export class AlreadyExistsError extends DomainError {
-  readonly code = 'ALREADY_EXISTS'
-  readonly entity: EntityKind
-  readonly id: string
-
-  constructor(entity: EntityKind, id: string) {
-    super(`${entity} "${id}" already exists`)
-    this.entity = entity
-    this.id = id
-  }
-}
-
 /** Optimistic-concurrency failure: somebody saved a newer version first. */
 export class VersionConflictError extends DomainError {
   readonly code = 'VERSION_CONFLICT'

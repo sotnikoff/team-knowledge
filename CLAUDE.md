@@ -43,6 +43,9 @@ Space (зарисовка)            domain/space/Space.ts
   `spaceId` (как `GET /spaces/:id/boards`). Внутри зарисовки — плоский список.
 - Все сущности `Versioned` (`domain/shared/versioned.ts`): `id`, `version`, `createdAt`,
   `updatedAt`. Имена валидирует общий `normalizeName` (`domain/shared/name.ts`).
+- Новая сущность в домене — **черновик** `Draft<T>` (всё, кроме identity): `newSpace`,
+  `newBoard`, `newDocument`. Id, первую версию и даты назначает тот, кто её сохраняет
+  (`Repository.create(draft)` → готовая сущность), — как сервер на `POST`.
 - Для списков есть лёгкие проекции без тяжёлого содержимого: `BoardSummary` (без
   `elements`), `DocumentSummary` (без `content`).
 - Текст документа — `RichText` (`domain/document/richText.ts`): нейтральное JSON-дерево
@@ -80,6 +83,7 @@ src/
   | `BoardRepository` | `list(spaceId), get, create, save, delete` | `GET /spaces/:spaceId/boards`, `/boards/:id` |
   | `DocumentRepository` | `list(spaceId), get, create, save, delete` | `GET /spaces/:spaceId/documents`, `/documents/:id` |
 
+  `create(draft)` → `POST` черновика, ответ — созданная сущность с id от сервера.
   `save` → `PUT` с `If-Match: version`. `list` возвращает summary без тяжёлого содержимого.
 - **`SpaceRepository.delete` удаляет зарисовку вместе со всеми её досками и
   документами** — часть контракта порта (на бэке это каскад на сервере, один запрос).
@@ -95,11 +99,16 @@ src/
   более новая версия того же объекта (например, переименовали из боковой панели),
   она становится базой следующего сохранения. Содержимое при этом не теряется:
   save кладёт текущее содержимое поверх свежей базы.
-- **Id генерирует клиент** (порт `IdGenerator`), бэк их принимает.
+- **Id сущностей (зарисовок, досок, документов) назначает хранилище, не клиент.** Генерация
+  UUID — особенность только localStorage-адаптера: у него нет сервера, поэтому
+  `LocalCollection` получает `LocalIdentity { ids, clock }` и сам играет роль сервера
+  при `create`. Container создаёт её только в ветке `case 'local'`; HTTP-адаптерам она
+  не нужна. Порт `IdGenerator` в UI остаётся только для id **элементов доски** (фигуры,
+  стрелки) — они часть содержимого доски, при любом бэкенде их создаёт клиент.
 - **Доменные ошибки** (`domain/shared/errors.ts`): адаптер обязан переводить свои
   сбои (QuotaExceeded, битый JSON, 404/409/5xx) в `NotFoundError`,
-  `VersionConflictError`, `AlreadyExistsError` (у всех есть `entity: space | board |
-  document` и `id`), `InvalidNameError`, `StorageUnavailableError`.
+  `VersionConflictError` (у обеих есть `entity: space | board | document` и `id`),
+  `InvalidNameError`, `StorageUnavailableError`.
   UI знает только их (`presentation/errors.ts`).
 - **Wire-формат общий для всех адаптеров**: `infrastructure/persistence/dto/`
   (`*Dto.ts` + `*Mapper.ts`: сериализация, валидация входящих данных, `schemaVersion`;
@@ -116,7 +125,8 @@ src/
 ### Чек-лист: переход на HTTP
 
 1. `infrastructure/persistence/http/Http{Space,Board,Document}Repository.ts`,
-   каждый `implements` свой порт: `fetch` + существующие mapper'ы из `dto/`; статусы →
+   каждый `implements` свой порт: `fetch` + существующие mapper'ы из `dto/`
+   (`create` шлёт черновик и разбирает ответ сервера — id генерировать не нужно); статусы →
    доменные ошибки (404 → NotFound, 409/412 → VersionConflict, сеть/5xx →
    StorageUnavailable). Каскадное удаление зарисовки делает сервер.
 2. Тесты: `runVersionedRepositoryContract(...)` для каждого поверх мок-сервера

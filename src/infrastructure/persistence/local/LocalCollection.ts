@@ -1,11 +1,12 @@
+import type { Clock } from '@/application/ports/Clock'
+import type { IdGenerator } from '@/application/ports/IdGenerator'
 import {
-  AlreadyExistsError,
   NotFoundError,
   StorageUnavailableError,
   VersionConflictError,
   type EntityKind,
 } from '@/domain/shared/errors'
-import type { Versioned } from '@/domain/shared/versioned'
+import type { Draft, Versioned } from '@/domain/shared/versioned'
 import type { KeyValueStore } from './KeyValueStore'
 
 /** How one entity type is (de)serialized. Built from the shared DTO mappers. */
@@ -16,6 +17,16 @@ export interface CollectionCodec<TFull extends Versioned, TSummary> {
   /** The listing entry (no heavy content) stored in the index. */
   toIndexEntry(entity: TFull): unknown
   summaryFromDto(raw: unknown): TSummary
+}
+
+/**
+ * How this adapter gives new entities their identity. It is a detail of the
+ * localStorage adapter only: with a real backend the server assigns ids and
+ * timestamps on POST and the client never generates them.
+ */
+export interface LocalIdentity {
+  readonly ids: IdGenerator
+  readonly clock: Clock
 }
 
 export interface CollectionKeys {
@@ -33,8 +44,15 @@ export class LocalCollection<TFull extends Versioned, TSummary> {
   private readonly store: KeyValueStore
   private readonly keys: CollectionKeys
   private readonly codec: CollectionCodec<TFull, TSummary>
+  private readonly identity: LocalIdentity
 
-  constructor(store: KeyValueStore, keys: CollectionKeys, codec: CollectionCodec<TFull, TSummary>) {
+  constructor(
+    store: KeyValueStore,
+    keys: CollectionKeys,
+    codec: CollectionCodec<TFull, TSummary>,
+    identity: LocalIdentity,
+  ) {
+    this.identity = identity
     this.store = store
     this.keys = keys
     this.codec = codec
@@ -50,8 +68,12 @@ export class LocalCollection<TFull extends Versioned, TSummary> {
     return this.parse(() => this.codec.fromDto(raw))
   }
 
-  create(entity: TFull): TFull {
-    if (this.exists(entity.id)) throw new AlreadyExistsError(this.codec.entity, entity.id)
+  /** Plays the server's part of `POST`: assigns id, first version and timestamps. */
+  create(draft: Draft<TFull>): TFull {
+    const now = this.identity.clock.now()
+    const entity = { ...draft, id: this.identity.ids.next(), version: 1, createdAt: now, updatedAt: now } as TFull
+    // A UUID collision is practically impossible; never overwrite silently.
+    if (this.exists(entity.id)) throw new StorageUnavailableError(`Generated id "${entity.id}" is already taken`)
     this.write(entity)
     return this.get(entity.id)
   }

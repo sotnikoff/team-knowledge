@@ -14,7 +14,6 @@ const notFound: Record<EntityKind, MessageKey> = {
 }
 
 const byCode: Record<string, MessageKey> = {
-  ALREADY_EXISTS: 'errors.alreadyExists',
   INVALID_NAME: 'errors.invalidName',
   STORAGE_UNAVAILABLE: 'errors.storage',
 }

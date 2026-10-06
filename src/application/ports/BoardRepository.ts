@@ -1,4 +1,4 @@
-import type { Board, BoardId, BoardSummary } from '@/domain/board/Board'
+import type { Board, BoardDraft, BoardId, BoardSummary } from '@/domain/board/Board'
 import type { SpaceId } from '@/domain/space/Space'
 
 /**
@@ -6,7 +6,7 @@ import type { SpaceId } from '@/domain/space/Space'
  *
  *   list(spaceId) -> GET    /spaces/:spaceId/boards   (summaries, no elements)
  *   get(id)       -> GET    /boards/:id
- *   create(b)     -> POST   /spaces/:spaceId/boards
+ *   create(draft) -> POST   /spaces/:spaceId/boards     (server assigns the id)
  *   save(b)       -> PUT    /boards/:id   If-Match: b.version
  *   delete(id)    -> DELETE /boards/:id
  *
@@ -16,7 +16,7 @@ import type { SpaceId } from '@/domain/space/Space'
 export interface BoardRepository {
   list(spaceId: SpaceId): Promise<BoardSummary[]>
   get(id: BoardId): Promise<Board>
-  create(board: Board): Promise<Board>
+  create(draft: BoardDraft): Promise<Board>
   save(board: Board): Promise<Board>
   delete(id: BoardId): Promise<void>
 }

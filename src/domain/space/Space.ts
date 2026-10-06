@@ -1,5 +1,5 @@
 import { normalizeName } from '../shared/name'
-import type { Versioned } from '../shared/versioned'
+import type { Draft, Versioned } from '../shared/versioned'
 
 export type SpaceId = string
 
@@ -12,14 +12,11 @@ export interface Space extends Versioned {
   readonly name: string
 }
 
-export function createSpace(params: { id: SpaceId; name: string; now: Date }): Space {
-  return {
-    id: params.id,
-    name: normalizeName(params.name),
-    version: 1,
-    createdAt: params.now,
-    updatedAt: params.now,
-  }
+export type SpaceDraft = Draft<Space>
+
+/** A new space; the repository gives it an id when it is created. */
+export function newSpace(params: { name: string }): SpaceDraft {
+  return { name: normalizeName(params.name) }
 }
 
 export function renameSpace(space: Space, name: string, now: Date): Space {

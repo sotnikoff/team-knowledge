@@ -53,13 +53,17 @@ interface Repositories {
 
 function createRepositories(config: AppConfig): Repositories {
   switch (config.persistence) {
-    case 'local':
+    case 'local': {
       purgeLegacyData(window.localStorage)
+      // localStorage has no server to assign ids/timestamps of new entities, so
+      // the adapter does it itself. The HTTP adapters will not need this.
+      const identity = { ids: new CryptoIdGenerator(), clock: new SystemClock() }
       return {
-        spaces: new LocalStorageSpaceRepository(window.localStorage),
-        boards: new LocalStorageBoardRepository(window.localStorage),
-        documents: new LocalStorageDocumentRepository(window.localStorage),
+        spaces: new LocalStorageSpaceRepository(window.localStorage, identity),
+        boards: new LocalStorageBoardRepository(window.localStorage, identity),
+        documents: new LocalStorageDocumentRepository(window.localStorage, identity),
       }
+    }
     case 'http':
       // const http = new FetchHttpClient(config.apiUrl)
       // return { spaces: new HttpSpaceRepository(http), boards: ..., documents: ... }
@@ -69,24 +73,25 @@ function createRepositories(config: AppConfig): Repositories {
 
 export function createContainer(config: AppConfig = readConfig()): AppDependencies {
   const { spaces, boards, documents } = createRepositories(config)
+  // Ids of board elements (shapes, arrows…), created by the drawing tools.
   const ids = new CryptoIdGenerator()
   const clock = new SystemClock()
   return {
     listSpaces: new ListSpaces(spaces),
-    createSpace: new CreateSpace(spaces, ids, clock),
+    createSpace: new CreateSpace(spaces),
     openSpace: new OpenSpace(spaces),
     renameSpace: new RenameSpace(spaces, clock),
     deleteSpace: new DeleteSpace(spaces),
 
     listBoards: new ListBoards(boards),
-    createBoard: new CreateBoard(boards, spaces, ids, clock),
+    createBoard: new CreateBoard(boards, spaces),
     openBoard: new OpenBoard(boards),
     saveBoardContent: new SaveBoardContent(boards, clock),
     renameBoard: new RenameBoard(boards, clock),
     deleteBoard: new DeleteBoard(boards),
 
     listDocuments: new ListDocuments(documents),
-    createDocument: new CreateDocument(documents, spaces, ids, clock),
+    createDocument: new CreateDocument(documents, spaces),
     openDocument: new OpenDocument(documents),
     saveDocumentContent: new SaveDocumentContent(documents, clock),
     renameDocument: new RenameDocument(documents, clock),

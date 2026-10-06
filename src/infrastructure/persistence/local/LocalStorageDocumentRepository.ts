@@ -2,6 +2,7 @@ import type { DocumentRepository } from '@/application/ports/DocumentRepository'
 import {
   toDocumentSummary,
   type Document,
+  type DocumentDraft,
   type DocumentId,
   type DocumentSummary,
 } from '@/domain/document/Document'
@@ -13,10 +14,10 @@ import {
   documentToDto,
 } from '../dto/documentMapper'
 import type { KeyValueStore } from './KeyValueStore'
-import { LocalCollection } from './LocalCollection'
+import { LocalCollection, type LocalIdentity } from './LocalCollection'
 import { DEFAULT_PREFIX } from './prefix'
 
-export function documentCollection(store: KeyValueStore, prefix: string) {
+export function documentCollection(store: KeyValueStore, prefix: string, identity: LocalIdentity) {
   return new LocalCollection<Document, DocumentSummary>(
     store,
     { index: `${prefix}:documents:index`, item: (id) => `${prefix}:document:${id}` },
@@ -27,14 +28,16 @@ export function documentCollection(store: KeyValueStore, prefix: string) {
       toIndexEntry: (doc) => documentSummaryToDto(toDocumentSummary(doc)),
       summaryFromDto: documentSummaryFromDto,
     },
+    identity,
   )
 }
 
 export class LocalStorageDocumentRepository implements DocumentRepository {
   private readonly documents: LocalCollection<Document, DocumentSummary>
 
-  constructor(store: KeyValueStore, prefix = DEFAULT_PREFIX) {
-    this.documents = documentCollection(store, prefix)
+  /** `identity` assigns ids/timestamps of created documents — a localStorage-only concern. */
+  constructor(store: KeyValueStore, identity: LocalIdentity, prefix = DEFAULT_PREFIX) {
+    this.documents = documentCollection(store, prefix, identity)
   }
 
   async list(spaceId: SpaceId): Promise<DocumentSummary[]> {
@@ -45,8 +48,8 @@ export class LocalStorageDocumentRepository implements DocumentRepository {
     return this.documents.get(id)
   }
 
-  async create(doc: Document): Promise<Document> {
-    return this.documents.create(doc)
+  async create(draft: DocumentDraft): Promise<Document> {
+    return this.documents.create(draft)
   }
 
   async save(doc: Document): Promise<Document> {

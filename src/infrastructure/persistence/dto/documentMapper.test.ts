@@ -1,12 +1,18 @@
 import { describe, expect, it } from 'vitest'
-import { createDocument, replaceContent } from '@/domain/document/Document'
+import { newDocument, replaceContent } from '@/domain/document/Document'
 import { InvalidDataError } from './common'
 import { documentFromDto, documentToDto, parseRichText } from './documentMapper'
 
 describe('documentMapper', () => {
   it('round-trips a document with formatted content', () => {
     const doc = replaceContent(
-      createDocument({ id: 'd1', spaceId: 's1', title: 'Notes', now: new Date('2026-01-01T00:00:00Z') }),
+      {
+        ...newDocument({ spaceId: 's1', title: 'Notes' }),
+        id: 'd1',
+        version: 1,
+        createdAt: new Date('2026-01-01T00:00:00Z'),
+        updatedAt: new Date('2026-01-01T00:00:00Z'),
+      },
       {
         type: 'doc',
         content: [

@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { runVersionedRepositoryContract } from '@/application/ports/repository.contract'
-import { createBoard, replaceElements } from '@/domain/board/Board'
-import { createDocument, replaceContent } from '@/domain/document/Document'
+import { newBoard, replaceElements, type Board } from '@/domain/board/Board'
+import { newDocument, replaceContent, type Document } from '@/domain/document/Document'
 import { StorageUnavailableError } from '@/domain/shared/errors'
-import { createSpace, renameSpace } from '@/domain/space/Space'
+import { newSpace, renameSpace, type Space } from '@/domain/space/Space'
 import { InMemoryKeyValueStore, type KeyValueStore } from './KeyValueStore'
+import type { LocalIdentity } from './LocalCollection'
 import { LocalStorageBoardRepository } from './LocalStorageBoardRepository'
 import { LocalStorageDocumentRepository } from './LocalStorageDocumentRepository'
 import { LocalStorageSpaceRepository } from './LocalStorageSpaceRepository'
@@ -12,22 +13,28 @@ import { purgeLegacyData } from './prefix'
 
 const t0 = new Date('2026-01-01T00:00:00.000Z')
 
-runVersionedRepositoryContract({
+/** Deterministic ids and time: what the browser gets from crypto + Date. */
+function testIdentity(): LocalIdentity {
+  let counter = 0
+  return { ids: { next: () => `id-${++counter}` }, clock: { now: () => t0 } }
+}
+
+runVersionedRepositoryContract<Space, LocalStorageSpaceRepository>({
   name: 'LocalStorageSpaceRepository',
   entity: 'space',
-  make: () => new LocalStorageSpaceRepository(new InMemoryKeyValueStore()),
+  make: () => new LocalStorageSpaceRepository(new InMemoryKeyValueStore(), testIdentity()),
   list: (repo) => repo.list(),
-  sample: (id) => createSpace({ id, name: 'Space', now: t0 }),
+  draft: () => newSpace({ name: 'Space' }),
   modify: (space, now) => renameSpace(space, 'Renamed', now),
   scopedBySpace: false,
 })
 
-runVersionedRepositoryContract({
+runVersionedRepositoryContract<Board, LocalStorageBoardRepository>({
   name: 'LocalStorageBoardRepository',
   entity: 'board',
-  make: () => new LocalStorageBoardRepository(new InMemoryKeyValueStore()),
+  make: () => new LocalStorageBoardRepository(new InMemoryKeyValueStore(), testIdentity()),
   list: (repo, spaceId) => repo.list(spaceId),
-  sample: (id, spaceId) => createBoard({ id, spaceId, name: 'Board', now: t0 }),
+  draft: (spaceId) => newBoard({ spaceId, name: 'Board' }),
   modify: (board, now) =>
     replaceElements(
       board,
@@ -50,12 +57,12 @@ runVersionedRepositoryContract({
   scopedBySpace: true,
 })
 
-runVersionedRepositoryContract({
+runVersionedRepositoryContract<Document, LocalStorageDocumentRepository>({
   name: 'LocalStorageDocumentRepository',
   entity: 'document',
-  make: () => new LocalStorageDocumentRepository(new InMemoryKeyValueStore()),
+  make: () => new LocalStorageDocumentRepository(new InMemoryKeyValueStore(), testIdentity()),
   list: (repo, spaceId) => repo.list(spaceId),
-  sample: (id, spaceId) => createDocument({ id, spaceId, title: 'Doc', now: t0 }),
+  draft: (spaceId) => newDocument({ spaceId, title: 'Doc' }),
   modify: (doc, now) =>
     replaceContent(
       doc,
@@ -75,31 +82,38 @@ runVersionedRepositoryContract({
   scopedBySpace: true,
 })
 
+describe('LocalStorage adapters assign identity themselves', () => {
+  it('uses the injected id generator and clock (a server would do this on POST)', async () => {
+    const repo = new LocalStorageSpaceRepository(new InMemoryKeyValueStore(), testIdentity())
+    const created = await repo.create(newSpace({ name: 'One' }))
+    expect(created).toEqual({ id: 'id-1', name: 'One', version: 1, createdAt: t0, updatedAt: t0 })
+  })
+})
+
 describe('LocalStorageSpaceRepository specifics', () => {
   it('deletes the boards and documents of a deleted space, and only them', async () => {
     const store = new InMemoryKeyValueStore()
-    const spaces = new LocalStorageSpaceRepository(store)
-    const boards = new LocalStorageBoardRepository(store)
-    const documents = new LocalStorageDocumentRepository(store)
-    await spaces.create(createSpace({ id: 's1', name: 'One', now: t0 }))
-    await spaces.create(createSpace({ id: 's2', name: 'Two', now: t0 }))
-    await boards.create(createBoard({ id: 'b1', spaceId: 's1', name: 'B', now: t0 }))
-    await boards.create(createBoard({ id: 'b2', spaceId: 's2', name: 'B', now: t0 }))
-    await documents.create(createDocument({ id: 'd1', spaceId: 's1', title: 'D', now: t0 }))
+    const identity = testIdentity()
+    const spaces = new LocalStorageSpaceRepository(store, identity)
+    const boards = new LocalStorageBoardRepository(store, identity)
+    const documents = new LocalStorageDocumentRepository(store, identity)
+    const one = await spaces.create(newSpace({ name: 'One' }))
+    const two = await spaces.create(newSpace({ name: 'Two' }))
+    const b1 = await boards.create(newBoard({ spaceId: one.id, name: 'B' }))
+    const b2 = await boards.create(newBoard({ spaceId: two.id, name: 'B' }))
+    const d1 = await documents.create(newDocument({ spaceId: one.id, title: 'D' }))
 
-    await spaces.delete('s1')
+    await spaces.delete(one.id)
 
-    expect(await boards.list('s1')).toEqual([])
-    expect(await documents.list('s1')).toEqual([])
-    expect((await boards.list('s2')).map((b) => b.id)).toEqual(['b2'])
-    expect(store.getItem('tk2:board:b1')).toBeNull()
-    expect(store.getItem('tk2:document:d1')).toBeNull()
+    expect(await boards.list(one.id)).toEqual([])
+    expect(await documents.list(one.id)).toEqual([])
+    expect((await boards.list(two.id)).map((b) => b.id)).toEqual([b2.id])
+    expect(store.getItem(`tk2:board:${b1.id}`)).toBeNull()
+    expect(store.getItem(`tk2:document:${d1.id}`)).toBeNull()
   })
 })
 
 describe('LocalCollection failure mapping', () => {
-  const board = createBoard({ id: 'b1', spaceId: 's1', name: 'Board', now: t0 })
-
   it('maps quota errors to StorageUnavailableError', async () => {
     const full: KeyValueStore = {
       getItem: () => null,
@@ -108,15 +122,15 @@ describe('LocalCollection failure mapping', () => {
       },
       removeItem: () => {},
     }
-    await expect(new LocalStorageBoardRepository(full).create(board)).rejects.toBeInstanceOf(
-      StorageUnavailableError,
-    )
+    await expect(
+      new LocalStorageBoardRepository(full, testIdentity()).create(newBoard({ spaceId: 's1', name: 'Board' })),
+    ).rejects.toBeInstanceOf(StorageUnavailableError)
   })
 
   it('maps corrupted data to StorageUnavailableError', async () => {
     const store = new InMemoryKeyValueStore()
     store.setItem('tk2:board:b1', '{"broken":')
-    await expect(new LocalStorageBoardRepository(store).get('b1')).rejects.toBeInstanceOf(
+    await expect(new LocalStorageBoardRepository(store, testIdentity()).get('b1')).rejects.toBeInstanceOf(
       StorageUnavailableError,
     )
   })

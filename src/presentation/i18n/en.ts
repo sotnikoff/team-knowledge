@@ -23,7 +23,6 @@ export const en: Messages = {
   'errors.notFound.space': 'Space not found',
   'errors.notFound.board': 'Board not found',
   'errors.notFound.document': 'Document not found',
-  'errors.alreadyExists': 'This item already exists',
   'errors.invalidName': 'Invalid name',
   'errors.storage': 'Storage is unavailable',
   'errors.conflict': 'Changed elsewhere — reload the page',

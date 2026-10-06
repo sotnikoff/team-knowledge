@@ -26,7 +26,6 @@ export const ru = {
   'errors.notFound.space': 'Зарисовка не найдена',
   'errors.notFound.board': 'Доска не найдена',
   'errors.notFound.document': 'Документ не найден',
-  'errors.alreadyExists': 'Такой объект уже существует',
   'errors.invalidName': 'Некорректное название',
   'errors.storage': 'Хранилище недоступно',
   'errors.conflict': 'Изменено в другом месте — обновите страницу',

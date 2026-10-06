@@ -46,6 +46,7 @@ export interface AppDependencies {
   readonly renameDocument: RenameDocument
   readonly deleteDocument: DeleteDocument
 
+  /** Ids of board elements only; entity ids are assigned by the repositories. */
   readonly ids: IdGenerator
 }
 

@@ -9,3 +9,10 @@ export interface Versioned {
   readonly createdAt: Date
   readonly updatedAt: Date
 }
+
+/**
+ * An entity that does not exist yet: everything but its identity. The id, the
+ * first version and the timestamps are assigned by the storage that creates it
+ * (`Repository.create(draft)`) — a real backend does it on `POST`.
+ */
+export type Draft<T extends Versioned> = Omit<T, keyof Versioned>

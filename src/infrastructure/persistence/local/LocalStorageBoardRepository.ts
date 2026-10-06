@@ -1,12 +1,12 @@
 import type { BoardRepository } from '@/application/ports/BoardRepository'
-import { toSummary, type Board, type BoardId, type BoardSummary } from '@/domain/board/Board'
+import { toSummary, type Board, type BoardDraft, type BoardId, type BoardSummary } from '@/domain/board/Board'
 import type { SpaceId } from '@/domain/space/Space'
 import { boardFromDto, boardToDto, summaryFromDto, summaryToDto } from '../dto/boardMapper'
 import type { KeyValueStore } from './KeyValueStore'
-import { LocalCollection } from './LocalCollection'
+import { LocalCollection, type LocalIdentity } from './LocalCollection'
 import { DEFAULT_PREFIX } from './prefix'
 
-export function boardCollection(store: KeyValueStore, prefix: string) {
+export function boardCollection(store: KeyValueStore, prefix: string, identity: LocalIdentity) {
   return new LocalCollection<Board, BoardSummary>(
     store,
     { index: `${prefix}:boards:index`, item: (id) => `${prefix}:board:${id}` },
@@ -17,14 +17,16 @@ export function boardCollection(store: KeyValueStore, prefix: string) {
       toIndexEntry: (board) => summaryToDto(toSummary(board)),
       summaryFromDto,
     },
+    identity,
   )
 }
 
 export class LocalStorageBoardRepository implements BoardRepository {
   private readonly boards: LocalCollection<Board, BoardSummary>
 
-  constructor(store: KeyValueStore, prefix = DEFAULT_PREFIX) {
-    this.boards = boardCollection(store, prefix)
+  /** `identity` assigns ids/timestamps of created boards — a localStorage-only concern. */
+  constructor(store: KeyValueStore, identity: LocalIdentity, prefix = DEFAULT_PREFIX) {
+    this.boards = boardCollection(store, prefix, identity)
   }
 
   async list(spaceId: SpaceId): Promise<BoardSummary[]> {
@@ -35,8 +37,8 @@ export class LocalStorageBoardRepository implements BoardRepository {
     return this.boards.get(id)
   }
 
-  async create(board: Board): Promise<Board> {
-    return this.boards.create(board)
+  async create(draft: BoardDraft): Promise<Board> {
+    return this.boards.create(draft)
   }
 
   async save(board: Board): Promise<Board> {
