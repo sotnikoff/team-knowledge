@@ -1,0 +1,50 @@
+.panel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 46px;
+  max-width: 320px;
+  padding: 0 var(--space-1);
+}
+
+.title,
+.input {
+  height: 36px;
+  min-width: 0;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: text;
+  transition: background-color var(--dur-fast) var(--ease);
+}
+
+.title:hover {
+  background: var(--sheet-hover);
+}
+
+.input {
+  max-width: 300px;
+  border: 1px solid var(--accent);
+  background: var(--sheet);
+  color: var(--ink);
+  outline: none;
+  box-shadow: var(--focus-ring);
+  user-select: text;
+}
+
+.error {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  left: var(--space-2);
+  color: var(--danger);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}

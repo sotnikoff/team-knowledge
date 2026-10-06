@@ -1,0 +1,65 @@
+.menu {
+  width: 280px;
+  padding: var(--space-1);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  height: 36px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--ink-soft);
+  font-size: var(--text-md);
+  text-align: left;
+  transition: background-color var(--dur-fast) var(--ease);
+}
+
+.option:hover:not(:disabled) {
+  background: var(--sheet-hover);
+}
+
+.create {
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+
+.create:hover:not(:disabled) {
+  background: var(--accent-tint);
+}
+
+.docIcon {
+  display: flex;
+  color: var(--ink-faint);
+}
+
+.docIcon svg,
+.create svg {
+  width: 16px;
+  height: 16px;
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.divider {
+  height: 1px;
+  margin: var(--space-1) var(--space-2);
+  background: var(--line);
+}
+
+.list {
+  max-height: 288px;
+  overflow-y: auto;
+}
+
+.error {
+  padding: var(--space-1) var(--space-3);
+  color: var(--danger);
+  font-size: var(--text-sm);
+}

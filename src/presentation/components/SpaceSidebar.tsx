@@ -10,7 +10,12 @@ import {
   useDocumentList,
   useRenameDocument,
 } from '../hooks/useDocuments'
+import { Button } from '../ui/Button'
+import { cx } from '../ui/cx'
+import { IconButton } from '../ui/IconButton'
+import { Input } from '../ui/Input'
 import { AppIcon, type IconName } from './icons'
+import styles from './SpaceSidebar.module.css'
 import { useI18n } from '../i18n/i18n'
 
 export function SpaceSidebar({ spaceId }: { spaceId: SpaceId }) {
@@ -32,8 +37,8 @@ export function SpaceSidebar({ spaceId }: { spaceId: SpaceId }) {
   const error = createBoard.error ?? createDocument.error ?? boards.error ?? documents.error
 
   return (
-    <nav className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 pb-4">
-      {error && <p className="px-2 text-sm text-red-600">{errorMessage(error, t)}</p>}
+    <nav className={styles.nav}>
+      {error && <p className={styles.error}>{errorMessage(error, t)}</p>}
       <Section
         title={t('sidebar.boards')}
         createLabel={t('sidebar.newBoard')}
@@ -82,20 +87,14 @@ export function SpaceSidebar({ spaceId }: { spaceId: SpaceId }) {
 
 function Section(props: { title: string; createLabel: string; onCreate: () => void; children: ReactNode }) {
   return (
-    <section>
-      <header className="flex items-center justify-between px-2 py-1">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{props.title}</h2>
-        <button
-          type="button"
-          title={props.createLabel}
-          aria-label={props.createLabel}
-          onClick={props.onCreate}
-          className="rounded p-0.5 text-slate-500 hover:bg-slate-200 hover:text-slate-800"
-        >
+    <section className={styles.section}>
+      <header className={styles.sectionHeader}>
+        <h2 className={styles.sectionTitle}>{props.title}</h2>
+        <IconButton label={props.createLabel} size="sm" onClick={props.onCreate}>
           <AppIcon name="plus" />
-        </button>
+        </IconButton>
       </header>
-      <ul className="flex flex-col">{props.children}</ul>
+      <ul className={styles.list}>{props.children}</ul>
     </section>
   )
 }
@@ -119,9 +118,10 @@ function SidebarItem(props: {
 
   if (mode === 'rename') {
     return (
-      <li className="px-1 py-0.5">
-        <input
+      <li className={styles.renaming}>
+        <Input
           autoFocus
+          inputSize="sm"
           value={name}
           maxLength={NAME_MAX_LENGTH}
           aria-label={t('common.newName')}
@@ -131,61 +131,45 @@ function SidebarItem(props: {
             if (e.key === 'Enter') submitRename()
             if (e.key === 'Escape') setMode('view')
           }}
-          className="w-full rounded border border-indigo-400 px-2 py-1 text-sm outline-none"
+          className={styles.renameInput}
         />
-        {error !== null && <p className="px-1 text-xs text-red-600">{errorMessage(error, t)}</p>}
+        {error !== null && <p className={styles.error}>{errorMessage(error, t)}</p>}
       </li>
     )
   }
 
   return (
-    <li className="group relative">
-      <NavLink
-        to={props.to}
-        className={({ isActive }) =>
-          `flex items-center gap-2 rounded-md py-1.5 pl-2 pr-14 text-sm ${
-            isActive ? 'bg-indigo-100 text-indigo-800' : 'text-slate-700 hover:bg-slate-200'
-          }`
-        }
-      >
-        <span className="shrink-0 opacity-60">
+    <li className={styles.item}>
+      <NavLink to={props.to} className={({ isActive }) => cx(styles.link, isActive && styles.active)}>
+        <span className={styles.icon}>
           <AppIcon name={props.icon} />
         </span>
-        <span className="truncate">{props.name}</span>
+        <span className={styles.name}>{props.name}</span>
       </NavLink>
-      <span className="absolute right-1 top-1/2 flex -translate-y-1/2 gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100">
+      <span className={cx(styles.actions, mode === 'confirm' && styles.actionsVisible)}>
         {mode === 'confirm' ? (
-          <button
-            type="button"
+          <Button
+            variant="dangerSolid"
+            size="sm"
+            className={styles.confirm}
             onClick={() => void props.remove().catch(setError)}
             onBlur={() => setMode('view')}
             autoFocus
-            className="rounded bg-red-600 px-1.5 text-xs text-white"
           >
             {t('common.deleteConfirm')}
-          </button>
+          </Button>
         ) : (
           <>
-            <IconAction label={t('common.rename')} icon="edit" onClick={() => (setName(props.name), setMode('rename'))} />
-            <IconAction label={t('common.delete')} icon="trash" onClick={() => setMode('confirm')} />
+            <IconButton size="sm" label={t('common.rename')} onClick={() => (setName(props.name), setMode('rename'))}>
+              <AppIcon name="edit" />
+            </IconButton>
+            <IconButton size="sm" label={t('common.delete')} onClick={() => setMode('confirm')}>
+              <AppIcon name="trash" />
+            </IconButton>
           </>
         )}
       </span>
-      {error !== null && <p className="px-2 text-xs text-red-600">{errorMessage(error, t)}</p>}
+      {error !== null && <p className={styles.error}>{errorMessage(error, t)}</p>}
     </li>
-  )
-}
-
-function IconAction(props: { label: string; icon: IconName; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      title={props.label}
-      aria-label={props.label}
-      onClick={props.onClick}
-      className="rounded p-0.5 text-slate-500 hover:bg-slate-300 hover:text-slate-900 [&_svg]:h-4 [&_svg]:w-4"
-    >
-      <AppIcon name={props.icon} />
-    </button>
   )
 }

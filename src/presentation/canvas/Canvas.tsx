@@ -12,6 +12,8 @@ import { DocumentLayer } from './DocumentLayer'
 import { createRoughCanvas, renderScene, type Surface } from './renderScene'
 import { HIT_TOLERANCE, lineHandleAt } from './selection'
 import { TextEditor } from './TextEditor'
+import { cx } from '../ui/cx'
+import styles from './Canvas.module.css'
 import { tools, type PointerInput, type ToolContext, type ToolSession } from './tools'
 import { startPan } from './tools/handTool'
 import { hoverCursor } from './tools/selectTool'
@@ -178,11 +180,11 @@ export function Canvas(props: { onOpenDocument: (documentId: string) => void }) 
   const cursor = spaceHeld ? 'grab' : tool === 'select' ? hover : tools[tool].cursor
 
   return (
-    <div ref={containerRef} className="absolute inset-0 overflow-hidden">
+    <div ref={containerRef} className={styles.container}>
       <DocumentLayer />
       <canvas
         ref={canvasRef}
-        className="board-ink relative block touch-none"
+        className={cx('board-ink', styles.canvas)}
         style={{ width: surface.width, height: surface.height, cursor }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}

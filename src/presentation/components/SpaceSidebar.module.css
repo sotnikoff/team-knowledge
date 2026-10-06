@@ -1,0 +1,133 @@
+.nav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-height: 0;
+  padding: 0 var(--space-2) var(--space-4);
+  overflow-y: auto;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-1) var(--space-1) var(--space-2);
+}
+
+.sectionTitle {
+  color: var(--ink-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.item {
+  position: relative;
+}
+
+.link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 34px;
+  padding: 0 64px 0 var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--ink-soft);
+  font-size: var(--text-md);
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+
+.link:hover {
+  background: var(--sheet-hover);
+  color: var(--ink);
+}
+
+/* The opened item: a sheet pulled out of the notebook, with a bookmark ribbon. */
+.active,
+.active:hover {
+  background: var(--sheet);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+
+.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 7px;
+  bottom: 7px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--accent);
+}
+
+.icon {
+  display: flex;
+  flex-shrink: 0;
+  color: var(--ink-faint);
+}
+
+.icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.active .icon {
+  color: var(--accent);
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actions {
+  position: absolute;
+  top: 3px;
+  right: var(--space-1);
+  display: flex;
+  gap: 1px;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+
+.item:hover .actions,
+.actions:focus-within,
+.actionsVisible {
+  opacity: 1;
+}
+
+.confirm {
+  height: 28px;
+}
+
+.renaming {
+  padding: 2px var(--space-1);
+}
+
+.renameInput {
+  width: 100%;
+}
+
+.error {
+  padding: var(--space-1) var(--space-2);
+  color: var(--danger);
+  font-size: var(--text-xs);
+}

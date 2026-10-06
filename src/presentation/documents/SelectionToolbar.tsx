@@ -4,6 +4,7 @@ import { formatActions, type FormatActionId } from './formatActions'
 import { LinkButton } from './LinkButton'
 import { ToolbarButton } from './ToolbarButton'
 import { useFormatState } from './useFormatState'
+import styles from './SelectionToolbar.module.css'
 
 const inline: readonly FormatActionId[] = ['bold', 'italic', 'underline', 'strike', 'code']
 
@@ -15,7 +16,7 @@ export function SelectionToolbar({ editor }: { editor: Editor }) {
       editor={editor}
       // Not inside code blocks: inline marks make no sense there.
       shouldShow={({ editor: e, from, to }) => from !== to && !e.isActive('codeBlock')}
-      className="flex items-center gap-0.5 rounded-lg border border-slate-200 bg-surface p-1 shadow-lg"
+      className={styles.bubble}
     >
       {inline.map((id) => (
         <ToolbarButton key={id} editor={editor} action={formatActions[id]} active={state.active[id]} />

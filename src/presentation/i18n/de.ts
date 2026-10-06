@@ -47,6 +47,7 @@ export const de: Messages = {
   'sidebar.noDocuments': 'Noch keine Dokumente',
 
   'board.loading': 'Board wird geladen…',
+  'board.renameHint': 'Klicken zum Umbenennen',
 
   'document.loading': 'Dokument wird geladen…',
   'document.title': 'Dokumenttitel',
@@ -60,6 +61,7 @@ export const de: Messages = {
   'save.error': 'Speichern fehlgeschlagen',
   'save.conflict': 'Woanders geändert',
   'save.reload': 'Neueste Version laden',
+  'save.retryHint': 'Klicken zum Wiederholen',
 
   'tools.hand': 'Hand',
   'tools.select': 'Auswahl',

@@ -1,0 +1,237 @@
+/* Document typography: editor, board cards and exported cards. */
+
+/* ---------- Document typography ----------
+   Used by the editor (`RichTextEditor`) and by document cards on boards, so a
+   document looks the same in both places. */
+.document-prose {
+  --doc-text: var(--ink-soft);
+  --doc-heading: var(--ink);
+  --doc-muted: var(--ink-muted);
+  --doc-border: var(--line);
+  --doc-accent: var(--accent-ink);
+  --doc-quote: var(--ink-muted);
+  --doc-quote-border: var(--accent);
+  --doc-code-bg: #faf6ee;
+  --doc-code-text: #24292f;
+  --doc-inline-code-bg: var(--accent-tint);
+  --doc-inline-code-text: var(--accent-ink);
+  --doc-placeholder: var(--ink-faint);
+  color: var(--doc-text);
+  font-size: 1rem;
+  line-height: 1.75;
+  overflow-wrap: break-word;
+}
+
+.document-prose > * + * {
+  margin-top: 0.75em;
+}
+
+.document-prose h1,
+.document-prose h2,
+.document-prose h3 {
+  color: var(--doc-heading);
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+.document-prose h1 {
+  font-size: 1.875rem;
+  margin-top: 1.6em;
+}
+.document-prose h2 {
+  font-size: 1.5rem;
+  margin-top: 1.4em;
+  padding-bottom: 0.25em;
+  border-bottom: 1px solid var(--doc-border);
+}
+.document-prose h3 {
+  font-size: 1.2rem;
+  margin-top: 1.2em;
+}
+.document-prose > :first-child {
+  margin-top: 0;
+}
+
+.document-prose a {
+  color: var(--doc-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.document-prose ul,
+.document-prose ol {
+  padding-left: 1.5em;
+}
+.document-prose ul {
+  list-style: disc;
+}
+.document-prose ol {
+  list-style: decimal;
+}
+.document-prose li + li {
+  margin-top: 0.25em;
+}
+.document-prose li > p {
+  margin: 0;
+}
+.document-prose li::marker {
+  color: var(--doc-muted);
+}
+
+/* Task lists */
+.document-prose ul[data-type='taskList'] {
+  list-style: none;
+  padding-left: 0.25em;
+}
+.document-prose ul[data-type='taskList'] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+}
+.document-prose ul[data-type='taskList'] li > label {
+  margin-top: 0.3em;
+  user-select: none;
+}
+.document-prose ul[data-type='taskList'] li > label input {
+  width: 1em;
+  height: 1em;
+  accent-color: var(--doc-accent);
+  cursor: pointer;
+}
+.document-prose ul[data-type='taskList'] li > div {
+  flex: 1;
+}
+.document-prose ul[data-type='taskList'] li[data-checked='true'] > div {
+  color: var(--doc-muted);
+  text-decoration: line-through;
+}
+
+.document-prose blockquote {
+  border-left: 3px solid var(--doc-quote-border);
+  padding: 0.1em 0 0.1em 1em;
+  color: var(--doc-quote);
+}
+
+.document-prose hr {
+  border: none;
+  border-top: 1px solid var(--doc-border);
+  margin: 1.5em 0;
+}
+
+.document-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+}
+.document-prose :not(pre) > code {
+  background: var(--doc-inline-code-bg);
+  color: var(--doc-inline-code-text);
+  border-radius: 4px;
+  padding: 0.15em 0.35em;
+}
+.document-prose pre {
+  background: var(--doc-code-bg);
+  border: 1px solid var(--doc-border);
+  border-radius: 8px;
+  padding: 0.9em 1.1em;
+  overflow-x: auto;
+  line-height: 1.55;
+  tab-size: 2;
+}
+.document-prose pre code {
+  background: none;
+  color: var(--doc-code-text);
+  padding: 0;
+  font-size: 0.85em;
+}
+
+/* On board cards code wraps instead of scrolling: the card shows everything. */
+.document-card .document-prose pre {
+  white-space: pre-wrap;
+  overflow-x: visible;
+}
+
+.document-prose .ProseMirror-selectednode {
+  outline: 2px solid #a5b4fc;
+}
+
+/* Placeholder of the empty document editor (TipTap Placeholder extension). */
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--doc-placeholder);
+  pointer-events: none;
+}
+
+.dark .document-prose {
+  --doc-code-bg: #1a1714;
+  --doc-code-text: #e6dccb;
+}
+
+/* Syntax colours of highlight.js' "github-dark" theme (the light theme is
+   imported above; its rules are overridden here only under `.dark`). */
+.dark .hljs-doctag,
+.dark .hljs-keyword,
+.dark .hljs-meta .hljs-keyword,
+.dark .hljs-template-tag,
+.dark .hljs-template-variable,
+.dark .hljs-type,
+.dark .hljs-variable.language_ {
+  color: #ff7b72;
+}
+.dark .hljs-title,
+.dark .hljs-title.class_,
+.dark .hljs-title.class_.inherited__,
+.dark .hljs-title.function_ {
+  color: #d2a8ff;
+}
+.dark .hljs-attr,
+.dark .hljs-attribute,
+.dark .hljs-literal,
+.dark .hljs-meta,
+.dark .hljs-number,
+.dark .hljs-operator,
+.dark .hljs-variable,
+.dark .hljs-selector-attr,
+.dark .hljs-selector-class,
+.dark .hljs-selector-id {
+  color: #79c0ff;
+}
+.dark .hljs-regexp,
+.dark .hljs-string,
+.dark .hljs-meta .hljs-string {
+  color: #a5d6ff;
+}
+.dark .hljs-built_in,
+.dark .hljs-symbol {
+  color: #ffa657;
+}
+.dark .hljs-comment,
+.dark .hljs-code,
+.dark .hljs-formula {
+  color: #8b949e;
+}
+.dark .hljs-name,
+.dark .hljs-quote,
+.dark .hljs-selector-tag,
+.dark .hljs-selector-pseudo {
+  color: #7ee787;
+}
+.dark .hljs-subst {
+  color: #c9d1d9;
+}
+.dark .hljs-section {
+  color: #1f6feb;
+}
+.dark .hljs-bullet {
+  color: #f2cc60;
+}
+.dark .hljs-addition {
+  color: #aff5b4;
+  background-color: #033a16;
+}
+.dark .hljs-deletion {
+  color: #ffdcd7;
+  background-color: #67060c;
+}

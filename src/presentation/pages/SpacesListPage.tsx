@@ -8,6 +8,10 @@ import { ThemeToggle } from '../theme/ThemeToggle'
 import { useCreateSpace, useDeleteSpace, useRenameSpace, useSpaceList } from '../hooks/useSpaces'
 import { useI18n } from '../i18n/i18n'
 import { LanguageSelect } from '../i18n/LanguageSelect'
+import { Button } from '../ui/Button'
+import { Input } from '../ui/Input'
+import { Scribble } from '../ui/Scribble'
+import styles from './SpacesListPage.module.css'
 
 export function SpacesListPage() {
   const i18n = useI18n()
@@ -27,47 +31,51 @@ export function SpacesListPage() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
-      <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold text-slate-900">{t('spaces.title')}</h1>
-          <p className="text-slate-500">{t('spaces.subtitle')}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <form onSubmit={onSubmit} className="flex gap-2">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              maxLength={NAME_MAX_LENGTH}
-              placeholder={t('spaces.newPlaceholder')}
-              aria-label={t('spaces.newPlaceholder')}
-              className="w-64 rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-indigo-500"
-            />
-            <button
-              type="submit"
-              disabled={create.isPending}
-              className="rounded-md bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
-            >
-              {t('common.create')}
-            </button>
-          </form>
+    <main className={styles.page}>
+      <div className={styles.topbar}>
+        <span className={styles.brand}>
+          <span className={styles.mark} aria-hidden="true">
+            tk
+          </span>
+          Team Knowledge
+        </span>
+        <div className={styles.prefs}>
           <ThemeToggle />
           <LanguageSelect />
         </div>
+      </div>
+
+      <header className={styles.hero}>
+        <div>
+          <h1 className={styles.title}>{t('spaces.title')}</h1>
+          <Scribble className={styles.underline} />
+          <p className={styles.subtitle}>{t('spaces.subtitle')}</p>
+        </div>
+        <form onSubmit={onSubmit} className={styles.create}>
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={NAME_MAX_LENGTH}
+            placeholder={t('spaces.newPlaceholder')}
+            aria-label={t('spaces.newPlaceholder')}
+            className={styles.createInput}
+          />
+          <Button type="submit" variant="primary" disabled={create.isPending}>
+            {t('common.create')}
+          </Button>
+        </form>
       </header>
 
-      {create.error && <p className="mb-4 text-red-600">{errorMessage(create.error, t)}</p>}
+      {create.error && <p className={styles.error}>{errorMessage(create.error, t)}</p>}
 
       {spaces.isPending ? (
-        <p className="text-slate-500">{t('common.loading')}</p>
+        <p className={styles.muted}>{t('common.loading')}</p>
       ) : spaces.error ? (
-        <p className="text-red-600">{errorMessage(spaces.error, t)}</p>
+        <p className={styles.error}>{errorMessage(spaces.error, t)}</p>
       ) : spaces.data.length === 0 ? (
-        <div className="rounded-xl border-2 border-dashed border-slate-200 p-12 text-center text-slate-500">
-          {t('spaces.empty')}
-        </div>
+        <div className={styles.empty}>{t('spaces.empty')}</div>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className={styles.grid}>
           {spaces.data.map((space) => (
             <li key={space.id}>
               <ItemCard

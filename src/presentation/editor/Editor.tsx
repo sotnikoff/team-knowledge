@@ -9,7 +9,6 @@ import { Canvas } from '../canvas/Canvas'
 import { BottomBar } from '../components/BottomBar'
 import { ExportMenu } from '../components/ExportMenu'
 import { InsertDocumentMenu } from '../components/InsertDocumentMenu'
-import { Island } from '../components/Island'
 import { SaveStatus } from '../components/SaveStatus'
 import { StylePanel } from '../components/StylePanel'
 import { Toolbar } from '../components/Toolbar'
@@ -17,6 +16,8 @@ import { useAutosave } from '../hooks/useAutosave'
 import { queryKeys } from '../hooks/queryKeys'
 import { getModel, resetEditor, useEditor, useEditorSession } from './store'
 import { useEditorShortcuts } from './useEditorShortcuts'
+import { BoardTitle } from './BoardTitle'
+import styles from './Editor.module.css'
 
 interface EditorProps {
   /** The freshest cached copy of the board; its first value seeds the editor. */
@@ -69,27 +70,23 @@ function LoadedEditor({ initial, ...props }: EditorProps & { initial: Board }) {
   }
 
   return (
-    <div ref={root} className="absolute inset-0 select-none overflow-hidden bg-canvas">
+    <div ref={root} className={styles.board}>
       <Canvas onOpenDocument={openDocument} />
-      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
-        <Island className="pointer-events-auto flex h-11 items-center px-3">
-          <span className="max-w-48 truncate font-medium text-slate-800">{props.board.name}</span>
-        </Island>
-        <div className="pointer-events-auto">
-          <Toolbar />
-        </div>
-        <div className="pointer-events-auto flex items-start gap-2">
+      <div className={styles.topBar}>
+        <BoardTitle board={props.board} />
+        <Toolbar />
+        <div className={styles.actions}>
           <InsertDocumentMenu spaceId={initial.spaceId} viewCenter={viewCenter} />
           <ExportMenu boardName={props.board.name} />
-          <Island className="flex h-11 items-center">
+          <span className={styles.status}>
             <SaveStatus status={status} onRetry={retry} onReload={props.onReload} />
-          </Island>
+          </span>
         </div>
       </div>
-      <div className="pointer-events-auto absolute left-3 top-20">
+      <div className={styles.stylePanel}>
         <StylePanel />
       </div>
-      <div className="pointer-events-auto absolute bottom-3 left-3">
+      <div className={styles.bottom}>
         <BottomBar />
       </div>
     </div>

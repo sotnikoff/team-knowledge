@@ -166,27 +166,45 @@ export function renderLabel(el: ShapeElement, ctx: CanvasRenderingContext2D): vo
   ctx.restore()
 }
 
-/**
- * Draws a line's label at the middle of the line, on a plate of the canvas
- * colour so the line does not cross the text. (White is right in both themes:
- * the dark theme shows the canvas through the `board-ink` inverting filter.)
- */
-export function renderLineLabel(el: LinearElement, ctx: CanvasRenderingContext2D): void {
-  if (el.label.trim() === '') return
+/** Room left around a line label where the line is interrupted. */
+const LABEL_GAP = 6
+
+/** Box of a line's label, measured with the real font (world units). */
+function lineLabelRect(el: LinearElement, ctx: CanvasRenderingContext2D) {
   const anchor = lineLabelAnchor(el)
   const lines = el.label.split('\n')
   const lineHeight = LINE_LABEL_FONT_SIZE * LINE_HEIGHT
   ctx.save()
   ctx.font = fontFor(LINE_LABEL_FONT_SIZE)
   const width = Math.max(...lines.map((line) => ctx.measureText(line).width))
+  ctx.restore()
   const height = lines.length * lineHeight
-  const pad = 6
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(anchor.x - width / 2 - pad, anchor.y - height / 2 - pad / 2, width + pad * 2, height + pad)
+  return { anchor, lines, lineHeight, x: anchor.x - width / 2, y: anchor.y - height / 2, width, height }
+}
+
+/**
+ * Draws a labelled line with a gap where the label is: the line is clipped
+ * around the text instead of being covered by a plate, so whatever lies under
+ * it (the paper, other elements) stays visible.
+ */
+function renderLabelledLine(el: LinearElement, r: RenderContext, showText: boolean): void {
+  const box = lineLabelRect(el, r.ctx)
+  const { ctx } = r
+  ctx.save()
+  ctx.beginPath()
+  // Everything except the label box (even-odd: the inner rect becomes a hole).
+  ctx.rect(box.x - 1e5, box.y - 1e5, 2e5, 2e5)
+  ctx.rect(box.x - LABEL_GAP, box.y - LABEL_GAP / 2, box.width + LABEL_GAP * 2, box.height + LABEL_GAP)
+  ctx.clip('evenodd')
+  renderElement(el, r)
+  ctx.restore()
+  if (!showText) return
+  ctx.save()
+  ctx.font = fontFor(LINE_LABEL_FONT_SIZE)
   ctx.fillStyle = el.style.strokeColor
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  lines.forEach((line, i) => ctx.fillText(line, anchor.x, anchor.y - height / 2 + (i + 0.5) * lineHeight))
+  box.lines.forEach((line, i) => ctx.fillText(line, box.anchor.x, box.y + (i + 0.5) * box.lineHeight))
   ctx.restore()
 }
 
@@ -210,8 +228,12 @@ export function drawElements(
   for (const el of elements) {
     const editing = el.id === options.editingId
     if (editing && el.type === 'text') continue
+    if (isLinearElement(el) && el.label.trim() !== '') {
+      // While the label is being edited the gap stays, the text is the textarea.
+      renderLabelledLine(el, { ctx, rc, gen: generator }, !editing)
+      continue
+    }
     renderElement(el, { ctx, rc, gen: generator })
     if (!editing && isShapeElement(el)) renderLabel(el, ctx)
-    if (!editing && isLinearElement(el)) renderLineLabel(el, ctx)
   }
 }

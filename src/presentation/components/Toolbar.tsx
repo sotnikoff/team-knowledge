@@ -2,7 +2,9 @@ import * as editor from '@/application/editor/editorModel'
 import type { ToolType } from '@/application/editor/editorModel'
 import { dispatch, useEditor } from '../editor/store'
 import { AppIcon } from './icons'
-import { IconButton, Island } from './Island'
+import { IconButton } from '../ui/IconButton'
+import { Panel } from '../ui/Panel'
+import styles from './Toolbar.module.css'
 import { useI18n } from '../i18n/i18n'
 
 /** Keyboard shortcuts of each tool (see `useEditorShortcuts`). */
@@ -22,7 +24,7 @@ export function Toolbar() {
   const { t } = useI18n()
   const current = useEditor((m) => m.tool)
   return (
-    <Island className="flex gap-0.5">
+    <Panel className={styles.toolbar}>
       {items.map((item) => (
         <IconButton
           key={item.tool}
@@ -34,6 +36,6 @@ export function Toolbar() {
           <AppIcon name={item.tool} />
         </IconButton>
       ))}
-    </Island>
+    </Panel>
   )
 }

@@ -12,6 +12,8 @@ import {
 } from '@/domain/element/types'
 import type { KeyboardEvent } from 'react'
 import { dispatch, useEditor } from '../editor/store'
+import { cx } from '../ui/cx'
+import styles from './TextEditor.module.css'
 import { commitTextEdit } from '../editor/textEditing'
 import { fontFor, LABEL_FONT_SIZE, LINE_HEIGHT, measureText, wrapText } from './text'
 
@@ -25,7 +27,7 @@ export function TextEditor() {
   return null
 }
 
-const baseClass = 'board-ink absolute resize-none overflow-hidden border-0 bg-transparent p-0 outline-none'
+
 
 const finishOnEscape = (e: KeyboardEvent) => {
   if (e.key === 'Escape') commitTextEdit()
@@ -55,7 +57,7 @@ function FreeTextArea({ element }: { element: TextElement }) {
       onKeyDown={finishOnEscape}
       spellCheck={false}
       wrap="off"
-      className={`${baseClass} whitespace-pre`}
+      className={cx('board-ink', styles.textarea, styles.pre)}
       style={{
         left: position.x,
         top: position.y,
@@ -93,7 +95,7 @@ function LabelTextArea({ element }: { element: ShapeElement }) {
       onKeyDown={finishOnEscape}
       onFocus={(e) => e.currentTarget.setSelectionRange(element.label.length, element.label.length)}
       spellCheck={false}
-      className={`${baseClass} text-center whitespace-pre-wrap`}
+      className={cx('board-ink', styles.textarea, styles.centered, styles.wrap)}
       style={{
         left: topLeft.x,
         top: topLeft.y,
@@ -133,7 +135,7 @@ function LineLabelTextArea({ element }: { element: LinearElement }) {
       onKeyDown={finishOnEscape}
       spellCheck={false}
       wrap="off"
-      className={`${baseClass} text-center whitespace-pre`}
+      className={cx('board-ink', styles.textarea, styles.centered, styles.pre)}
       style={{
         left: topLeft.x,
         top: topLeft.y,
@@ -142,8 +144,6 @@ function LineLabelTextArea({ element }: { element: LinearElement }) {
         font: fontFor(LINE_LABEL_FONT_SIZE * viewport.zoom),
         lineHeight: LINE_HEIGHT,
         color: element.style.strokeColor,
-        // Same plate as the rendered label; the line must not cross the text.
-        background: '#ffffff',
       }}
     />
   )

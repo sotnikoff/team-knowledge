@@ -1,6 +1,7 @@
 import type { Editor } from '@tiptap/react'
 import type { ReactNode } from 'react'
-import { Select } from '../components/Select'
+import { Select } from '../ui/Select'
+import styles from './EditorToolbar.module.css'
 import { useI18n } from '../i18n/i18n'
 import { CODE_LANGUAGES } from './extensions'
 import { blockTypes, formatActions, type FormatActionId } from './formatActions'
@@ -33,7 +34,7 @@ export function EditorToolbar(props: { editor: Editor; end?: ReactNode }) {
     <div
       role="toolbar"
       aria-label={t('format.toolbar')}
-      className="sticky top-0 z-10 flex flex-wrap items-center gap-0.5 border-b border-slate-200 bg-surface/95 px-4 py-2 backdrop-blur"
+      className={styles.toolbar}
     >
       {button('undo')}
       {button('redo')}
@@ -42,7 +43,7 @@ export function EditorToolbar(props: { editor: Editor; end?: ReactNode }) {
         aria-label={t('format.textStyle')}
         value={state.block}
         onChange={(e) => blockTypes.find((b) => b.id === e.target.value)?.run(editor)}
-        className="h-8 w-44"
+        className={styles.blockSelect}
       >
         {state.block === '' && <option value="">—</option>}
         {blockTypes.map((b) => (
@@ -69,7 +70,7 @@ export function EditorToolbar(props: { editor: Editor; end?: ReactNode }) {
               .updateAttributes('codeBlock', { language: e.target.value || null })
               .run()
           }
-          className="ml-1 h-8"
+          className={styles.languageSelect}
         >
           <option value="">{t('format.codeAuto')}</option>
           {CODE_LANGUAGES.map((l) => (
@@ -81,7 +82,7 @@ export function EditorToolbar(props: { editor: Editor; end?: ReactNode }) {
       )}
       {button('horizontalRule')}
       {button('clear')}
-      {props.end && <div className="ml-auto pl-2">{props.end}</div>}
+      {props.end && <div className={styles.end}>{props.end}</div>}
     </div>
   )
 }

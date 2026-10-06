@@ -5,6 +5,7 @@ import { EditorToolbar } from './EditorToolbar'
 import { documentExtensions } from './extensions'
 import { fromEditorContent, toEditorContent } from './richTextAdapter'
 import { SelectionToolbar } from './SelectionToolbar'
+import styles from './RichTextEditor.module.css'
 import { useI18n } from '../i18n/i18n'
 
 export interface RichTextEditorHandle {
@@ -33,7 +34,7 @@ export function RichTextEditor({
     extensions: documentExtensions({ placeholder: t('document.placeholder') }),
     content: toEditorContent(initialContent),
     editorProps: {
-      attributes: { class: 'document-prose min-h-[50vh] outline-none' },
+      attributes: { class: `document-prose ${styles.content}` },
     },
     onUpdate: ({ editor: e }) => onChange(fromEditorContent(e.getJSON())),
   })
@@ -54,9 +55,11 @@ export function RichTextEditor({
   return (
     <>
       <EditorToolbar editor={editor} end={toolbarEnd} />
-      <div className="mx-auto max-w-3xl px-8 pb-24 pt-8">
-        {header}
-        <EditorContent editor={editor} />
+      <div className={styles.page}>
+        <div className={styles.sheet}>
+          {header}
+          <EditorContent editor={editor} />
+        </div>
       </div>
       <SelectionToolbar editor={editor} />
     </>

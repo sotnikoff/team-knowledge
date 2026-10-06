@@ -1,0 +1,25 @@
+.anchor {
+  position: relative;
+}
+
+.popover {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  z-index: var(--z-popover);
+  animation: pop var(--dur) var(--ease);
+}
+
+.end {
+  right: 0;
+}
+
+.start {
+  left: 0;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}

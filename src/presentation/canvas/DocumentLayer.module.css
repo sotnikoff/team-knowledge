@@ -1,0 +1,48 @@
+.layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* A document pinned to the board: a sheet with a paper shadow. */
+.card {
+  position: absolute;
+  padding: var(--space-6) var(--space-8) var(--space-8);
+  background: var(--sheet);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm) var(--radius-sm) var(--radius-lg) var(--radius-sm);
+  box-shadow: var(--shadow-md);
+}
+
+.title {
+  margin-bottom: var(--space-4);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.missing {
+  color: var(--ink-muted);
+}
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.skeleton > div {
+  height: 14px;
+  border-radius: 4px;
+  background: var(--sheet-hover);
+  animation: shimmer 1.4s var(--ease) infinite;
+}
+
+@keyframes shimmer {
+  50% {
+    opacity: 0.5;
+  }
+}

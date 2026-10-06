@@ -1,0 +1,22 @@
+/* Inline editors over the canvas; geometry and font come from inline styles. */
+.textarea {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+}
+
+.centered {
+  text-align: center;
+}
+
+.pre {
+  white-space: pre;
+}
+
+.wrap {
+  white-space: pre-wrap;
+}

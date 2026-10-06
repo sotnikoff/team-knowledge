@@ -1,0 +1,58 @@
+/* Just a dot; the state is in the tooltip. */
+.status {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 0%, transparent);
+  transition: background-color var(--dur) var(--ease);
+}
+
+.saved {
+  background: var(--success);
+}
+
+.pending {
+  background: var(--warning);
+}
+
+.failed {
+  background: var(--danger);
+  box-shadow: 0 0 0 4px var(--danger-tint);
+}
+
+/* Error / conflict: clickable, with a slow attention ring. */
+.alert {
+  cursor: pointer;
+}
+
+.alert:hover .dot {
+  transform: scale(1.15);
+}
+
+.alert .dot {
+  animation: ring 1.8s var(--ease) infinite;
+}
+
+.pulse {
+  animation: pulse 1s var(--ease) infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes ring {
+  50% {
+    box-shadow: 0 0 0 7px var(--danger-tint);
+  }
+}

@@ -47,6 +47,7 @@ export const en: Messages = {
   'sidebar.noDocuments': 'No documents yet',
 
   'board.loading': 'Loading board…',
+  'board.renameHint': 'Click to rename',
 
   'document.loading': 'Loading document…',
   'document.title': 'Document title',
@@ -60,6 +61,7 @@ export const en: Messages = {
   'save.error': 'Save failed',
   'save.conflict': 'Changed elsewhere',
   'save.reload': 'Load latest',
+  'save.retryHint': 'Click to retry',
 
   'tools.hand': 'Hand',
   'tools.select': 'Selection',

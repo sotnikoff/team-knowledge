@@ -1,5 +1,6 @@
 import { setTheme, useTheme } from './theme'
 import { useI18n } from '../i18n/i18n'
+import styles from './ThemeToggle.module.css'
 
 const sun = (
   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
@@ -26,7 +27,7 @@ export function ThemeToggle({ withLabel = false }: { withLabel?: boolean }) {
       title={label}
       aria-label={label}
       onClick={() => setTheme(next)}
-      className="flex h-9 items-center gap-2 rounded-md px-2 text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+      className={styles.toggle}
     >
       {next === 'dark' ? moon : sun}
       {withLabel && label}

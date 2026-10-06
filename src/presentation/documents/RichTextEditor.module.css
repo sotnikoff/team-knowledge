@@ -1,0 +1,25 @@
+.page {
+  padding: var(--space-10) var(--space-6) 120px;
+}
+
+/* The document is a single sheet of paper lying on the desk. */
+.sheet {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: var(--space-12) 72px 96px;
+  background: var(--sheet);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+}
+
+.content {
+  min-height: 50vh;
+  outline: none;
+}
+
+@media (max-width: 760px) {
+  .sheet {
+    padding: var(--space-8) var(--space-6) var(--space-12);
+  }
+}

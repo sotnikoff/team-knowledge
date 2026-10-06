@@ -1,6 +1,12 @@
 import type { Editor } from '@tiptap/react'
-import { useState, type FormEvent } from 'react'
+import { useCallback, useState, type FormEvent } from 'react'
 import { useI18n } from '../i18n/i18n'
+import { Button } from '../ui/Button'
+import { cx } from '../ui/cx'
+import { Input } from '../ui/Input'
+import { Popover } from '../ui/Popover'
+import styles from './LinkButton.module.css'
+import buttonStyles from './ToolbarButton.module.css'
 
 const linkIcon = (
   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
@@ -22,43 +28,45 @@ export function LinkButton(props: { editor: Editor; href: string | undefined }) 
     setOpen(false)
   }
 
+  const close = useCallback(() => setOpen(false), [])
+
   return (
-    <span className="relative">
-      <button
-        type="button"
-        title={t('format.link')}
-        aria-label={t('format.link')}
-        aria-pressed={Boolean(props.href)}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => {
-          setUrl(props.href ?? '')
-          setOpen((o) => !o)
-        }}
-        className={`flex h-8 min-w-8 items-center justify-center rounded-md px-1.5 ${
-          props.href ? 'bg-indigo-100 text-indigo-700' : 'text-slate-700 hover:bg-slate-100'
-        }`}
-      >
-        {linkIcon}
-      </button>
-      {open && (
-        <form
-          onSubmit={apply}
-          className="absolute left-0 top-10 z-20 flex w-80 gap-2 rounded-lg border border-slate-200 bg-surface p-2 shadow-lg"
+    <Popover
+      open={open}
+      onClose={close}
+      align="start"
+      className={styles.popover}
+      trigger={
+        <button
+          type="button"
+          title={t('format.link')}
+          aria-label={t('format.link')}
+          aria-pressed={Boolean(props.href)}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => {
+            setUrl(props.href ?? '')
+            setOpen((o) => !o)
+          }}
+          className={cx(buttonStyles.button, props.href && buttonStyles.active)}
         >
-          <input
-            autoFocus
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
-            placeholder="https://…"
-            aria-label={t('format.linkUrl')}
-            className="min-w-0 flex-1 rounded border border-slate-300 px-2 py-1 text-sm outline-none focus:border-indigo-500"
-          />
-          <button type="submit" className="rounded bg-indigo-600 px-2 text-sm text-white hover:bg-indigo-500">
-            {url.trim() === '' && props.href ? t('format.linkRemove') : 'OK'}
-          </button>
-        </form>
-      )}
-    </span>
+          {linkIcon}
+        </button>
+      }
+    >
+      <form onSubmit={apply} className={styles.form}>
+        <Input
+          autoFocus
+          inputSize="sm"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="https://…"
+          aria-label={t('format.linkUrl')}
+          className={styles.input}
+        />
+        <Button type="submit" variant="primary" size="sm">
+          {url.trim() === '' && props.href ? t('format.linkRemove') : 'OK'}
+        </Button>
+      </form>
+    </Popover>
   )
 }

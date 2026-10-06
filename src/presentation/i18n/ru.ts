@@ -50,6 +50,7 @@ export const ru = {
   'sidebar.noDocuments': 'Документов пока нет',
 
   'board.loading': 'Загрузка доски…',
+  'board.renameHint': 'Нажмите, чтобы переименовать',
 
   'document.loading': 'Загрузка документа…',
   'document.title': 'Название документа',
@@ -63,6 +64,7 @@ export const ru = {
   'save.error': 'Ошибка сохранения',
   'save.conflict': 'Изменено в другом месте',
   'save.reload': 'Загрузить актуальную',
+  'save.retryHint': 'Нажмите, чтобы повторить',
 
   'tools.hand': 'Рука',
   'tools.select': 'Выделение',

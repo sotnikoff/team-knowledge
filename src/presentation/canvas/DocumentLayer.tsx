@@ -7,6 +7,8 @@ import { StaticDocument } from '../documents/StaticDocument'
 import { dispatch, useEditor } from '../editor/store'
 import { useDocument } from '../hooks/useDocuments'
 import { useI18n } from '../i18n/i18n'
+import { cx } from '../ui/cx'
+import styles from './DocumentLayer.module.css'
 
 /**
  * Document cards of the board, rendered as DOM under the (transparent) canvas
@@ -20,7 +22,7 @@ export function DocumentLayer() {
   if (documents.length === 0) return null
 
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+    <div className={styles.layer}>
       <div
         style={{
           transformOrigin: '0 0',
@@ -58,22 +60,22 @@ function DocumentCard({ element }: { element: DocumentElement }) {
     <article
       ref={ref}
       data-element-id={element.id}
-      className="document-card absolute rounded-xl border border-slate-200 bg-surface px-7 py-6 shadow-md"
+      className={cx('document-card', styles.card)}
       style={{ left: element.x, top: element.y, width: element.width }}
     >
       {isPending ? (
-        <div className="space-y-3">
-          <div className="h-7 w-2/3 animate-pulse rounded bg-slate-100" />
-          <div className="h-4 w-full animate-pulse rounded bg-slate-100" />
-          <div className="h-4 w-5/6 animate-pulse rounded bg-slate-100" />
+        <div className={styles.skeleton}>
+          <div style={{ width: '66%', height: 26 }} />
+          <div style={{ width: '100%' }} />
+          <div style={{ width: '82%' }} />
         </div>
       ) : error ? (
-        <p className="text-slate-500">
+        <p className={styles.missing}>
           {t(error instanceof NotFoundError ? 'document.deleted' : 'document.loadFailed')}
         </p>
       ) : (
         <>
-          <h1 className="mb-4 text-2xl font-bold text-slate-900">{doc.title}</h1>
+          <h1 className={styles.title}>{doc.title}</h1>
           <StaticDocument content={doc.content} />
         </>
       )}

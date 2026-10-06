@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useCallback, useState, type ReactNode } from 'react'
 import { getModel, useEditor } from '../editor/store'
 import {
   downloadBlob,
@@ -8,8 +8,13 @@ import {
   NothingToExportError,
   type ExportFormat,
 } from '../export/exportImage'
-import { Island } from './Island'
 import { useI18n } from '../i18n/i18n'
+import { Button } from '../ui/Button'
+import { cx } from '../ui/cx'
+import { Panel } from '../ui/Panel'
+import { Popover } from '../ui/Popover'
+import { SegmentedControl } from '../ui/SegmentedControl'
+import styles from './ExportMenu.module.css'
 
 type Scope = 'all' | 'selection'
 
@@ -56,86 +61,75 @@ export function ExportMenu(props: { boardName: string }) {
     }
   }
 
-  const segment = (active: boolean) =>
-    `flex-1 rounded-md px-2 py-1 text-sm disabled:opacity-40 ${
-      active ? 'bg-surface text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-    }`
+  const closeMenu = useCallback(() => setOpen(false), [])
 
   return (
-    <div className="relative">
-      <Island className="flex">
-        <button
-          type="button"
-          title={t('export.title')}
-          aria-expanded={open}
-          disabled={isEmpty}
-          onClick={toggle}
-          className={`flex h-9 items-center gap-1.5 rounded-md px-2.5 text-sm disabled:opacity-40 ${
-            open ? 'bg-indigo-100 text-indigo-700' : 'text-slate-700 hover:bg-slate-100'
-          }`}
-        >
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />
-          </svg>
-          {t('export.button')}
-        </button>
-      </Island>
-      {open && (
-        <Island className="absolute right-0 top-12 z-20 flex w-72 flex-col gap-3 p-3">
-          <Field label={t('export.what')}>
-            <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
-              <button type="button" className={segment(scope === 'all')} aria-pressed={scope === 'all'} onClick={() => setScope('all')}>
-                {t('export.all')}
-              </button>
-              <button
-                type="button"
-                className={segment(scope === 'selection')}
-                aria-pressed={scope === 'selection'}
-                disabled={selectedCount === 0}
-                title={selectedCount === 0 ? t('export.selectFirst') : undefined}
-                onClick={() => setScope('selection')}
-              >
-                {selectedCount > 0 ? t('export.selectionCount', { count: selectedCount }) : t('export.selection')}
-              </button>
-            </div>
-          </Field>
-          <Field label={t('export.format')}>
-            <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
-              {EXPORT_FORMATS.map((f) => (
-                <button key={f.id} type="button" className={segment(format === f.id)} aria-pressed={format === f.id} onClick={() => setFormat(f.id)}>
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          </Field>
-          <Field label={t('export.scale')}>
-            <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
-              {SCALES.map((s) => (
-                <button key={s} type="button" className={segment(scale === s)} aria-pressed={scale === s} onClick={() => setScale(s)}>
-                  {s}×
-                </button>
-              ))}
-            </div>
-          </Field>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+    <Popover
+      open={open}
+      onClose={closeMenu}
+      className={styles.menu}
+      trigger={
+        <Panel>
           <button
             type="button"
-            disabled={busy}
-            onClick={() => void run()}
-            className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+            title={t('export.title')}
+            aria-expanded={open}
+            disabled={isEmpty}
+            onClick={toggle}
+            className={cx(styles.trigger, open && styles.triggerOpen)}
           >
-            {busy ? t('export.preparing') : t('export.download')}
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />
+            </svg>
+            {t('export.button')}
           </button>
-        </Island>
-      )}
-    </div>
+        </Panel>
+      }
+    >
+      <Field label={t('export.what')}>
+        <SegmentedControl<Scope>
+          label={t('export.what')}
+          value={scope}
+          onChange={setScope}
+          options={[
+            { value: 'all', label: t('export.all') },
+            {
+              value: 'selection',
+              label: selectedCount > 0 ? t('export.selectionCount', { count: selectedCount }) : t('export.selection'),
+              disabled: selectedCount === 0,
+              title: selectedCount === 0 ? t('export.selectFirst') : undefined,
+            },
+          ]}
+        />
+      </Field>
+      <Field label={t('export.format')}>
+        <SegmentedControl<ExportFormat>
+          label={t('export.format')}
+          value={format}
+          onChange={setFormat}
+          options={EXPORT_FORMATS.map((f) => ({ value: f.id, label: f.label }))}
+        />
+      </Field>
+      <Field label={t('export.scale')}>
+        <SegmentedControl<number>
+          label={t('export.scale')}
+          value={scale}
+          onChange={setScale}
+          options={SCALES.map((s) => ({ value: s, label: `${s}×` }))}
+        />
+      </Field>
+      {error && <p className={styles.error}>{error}</p>}
+      <Button variant="primary" disabled={busy} onClick={() => void run()} className={styles.download}>
+        {busy ? t('export.preparing') : t('export.download')}
+      </Button>
+    </Popover>
   )
 }
 
 function Field(props: { label: string; children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-xs text-slate-500">{props.label}</span>
+    <div className={styles.field}>
+      <span className={styles.label}>{props.label}</span>
       {props.children}
     </div>
   )

@@ -3,7 +3,9 @@ import * as editor from '@/application/editor/editorModel'
 import { findElement } from '@/application/editor/scene'
 import { isLinearElement, TRANSPARENT, type ElementStyle } from '@/domain/element/types'
 import { dispatch, useEditor } from '../editor/store'
-import { Island } from './Island'
+import { cx } from '../ui/cx'
+import { Panel } from '../ui/Panel'
+import styles from './StylePanel.module.css'
 import { useI18n, type MessageKey } from '../i18n/i18n'
 
 const strokeColors = ['#1e1e1e', '#e03131', '#2f9e44', '#1971c2', '#f08c00']
@@ -21,9 +23,9 @@ const roughnesses: { value: number; label: MessageKey }[] = [
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-xs text-slate-500">{title}</span>
-      <div className="flex gap-1">{children}</div>
+    <div className={styles.section}>
+      <span className={styles.title}>{title}</span>
+      <div className={styles.row}>{children}</div>
     </div>
   )
 }
@@ -38,13 +40,13 @@ function Swatch({ color, active, onClick }: { color: string; active: boolean; on
       aria-label={transparent ? t('style.noFill') : color}
       aria-pressed={active}
       onClick={onClick}
-      className={`board-ink h-7 w-7 rounded-md border ${active ? 'ring-2 ring-indigo-500 ring-offset-1' : 'border-slate-300'}`}
-      style={{
-        background: transparent
-          ? 'repeating-conic-gradient(#e2e8f0 0% 25%, #fff 0% 50%) 50% / 10px 10px'
-          : color,
-      }}
-    />
+      className={cx(styles.swatch, active && styles.selected)}
+    >
+      <span
+        className={cx('board-ink', styles.swatchColor, transparent && styles.transparent)}
+        style={transparent ? undefined : { background: color }}
+      />
+    </button>
   )
 }
 
@@ -56,9 +58,7 @@ function OptionButton(props: { label: string; active: boolean; onClick: () => vo
       aria-label={props.label}
       aria-pressed={props.active}
       onClick={props.onClick}
-      className={`flex h-7 w-9 items-center justify-center rounded-md border ${
-        props.active ? 'border-indigo-400 bg-indigo-50' : 'border-slate-200 hover:bg-slate-50'
-      }`}
+      className={cx(styles.option, props.active && styles.selected)}
     >
       {props.children}
     </button>
@@ -89,7 +89,7 @@ export function StylePanel() {
   const apply = (patch: Partial<ElementStyle>) => dispatch((m) => editor.applyStyle(m, patch))
 
   return (
-    <Island className="flex w-52 flex-col gap-3 p-3">
+    <Panel padding="none" className={styles.panel}>
       <Section title={t('style.stroke')}>
         {strokeColors.map((c) => (
           <Swatch key={c} color={c} active={style.strokeColor === c} onClick={() => apply({ strokeColor: c })} />
@@ -108,7 +108,7 @@ export function StylePanel() {
             active={style.strokeWidth === w.value}
             onClick={() => apply({ strokeWidth: w.value })}
           >
-            <span className="w-5 rounded-full bg-slate-800" style={{ height: w.value + 0.5 }} />
+            <span className={styles.widthSample} style={{ height: w.value + 0.5 }} />
           </OptionButton>
         ))}
       </Section>
@@ -140,6 +140,6 @@ export function StylePanel() {
           </OptionButton>
         </Section>
       )}
-    </Island>
+    </Panel>
   )
 }

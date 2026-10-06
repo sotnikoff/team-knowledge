@@ -3,6 +3,14 @@ import { Link } from 'react-router'
 import { NAME_MAX_LENGTH } from '@/domain/shared/name'
 import { errorMessage } from '../errors'
 import { useI18n } from '../i18n/i18n'
+import { Button } from '../ui/Button'
+import { buttonClass } from '../ui/buttonClass'
+import { Input } from '../ui/Input'
+import { IconButton } from '../ui/IconButton'
+import { AppIcon } from './icons'
+import styles from './ItemCard.module.css'
+
+const linkStyle = buttonClass('link', 'sm')
 
 /** Card for a space, board or document: open, rename inline, delete with confirmation. */
 export function ItemCard(props: {
@@ -30,62 +38,67 @@ export function ItemCard(props: {
   }
 
   return (
-    <article className="flex h-full flex-col justify-between gap-4 rounded-xl border border-slate-200 bg-surface p-4 shadow-sm transition-shadow hover:shadow-md">
+    <article className={styles.card}>
       {editing ? (
-        <form onSubmit={onRename} className="flex gap-2">
-          <input
+        <form onSubmit={onRename} className={styles.renameForm}>
+          <Input
             autoFocus
+            inputSize="sm"
             value={name}
             maxLength={NAME_MAX_LENGTH}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === 'Escape' && setEditing(false)}
             aria-label={t('common.newName')}
-            className="min-w-0 flex-1 rounded-md border border-slate-300 px-2 py-1 outline-none focus:border-indigo-500"
+            className={styles.renameInput}
           />
-          <button type="submit" className="text-sm text-indigo-700 hover:underline">
+          <Button type="submit" variant="primary" size="sm">
             OK
-          </button>
+          </Button>
         </form>
       ) : (
-        <Link to={props.to} className="group flex gap-3">
-          {props.icon && <span className="mt-0.5 text-slate-400 group-hover:text-indigo-500">{props.icon}</span>}
-          <span className="min-w-0">
-            <h3 className="truncate text-lg font-medium text-slate-900 group-hover:text-indigo-700">{props.title}</h3>
-            <p className="text-sm text-slate-500">{props.subtitle}</p>
+        <Link to={props.to} className={styles.main}>
+          {props.icon && <span className={styles.icon}>{props.icon}</span>}
+          <span className={styles.text}>
+            <h3 className={styles.title}>{props.title}</h3>
+            <p className={styles.subtitle}>{props.subtitle}</p>
           </span>
         </Link>
       )}
 
-      {error !== null && <p className="text-sm text-red-600">{errorMessage(error, t)}</p>}
+      {error !== null && <p className={styles.error}>{errorMessage(error, t)}</p>}
 
-      <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
-        <Link to={props.to} className="text-indigo-700 hover:underline">
+      <div className={styles.actions}>
+        <Link to={props.to} className={linkStyle}>
           {t('common.open')}
         </Link>
-        <button
-          type="button"
-          className="text-slate-600 hover:underline"
-          onClick={() => {
-            setName(props.title)
-            setEditing(true)
-          }}
-        >
-          {t('common.rename')}
-        </button>
-        {confirmDelete ? (
-          <span className="ml-auto flex gap-2">
-            <button type="button" className="font-medium text-red-600 hover:underline" onClick={() => run(props.remove)}>
-              {t('common.deleteConfirm')}
-            </button>
-            <button type="button" className="text-slate-500 hover:underline" onClick={() => setConfirmDelete(false)}>
-              {t('common.cancel')}
-            </button>
-          </span>
-        ) : (
-          <button type="button" className="ml-auto text-red-600 hover:underline" onClick={() => setConfirmDelete(true)}>
-            {t('common.delete')}
-          </button>
-        )}
+        <span className={styles.push}>
+          {confirmDelete ? (
+            <>
+              <Button variant="dangerSolid" size="sm" onClick={() => run(props.remove)}>
+                {t('common.deleteConfirm')}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)}>
+                {t('common.cancel')}
+              </Button>
+            </>
+          ) : (
+            <>
+              <IconButton
+                size="sm"
+                label={t('common.rename')}
+                onClick={() => {
+                  setName(props.title)
+                  setEditing(true)
+                }}
+              >
+                <AppIcon name="edit" />
+              </IconButton>
+              <IconButton size="sm" label={t('common.delete')} className={styles.deleteButton} onClick={() => setConfirmDelete(true)}>
+                <AppIcon name="trash" />
+              </IconButton>
+            </>
+          )}
+        </span>
       </div>
     </article>
   )

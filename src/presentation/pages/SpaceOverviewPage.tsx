@@ -12,6 +12,9 @@ import {
 } from '../hooks/useDocuments'
 import { useSpace } from '../hooks/useSpaces'
 import { useI18n } from '../i18n/i18n'
+import { Button } from '../ui/Button'
+import { Scribble } from '../ui/Scribble'
+import styles from './SpaceOverviewPage.module.css'
 
 export function SpaceOverviewPage() {
   const i18n = useI18n()
@@ -32,8 +35,9 @@ export function SpaceOverviewPage() {
   const deleteDocument = useDeleteDocument(spaceId)
 
   return (
-    <div className="mx-auto max-w-5xl px-8 py-10">
-      <h1 className="mb-8 text-3xl font-semibold text-slate-900">{space.data?.name}</h1>
+    <div className={styles.page}>
+      <h1 className={styles.title}>{space.data?.name}</h1>
+      <Scribble className={styles.underline} />
 
       <Section
         title={t('sidebar.boards')}
@@ -87,26 +91,19 @@ function Section(props: {
   onCreate: () => void
   children: ReactNode[] | undefined
 }) {
-  const hasItems = (props.children?.length ?? 0) > 0
+  const count = props.children?.length ?? 0
   return (
-    <section className="mb-10">
-      <header className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-medium text-slate-800">{props.title}</h2>
-        <button
-          type="button"
-          onClick={props.onCreate}
-          className="flex items-center gap-1 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500"
-        >
+    <section className={styles.section}>
+      <header className={styles.sectionHeader}>
+        <h2 className={styles.sectionTitle}>
+          {props.title}
+          {count > 0 && <span className={styles.count}>{count}</span>}
+        </h2>
+        <Button variant="primary" size="sm" onClick={props.onCreate}>
           <AppIcon name="plus" /> {props.createLabel}
-        </button>
+        </Button>
       </header>
-      {hasItems ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{props.children}</div>
-      ) : (
-        <p className="rounded-xl border-2 border-dashed border-slate-200 p-8 text-center text-slate-500">
-          {props.empty}
-        </p>
-      )}
+      {count > 0 ? <div className={styles.grid}>{props.children}</div> : <p className={styles.empty}>{props.empty}</p>}
     </section>
   )
 }

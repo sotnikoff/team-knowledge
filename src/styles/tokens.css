@@ -1,0 +1,118 @@
+/* ==========================================================================
+   Design tokens — "warm sketchbook".
+   Every colour/size in component CSS modules comes from here (`var(--…)`).
+   The dark theme ("night notebook") only re-defines tokens under `.dark`,
+   the class `presentation/theme/theme.ts` puts on <html>.
+   ========================================================================== */
+
+:root {
+  /* Surfaces */
+  --paper: #f6f1e7; /* page / canvas background */
+  --sheet: #fffdf8; /* panels, cards, menus */
+  --spread: #efe7d8; /* sidebar */
+  --sheet-hover: #f3ecdf;
+  --sheet-pressed: #ebe2d2;
+
+  /* Ink */
+  --ink: #1f1b16;
+  --ink-soft: #3d362e;
+  --ink-muted: #6b6157;
+  --ink-faint: #9a8f82;
+  --line: #e3d9c8;
+  --line-strong: #cfc2ad;
+
+  /* Accent — terracotta */
+  --accent: #c2562f;
+  --accent-hover: #a9461f;
+  --accent-ink: #9a3c18; /* accent text on paper */
+  --accent-tint: #f5e2d8;
+  --accent-tint-strong: #efd1c2;
+  --on-accent: #fffaf4;
+
+  /* Status */
+  --success: #4f7a4a;
+  --danger: #b3261e;
+  --danger-tint: #f7dfdc;
+  --warning: #c98a1b;
+
+  /* Typography */
+  --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2.25rem;
+
+  /* Spacing — 4px scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Shape */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-pill: 999px;
+
+  /* Paper-like shadows: warm, soft, slightly offset downwards */
+  --shadow-sm: 0 1px 0 rgb(80 60 30 / 0.06), 0 1px 2px rgb(80 60 30 / 0.08);
+  --shadow-md: 0 1px 0 rgb(80 60 30 / 0.05), 0 4px 12px -2px rgb(80 60 30 / 0.12);
+  --shadow-lg: 0 2px 0 rgb(80 60 30 / 0.04), 0 14px 32px -8px rgb(80 60 30 / 0.22);
+  --focus-ring: 0 0 0 3px rgb(194 86 47 / 0.35);
+
+  /* Canvas grid dots */
+  --grid-dot: rgb(120 100 70 / 0.16);
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur: 180ms;
+
+  /* Layers */
+  --z-sticky: 10;
+  --z-popover: 30;
+}
+
+.dark {
+  --paper: #171411;
+  --sheet: #211d19;
+  --spread: #1b1815;
+  --sheet-hover: #2a2520;
+  --sheet-pressed: #322c26;
+
+  --ink: #ede6d8;
+  --ink-soft: #d9d0c0;
+  --ink-muted: #a99e8f;
+  --ink-faint: #7a7062;
+  --line: #352f28;
+  --line-strong: #4a4239;
+
+  --accent: #e07a52;
+  --accent-hover: #ea8f6a;
+  --accent-ink: #f0a07d;
+  --accent-tint: #3a2519;
+  --accent-tint-strong: #4a2e1f;
+  --on-accent: #1a110c;
+
+  --success: #8fbf86;
+  --danger: #f08a80;
+  --danger-tint: #3d1d1a;
+  --warning: #e3b05a;
+
+  --shadow-sm: 0 1px 0 rgb(0 0 0 / 0.3), 0 1px 2px rgb(0 0 0 / 0.35);
+  --shadow-md: 0 1px 0 rgb(0 0 0 / 0.25), 0 6px 16px -4px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 2px 0 rgb(0 0 0 / 0.2), 0 18px 36px -10px rgb(0 0 0 / 0.65);
+  --focus-ring: 0 0 0 3px rgb(224 122 82 / 0.4);
+
+  --grid-dot: rgb(237 230 216 / 0.07);
+}

@@ -12,6 +12,8 @@ import { errorMessage } from '../errors'
 import { useAutosave } from '../hooks/useAutosave'
 import { useDocument, useRenameDocument } from '../hooks/useDocuments'
 import { queryKeys } from '../hooks/queryKeys'
+import { Scribble } from '../ui/Scribble'
+import styles from './DocumentPage.module.css'
 import { useI18n } from '../i18n/i18n'
 
 export function DocumentPage() {
@@ -77,7 +79,7 @@ function TitleInput(props: { doc: Document; onEnter: () => void }) {
   }
 
   return (
-    <div className="mb-6">
+    <div className={styles.titleBlock}>
       <input
         value={title}
         maxLength={NAME_MAX_LENGTH}
@@ -92,9 +94,10 @@ function TitleInput(props: { doc: Document; onEnter: () => void }) {
             props.onEnter()
           }
         }}
-        className="w-full border-0 bg-transparent text-4xl font-bold text-slate-900 outline-none placeholder:text-slate-300"
+        className={styles.title}
       />
-      {rename.error && <p className="text-sm text-red-600">{errorMessage(rename.error, t)}</p>}
+      <Scribble className={styles.underline} />
+      {rename.error && <p className={styles.error}>{errorMessage(rename.error, t)}</p>}
     </div>
   )
 }

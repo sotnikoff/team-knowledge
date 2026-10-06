@@ -1,0 +1,15 @@
+/* A floating sheet of paper: toolbars, menus, popovers. */
+.panel {
+  background: var(--sheet);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.tight {
+  padding: var(--space-1);
+}
+
+.roomy {
+  padding: var(--space-3);
+}

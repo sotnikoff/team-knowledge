@@ -1,0 +1,66 @@
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: var(--space-10) var(--space-8) var(--space-12);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.underline {
+  display: block;
+  width: 120px;
+  height: 10px;
+  margin: var(--space-1) 0 var(--space-10);
+  color: var(--accent);
+}
+
+.section {
+  margin-bottom: var(--space-12);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--line);
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+}
+
+.count {
+  margin-left: var(--space-2);
+  color: var(--ink-faint);
+  font-family: var(--font-ui);
+  font-size: var(--text-md);
+  font-weight: 500;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-8) var(--space-6);
+  padding-top: var(--space-2);
+}
+
+.empty {
+  padding: var(--space-8);
+  border: 2px dashed var(--line-strong);
+  border-radius: var(--radius-xl);
+  color: var(--ink-muted);
+  text-align: center;
+  font-family: 'Caveat', var(--font-ui);
+  font-size: 1.45rem;
+}

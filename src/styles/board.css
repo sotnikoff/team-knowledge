@@ -1,0 +1,8 @@
+/* Global classes the board relies on (used across components and in exports). */
+
+/* The board is drawn with its stored (light-theme) colours; in the dark theme
+   it is shown through the transform Excalidraw uses: black ink becomes light,
+   hues are kept. Board data never depends on the theme. */
+.dark .board-ink {
+  filter: invert(93%) hue-rotate(180deg);
+}

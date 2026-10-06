@@ -1,0 +1,50 @@
+.board {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  user-select: none;
+  background-color: var(--paper);
+  /* Dotted sketchbook grid; fixed to the screen like a notebook page under the drawing. */
+  background-image: radial-gradient(var(--grid-dot) 1.2px, transparent 1.3px);
+  background-size: 22px 22px;
+}
+
+.topBar {
+  position: absolute;
+  inset: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  pointer-events: none;
+}
+
+.topBar > * {
+  pointer-events: auto;
+}
+
+.actions {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  height: 46px;
+  padding: 0 var(--space-1);
+}
+
+.stylePanel {
+  position: absolute;
+  top: 76px;
+  left: var(--space-3);
+}
+
+.bottom {
+  position: absolute;
+  bottom: var(--space-3);
+  left: var(--space-3);
+}

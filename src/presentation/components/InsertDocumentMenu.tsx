@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import * as editor from '@/application/editor/editorModel'
 import { createDocumentElement, DOCUMENT_CARD_WIDTH } from '@/domain/element/factory'
 import type { Point } from '@/domain/shared/geometry'
@@ -8,8 +8,12 @@ import { dispatch } from '../editor/store'
 import { errorMessage } from '../errors'
 import { useCreateDocument, useDocumentList } from '../hooks/useDocuments'
 import { AppIcon } from './icons'
-import { Island } from './Island'
 import { useI18n } from '../i18n/i18n'
+import { cx } from '../ui/cx'
+import { Panel } from '../ui/Panel'
+import { Popover } from '../ui/Popover'
+import menu from './ExportMenu.module.css'
+import styles from './InsertDocumentMenu.module.css'
 
 /** Puts a document of the space onto the board as a card. */
 export function InsertDocumentMenu(props: { spaceId: SpaceId; viewCenter: () => Point }) {
@@ -36,51 +40,49 @@ export function InsertDocumentMenu(props: { spaceId: SpaceId; viewCenter: () => 
     setOpen(false)
   }
 
+  const closeMenu = useCallback(() => setOpen(false), [])
+
   return (
-    <div className="relative">
-      <Island className="flex">
-        <button
-          type="button"
-          title={t('insertDocument.title')}
-          aria-expanded={open}
-          onClick={() => setOpen((o) => !o)}
-          className={`flex h-9 items-center gap-1.5 rounded-md px-2.5 text-sm ${
-            open ? 'bg-indigo-100 text-indigo-700' : 'text-slate-700 hover:bg-slate-100'
-          }`}
-        >
-          <AppIcon name="document" /> {t('insertDocument.button')}
-        </button>
-      </Island>
-      {open && (
-        <Island className="absolute right-0 top-12 z-20 w-72 p-1">
+    <Popover
+      open={open}
+      onClose={closeMenu}
+      className={styles.menu}
+      trigger={
+        <Panel>
           <button
             type="button"
-            disabled={create.isPending}
-            onClick={() => create.mutate(t('common.untitled'), { onSuccess: (doc) => insert(doc.id) })}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm font-medium text-indigo-700 hover:bg-indigo-50"
+            title={t('insertDocument.title')}
+            aria-expanded={open}
+            onClick={() => setOpen((o) => !o)}
+            className={cx(menu.trigger, open && menu.triggerOpen)}
           >
-            <AppIcon name="plus" /> {t('insertDocument.new')}
+            <AppIcon name="document" /> {t('insertDocument.button')}
           </button>
-          {(documents.data?.length ?? 0) > 0 && <div className="my-1 h-px bg-slate-100" />}
-          <ul className="max-h-72 overflow-y-auto">
-            {documents.data?.map((doc) => (
-              <li key={doc.id}>
-                <button
-                  type="button"
-                  onClick={() => insert(doc.id)}
-                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-slate-700 hover:bg-slate-100"
-                >
-                  <span className="opacity-50">
-                    <AppIcon name="document" />
-                  </span>
-                  <span className="truncate">{doc.title}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-          {create.error && <p className="px-2 py-1 text-sm text-red-600">{errorMessage(create.error, t)}</p>}
-        </Island>
-      )}
-    </div>
+        </Panel>
+      }
+    >
+      <button
+        type="button"
+        disabled={create.isPending}
+        onClick={() => create.mutate(t('common.untitled'), { onSuccess: (doc) => insert(doc.id) })}
+        className={cx(styles.option, styles.create)}
+      >
+        <AppIcon name="plus" /> {t('insertDocument.new')}
+      </button>
+      {(documents.data?.length ?? 0) > 0 && <div className={styles.divider} />}
+      <ul className={styles.list}>
+        {documents.data?.map((doc) => (
+          <li key={doc.id}>
+            <button type="button" onClick={() => insert(doc.id)} className={styles.option}>
+              <span className={styles.docIcon}>
+                <AppIcon name="document" />
+              </span>
+              <span className={styles.name}>{doc.title}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      {create.error && <p className={styles.error}>{errorMessage(create.error, t)}</p>}
+    </Popover>
   )
 }

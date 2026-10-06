@@ -1,0 +1,26 @@
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 34px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-md);
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+
+.toggle:hover {
+  background: var(--sheet-hover);
+  color: var(--ink);
+}
+
+.toggle svg {
+  transition: transform var(--dur) var(--ease);
+}
+
+.toggle:hover svg {
+  transform: rotate(-20deg);
+}

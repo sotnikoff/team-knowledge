@@ -1,0 +1,29 @@
+/* Sticky formatting bar over the page, on frosted paper. */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-2) var(--space-5);
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(8px);
+}
+
+.blockSelect {
+  width: 168px;
+  height: 32px;
+}
+
+.languageSelect {
+  height: 32px;
+  margin-left: var(--space-1);
+}
+
+.end {
+  margin-left: auto;
+  padding-left: var(--space-2);
+}

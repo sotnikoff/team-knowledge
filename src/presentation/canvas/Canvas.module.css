@@ -1,0 +1,10 @@
+.container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.canvas {
+  position: relative;
+  touch-action: none;
+}

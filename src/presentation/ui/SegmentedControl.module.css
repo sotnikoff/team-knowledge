@@ -1,0 +1,35 @@
+.group {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-md);
+  background: var(--spread);
+}
+
+.option {
+  flex: 1;
+  height: 28px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+
+.option:hover:not(:disabled) {
+  color: var(--ink);
+}
+
+.option:disabled {
+  opacity: 0.4;
+}
+
+.selected,
+.selected:hover:not(:disabled) {
+  background: var(--sheet);
+  color: var(--accent-ink);
+  box-shadow: var(--shadow-sm);
+}

@@ -33,14 +33,14 @@ export const formatActions = {
   bold: {
     label: 'format.bold',
     shortcut: 'Ctrl+B',
-    icon: (t) => <b className="font-bold">{t('format.boldIcon')}</b>,
+    icon: (t) => <b style={{ fontWeight: 700 }}>{t('format.boldIcon')}</b>,
     isActive: (e) => e.isActive('bold'),
     run: (e) => e.chain().focus().toggleBold().run(),
   },
   italic: {
     label: 'format.italic',
     shortcut: 'Ctrl+I',
-    icon: (t) => <i className="font-serif">{t('format.italicIcon')}</i>,
+    icon: (t) => <i style={{ fontFamily: 'var(--font-display)' }}>{t('format.italicIcon')}</i>,
     isActive: (e) => e.isActive('italic'),
     run: (e) => e.chain().focus().toggleItalic().run(),
   },

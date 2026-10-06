@@ -1,0 +1,29 @@
+.bar {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.sign {
+  font-size: var(--text-lg);
+  line-height: 1;
+}
+
+.zoom {
+  width: 58px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  transition: background-color var(--dur-fast) var(--ease);
+}
+
+.zoom:hover {
+  background: var(--sheet-hover);
+}
