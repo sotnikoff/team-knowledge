@@ -155,3 +155,35 @@ describe('purgeLegacyData', () => {
     expect([...data.keys()]).toEqual(['tk2:spaces:index', 'other'])
   })
 })
+
+describe('arrow bindings survive a reload', () => {
+  it('a bound arrow still follows its shape after save -> get -> editor load', async () => {
+    const { createEditorModel, updateLive } = await import('@/application/editor/editorModel')
+    const { translateElements } = await import('@/application/editor/scene')
+    const { anchorPoint, moveLinearEnd } = await import('@/domain/element/binding')
+    const { absolutePoints, createLinear } = await import('@/domain/element/factory')
+    const style = { strokeColor: '#000', fillColor: 'transparent', strokeWidth: 2, roughness: 1 }
+    const box = { id: 'box', type: 'rectangle' as const, label: '', x: 0, y: 0, width: 100, height: 50, seed: 1, style }
+    const arrow = moveLinearEnd(
+      createLinear({ id: 'arrow', type: 'arrow', seed: 1, style, origin: { x: 300, y: 25 } }),
+      'end',
+      anchorPoint(box, 'right'),
+      { elementId: 'box', anchor: 'right' },
+    )
+
+    const repo = new LocalStorageBoardRepository(new InMemoryKeyValueStore(), testIdentity())
+    const created = await repo.create(newBoard({ spaceId: 's1', name: 'B' }))
+    await repo.save(replaceElements(created, [box, arrow], t0))
+
+    // "Reload": read from storage and load into a fresh editor.
+    const loaded = await repo.get(created.id)
+    let model = createEditorModel(loaded.elements)
+    model = updateLive(model, translateElements(model.elements, ['box'], 0, 80))
+
+    const moved = model.elements.find((el) => el.id === 'arrow')
+    expect(moved && 'endBinding' in moved ? moved.endBinding : null).toEqual({ elementId: 'box', anchor: 'right' })
+    expect(moved && moved.type === 'arrow' ? absolutePoints(moved).at(-1) : null).toEqual(
+      anchorPoint({ ...box, y: 80 }, 'right'),
+    )
+  })
+})
