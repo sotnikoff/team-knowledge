@@ -13,7 +13,7 @@ export abstract class DomainError extends Error {
 }
 
 /** Kinds of persisted entities, used to tell errors apart. */
-export type EntityKind = 'space' | 'board' | 'document'
+export type EntityKind = 'project' | 'space' | 'board' | 'document'
 
 export class NotFoundError extends DomainError {
   readonly code = 'NOT_FOUND'

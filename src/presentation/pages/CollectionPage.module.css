@@ -112,3 +112,26 @@
   font-size: var(--text-sm);
   letter-spacing: 0.04em;
 }
+
+/* "← All projects" above the title of a nested list. */
+.crumbs {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: color var(--dur-fast) var(--ease);
+}
+
+.crumbs:hover {
+  color: var(--ink);
+}
+
+.crumbs svg {
+  width: 14px;
+  height: 14px;
+}

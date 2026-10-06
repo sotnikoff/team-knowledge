@@ -4,7 +4,7 @@ export type Theme = 'light' | 'dark'
 
 /**
  * UI preference, not domain data: lives in the viewer's browser only and is
- * deliberately outside the persistence ports. Not under the `tk2:` namespace.
+ * deliberately outside the persistence ports. Not under the `tk3:` data namespace.
  */
 const STORAGE_KEY = 'team-knowledge:theme'
 

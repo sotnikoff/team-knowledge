@@ -1,10 +1,11 @@
 import type { RouteObject } from 'react-router'
+import { ProjectPage } from '../pages/ProjectPage'
+import { ProjectsListPage } from '../pages/ProjectsListPage'
 import { SpaceLayout } from '../pages/SpaceLayout'
-import { SpacesListPage } from '../pages/SpacesListPage'
 
 /**
- * Route-level code splitting. The shell (spaces list + space layout with the
- * sidebar) is in the entry chunk; heavy pages are separate chunks:
+ * Route-level code splitting. The shell (projects list, a project's spaces,
+ * space layout with the sidebar) is in the entry chunk; heavy pages are separate chunks:
  * the board editor (roughjs, canvas, export) and the document editor (TipTap,
  * syntax highlighting). Each loader is a plain dynamic import, so the same
  * function serves the router and the idle-time prefetch below.
@@ -16,7 +17,8 @@ const pages = {
 }
 
 export const routes: RouteObject[] = [
-  { path: '/', element: <SpacesListPage /> },
+  { path: '/', element: <ProjectsListPage /> },
+  { path: '/projects/:projectId', element: <ProjectPage /> },
   {
     path: '/spaces/:spaceId',
     element: <SpaceLayout />,

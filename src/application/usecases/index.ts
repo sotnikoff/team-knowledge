@@ -1,3 +1,9 @@
+export { ListProjects } from './projects/ListProjects'
+export { CreateProject } from './projects/CreateProject'
+export { OpenProject } from './projects/OpenProject'
+export { RenameProject } from './projects/RenameProject'
+export { DeleteProject } from './projects/DeleteProject'
+
 export { ListSpaces } from './spaces/ListSpaces'
 export { CreateSpace } from './spaces/CreateSpace'
 export { OpenSpace } from './spaces/OpenSpace'

@@ -1,7 +1,8 @@
 import { Link, Outlet, useParams } from 'react-router'
 import { AppIcon } from '../components/icons'
-import { LoadError, Loading } from '../components/PageState'
+import { ErrorPage, Loading } from '../components/PageState'
 import { SpaceSidebar } from '../components/SpaceSidebar'
+import { useProject } from '../hooks/useProjects'
 import { useSpace } from '../hooks/useSpaces'
 import { ThemeToggle } from '../theme/ThemeToggle'
 import { useSidebarCollapsed } from './useSidebarCollapsed'
@@ -14,18 +15,19 @@ import { LanguageSelect } from '../i18n/LanguageSelect'
 export function SpaceLayout() {
   const { spaceId = '' } = useParams()
   const space = useSpace(spaceId)
+  const project = useProject(space.data?.projectId)
   const [collapsed, setCollapsed] = useSidebarCollapsed()
   const { t } = useI18n()
 
   if (space.isPending) return <Loading>{t('spaces.loading')}</Loading>
   if (space.error) {
     return (
-      <div className={styles.errorPage}>
-        <LoadError error={space.error} onRetry={() => void space.refetch()} />
-        <Link to="/" className={styles.back}>
-          {t('spaces.backToList')}
-        </Link>
-      </div>
+      <ErrorPage
+        error={space.error}
+        onRetry={() => void space.refetch()}
+        backTo="/"
+        backLabel={t('projects.backToList')}
+      />
     )
   }
 
@@ -44,8 +46,9 @@ export function SpaceLayout() {
       ) : (
         <aside className={styles.sidebar}>
           <div className={styles.top}>
-            <Link to="/" className={styles.back}>
-              <AppIcon name="back" /> {t('spaces.all')}
+            {/* Up to the project of this space. */}
+            <Link to={`/projects/${space.data.projectId}`} className={styles.back} title={project.data?.name}>
+              <AppIcon name="back" /> <span className={styles.backLabel}>{project.data?.name ?? t('projects.loading')}</span>
             </Link>
             <IconButton label={t('sidebar.hide')} size="sm" onClick={() => setCollapsed(true)}>
               <AppIcon name="sidebar" />

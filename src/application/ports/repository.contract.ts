@@ -14,16 +14,16 @@ export interface ContractSubject<T extends Versioned, R extends VersionedReposit
   readonly name: string
   readonly entity: EntityKind
   readonly make: () => R | Promise<R>
-  /** Lists entities of a space (spaces themselves ignore `spaceId`). */
-  readonly list: (repo: R, spaceId: string) => Promise<Versioned[]>
-  /** A new entity, as produced by the domain factory (no identity yet). */
-  readonly draft: (spaceId: string) => Draft<T>
+  /** Lists entities of a parent (a project's spaces, a space's boards…); top-level ones ignore `parentId`. */
+  readonly list: (repo: R, parentId: string) => Promise<Versioned[]>
+  /** A new entity in the given parent, as produced by the domain factory (no identity yet). */
+  readonly draft: (parentId: string) => Draft<T>
   /** Changes the entity's content (and `updatedAt`). */
   readonly modify: (entity: T, now: Date) => T
   /** Property present on full entities but absent from list summaries. */
   readonly heavyField?: string
-  /** Whether `list` is scoped by space. */
-  readonly scopedBySpace: boolean
+  /** Whether `list` is scoped by a parent (false for top-level entities: projects). */
+  readonly scoped: boolean
 }
 
 /**
@@ -48,7 +48,7 @@ export function runVersionedRepositoryContract<T extends Versioned, R extends Ve
   describe(`repository contract: ${subject.name}`, () => {
     let repo: R
     const t1 = new Date('2030-01-02T00:00:00.000Z')
-    const create = (spaceId = 's1') => repo.create(subject.draft(spaceId))
+    const create = (parentId = 's1') => repo.create(subject.draft(parentId))
 
     beforeEach(async () => {
       repo = await subject.make()
@@ -84,8 +84,8 @@ export function runVersionedRepositoryContract<T extends Versioned, R extends Ve
       if (subject.heavyField) expect(list[0]).not.toHaveProperty(subject.heavyField)
     })
 
-    if (subject.scopedBySpace) {
-      it('lists only the entities of the given space', async () => {
+    if (subject.scoped) {
+      it('lists only the entities of the given parent', async () => {
         await create('s1')
         const other = await create('s2')
         expect((await subject.list(repo, 's2')).map((e) => e.id)).toEqual([other.id])

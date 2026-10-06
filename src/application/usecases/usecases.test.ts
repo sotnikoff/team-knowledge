@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest'
 import type { Board } from '@/domain/board/Board'
 import type { Document } from '@/domain/document/Document'
 import { NotFoundError } from '@/domain/shared/errors'
+import type { Project } from '@/domain/project/Project'
 import type { Space } from '@/domain/space/Space'
 import type { BoardRepository } from '../ports/BoardRepository'
 import type { DocumentRepository } from '../ports/DocumentRepository'
+import type { ProjectRepository } from '../ports/ProjectRepository'
 import type { SpaceRepository } from '../ports/SpaceRepository'
-import { CreateBoard, CreateDocument, CreateSpace } from './index'
+import { CreateBoard, CreateDocument, CreateProject, CreateSpace } from './index'
 
 /** Minimal in-memory fakes: use cases are tested without any adapter. */
 function memoryRepo<T extends { id: string }>() {
@@ -34,10 +36,16 @@ let counter = 0
 
 describe('creating content in a space', () => {
   it('creates boards and documents inside an existing space', async () => {
+    const projects = memoryRepo<Project>()
     const spaces = memoryRepo<Space>()
     const boards = memoryRepo<Board>()
     const documents = memoryRepo<Document>()
-    const space = await new CreateSpace(spaces as SpaceRepository).execute({ name: 'Arch' })
+    const project = await new CreateProject(projects as ProjectRepository).execute({ name: 'Shop' })
+    const space = await new CreateSpace(spaces as SpaceRepository, projects as ProjectRepository).execute({
+      projectId: project.id,
+      name: 'Arch',
+    })
+    expect(space.projectId).toBe(project.id)
 
     const board = await new CreateBoard(boards as BoardRepository, spaces as SpaceRepository).execute({
       spaceId: space.id,
@@ -50,6 +58,13 @@ describe('creating content in a space', () => {
     expect(board.spaceId).toBe(space.id)
     expect(doc.spaceId).toBe(space.id)
     expect(doc.content.type).toBe('doc')
+  })
+
+  it('refuses to create a space in a missing project', async () => {
+    const spaces = memoryRepo<Space>()
+    const create = new CreateSpace(spaces as SpaceRepository, memoryRepo<Project>() as ProjectRepository)
+    await expect(create.execute({ projectId: 'nope', name: 'x' })).rejects.toBeInstanceOf(NotFoundError)
+    expect(spaces.items.size).toBe(0)
   })
 
   it('refuses to create a board in a missing space', async () => {

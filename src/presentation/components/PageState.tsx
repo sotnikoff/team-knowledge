@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Link } from 'react-router'
 import { NotFoundError } from '@/domain/shared/errors'
 import { errorMessage } from '../errors'
 import { useI18n } from '../i18n/i18n'
@@ -21,6 +22,18 @@ export function LoadError({ error, onRetry }: { error: unknown; onRetry: () => v
           {t('common.retry')}
         </Button>
       )}
+    </div>
+  )
+}
+
+/** A whole page that failed to load: the error plus a way back up. */
+export function ErrorPage(props: { error: unknown; onRetry: () => void; backTo: string; backLabel: string }) {
+  return (
+    <div className={styles.page}>
+      <LoadError error={props.error} onRetry={props.onRetry} />
+      <Link to={props.backTo} className={styles.back}>
+        {props.backLabel}
+      </Link>
     </div>
   )
 }

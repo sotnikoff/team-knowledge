@@ -5,5 +5,6 @@ export const SPACE_SCHEMA_VERSION = 1
 
 export interface SpaceDto extends VersionedDto {
   schemaVersion: number
+  projectId: string
   name: string
 }

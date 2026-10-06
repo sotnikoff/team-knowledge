@@ -3,18 +3,23 @@ import type { IdGenerator } from '@/application/ports/IdGenerator'
 import type {
   CreateBoard,
   CreateDocument,
+  CreateProject,
   CreateSpace,
   DeleteBoard,
   DeleteDocument,
+  DeleteProject,
   DeleteSpace,
   ListBoards,
   ListDocuments,
+  ListProjects,
   ListSpaces,
   OpenBoard,
   OpenDocument,
+  OpenProject,
   OpenSpace,
   RenameBoard,
   RenameDocument,
+  RenameProject,
   RenameSpace,
   SaveBoardContent,
   SaveDocumentContent,
@@ -26,6 +31,12 @@ import type {
  * Dependency Inversion).
  */
 export interface AppDependencies {
+  readonly listProjects: ListProjects
+  readonly createProject: CreateProject
+  readonly openProject: OpenProject
+  readonly renameProject: RenameProject
+  readonly deleteProject: DeleteProject
+
   readonly listSpaces: ListSpaces
   readonly createSpace: CreateSpace
   readonly openSpace: OpenSpace

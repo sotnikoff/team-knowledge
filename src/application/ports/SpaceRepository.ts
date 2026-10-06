@@ -1,11 +1,12 @@
+import type { ProjectId } from '@/domain/project/Project'
 import type { Space, SpaceDraft, SpaceId } from '@/domain/space/Space'
 
 /**
  * Driven port for spaces ("зарисовки"). Mirrors the REST API:
  *
- *   list()      -> GET    /spaces
+ *   list(projectId) -> GET    /projects/:projectId/spaces
  *   get(id)     -> GET    /spaces/:id
- *   create(d)   -> POST   /spaces          (server assigns the id)
+ *   create(d)   -> POST   /projects/:projectId/spaces   (server assigns the id)
  *   save(s)     -> PUT    /spaces/:id   If-Match: s.version
  *   delete(id)  -> DELETE /spaces/:id
  *
@@ -14,7 +15,7 @@ import type { Space, SpaceDraft, SpaceId } from '@/domain/space/Space'
  * Shared semantics: see `repository.contract.ts`.
  */
 export interface SpaceRepository {
-  list(): Promise<Space[]>
+  list(projectId: ProjectId): Promise<Space[]>
   get(id: SpaceId): Promise<Space>
   create(draft: SpaceDraft): Promise<Space>
   save(space: Space): Promise<Space>

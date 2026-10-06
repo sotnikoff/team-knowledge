@@ -8,6 +8,7 @@ import {
 import type { MessageKey, Translate } from './i18n/i18n'
 
 const notFound: Record<EntityKind, MessageKey> = {
+  project: 'errors.notFound.project',
   space: 'errors.notFound.space',
   board: 'errors.notFound.board',
   document: 'errors.notFound.document',

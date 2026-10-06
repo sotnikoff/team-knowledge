@@ -1,6 +1,6 @@
-# Team Knowledge — зарисовки: доски и документы
+# Team Knowledge — проекты, зарисовки: доски и документы
 
-Зарисовки (в коде — `Space`), в каждой — доски с диаграммами в стиле Excalidraw
+Проекты (`Project`) содержат зарисовки (в коде — `Space`), в каждой зарисовке — доски с диаграммами в стиле Excalidraw
 (canvas + roughjs) и текстовые документы с минимальным WYSIWYG (TipTap), как
 страницы в Confluence. Vite + React 19 + TypeScript strict + CSS Modules (без Tailwind).
 
@@ -34,16 +34,18 @@ npm run lint       # oxlint
 ## Модель данных
 
 ```
-Space (зарисовка)            domain/space/Space.ts
- ├─ Board (доска)  *         domain/board/Board.ts        — ссылается через spaceId
- └─ Document (документ) *    domain/document/Document.ts  — ссылается через spaceId
+Project (проект)                   domain/project/Project.ts
+ └─ Space (зарисовка) *           domain/space/Space.ts        — ссылается через projectId
+     ├─ Board (доска)  *          domain/board/Board.ts        — ссылается через spaceId
+     └─ Document (документ) *     domain/document/Document.ts  — ссылается через spaceId
 ```
 
-- Зарисовка **не хранит** список детей: доски и документы указывают на неё через
-  `spaceId` (как `GET /spaces/:id/boards`). Внутри зарисовки — плоский список.
+- Родитель **не хранит** список детей: зарисовки указывают на проект через `projectId`,
+  доски и документы на зарисовку — через `spaceId` (как `GET /projects/:id/spaces`,
+  `GET /spaces/:id/boards`). Каждый уровень — плоский список.
 - Все сущности `Versioned` (`domain/shared/versioned.ts`): `id`, `version`, `createdAt`,
   `updatedAt`. Имена валидирует общий `normalizeName` (`domain/shared/name.ts`).
-- Новая сущность в домене — **черновик** `Draft<T>` (всё, кроме identity): `newSpace`,
+- Новая сущность в домене — **черновик** `Draft<T>` (всё, кроме identity): `newProject`, `newSpace`,
   `newBoard`, `newDocument`. Id, первую версию и даты назначает тот, кто её сохраняет
   (`Repository.create(draft)` → готовая сущность), — как сервер на `POST`.
 - Для списков есть лёгкие проекции без тяжёлого содержимого: `BoardSummary` (без
@@ -79,16 +81,20 @@ src/
 
   | Порт | Методы | REST |
   |---|---|---|
-  | `SpaceRepository` | `list, get, create, save, delete` | `/spaces`, `/spaces/:id` |
+  | `ProjectRepository` | `list, get, create, save, delete` | `/projects`, `/projects/:id` |
+  | `SpaceRepository` | `list(projectId), get, create, save, delete` | `GET /projects/:projectId/spaces`, `/spaces/:id` |
   | `BoardRepository` | `list(spaceId), get, create, save, delete` | `GET /spaces/:spaceId/boards`, `/boards/:id` |
   | `DocumentRepository` | `list(spaceId), get, create, save, delete` | `GET /spaces/:spaceId/documents`, `/documents/:id` |
 
   `create(draft)` → `POST` черновика, ответ — созданная сущность с id от сервера.
   `save` → `PUT` с `If-Match: version`. `list` возвращает summary без тяжёлого содержимого.
-- **`SpaceRepository.delete` удаляет зарисовку вместе со всеми её досками и
-  документами** — часть контракта порта (на бэке это каскад на сервере, один запрос).
-  Use case `DeleteSpace` ничего не перебирает сам.
-- Создание доски/документа проверяет, что зарисовка существует (`NotFoundError`).
+- **Удаление каскадное и входит в контракт порта** (на бэке это каскад на сервере, один
+  запрос): `ProjectRepository.delete` удаляет проект с его зарисовками и их досками/документами,
+  `SpaceRepository.delete` — зарисовку с досками и документами. Use cases `DeleteProject`/
+  `DeleteSpace` ничего не перебирают сами. В localStorage каскад зарисовок — одна функция
+  `deleteSpacesCascade` (`LocalStorageSpaceRepository.ts`), её зовут оба репозитория.
+- Создание зарисовки проверяет, что проект существует; доски/документа — что существует
+  зарисовка (`NotFoundError`).
 - **Всё асинхронно**, даже поверх синхронного localStorage. UI уже обрабатывает
   loading/error, поэтому сеть ничего в нём не изменит.
 - **Оптимистичная конкурентность**: `save` проходит, только если `entity.version`
@@ -107,7 +113,7 @@ src/
   стрелки) — они часть содержимого доски, при любом бэкенде их создаёт клиент.
 - **Доменные ошибки** (`domain/shared/errors.ts`): адаптер обязан переводить свои
   сбои (QuotaExceeded, битый JSON, 404/409/5xx) в `NotFoundError`,
-  `VersionConflictError` (у обеих есть `entity: space | board | document` и `id`),
+  `VersionConflictError` (у обеих есть `entity: project | space | board | document` и `id`),
   `InvalidNameError`, `StorageUnavailableError`.
   UI знает только их (`presentation/errors.ts`).
 - **Wire-формат общий для всех адаптеров**: `infrastructure/persistence/dto/`
@@ -117,18 +123,19 @@ src/
   (`runVersionedRepositoryContract`) — единый для всех репозиториев и всех реализаций
   (Liskov). Новый адаптер обязан его пройти.
 - localStorage-адаптеры — тонкие обёртки над `LocalCollection` (индекс summary +
-  JSON на объект, версии, перевод ошибок). Ключи с префиксом `tk2:`; данные старого
-  формата (`tk:*`) удаляет `purgeLegacyData` при старте.
+  JSON на объект, версии, перевод ошибок). Ключи с префиксом `tk3:`; данные старых
+  форматов (`tk:*` — до зарисовок, `tk2:*` — зарисовки без проектов) удаляет `purgeLegacyData`
+  при старте.
 - Серверное состояние в UI — через TanStack Query (`presentation/hooks`), кэш
   обновляется из ответов use cases.
 
 ### Чек-лист: переход на HTTP
 
-1. `infrastructure/persistence/http/Http{Space,Board,Document}Repository.ts`,
+1. `infrastructure/persistence/http/Http{Project,Space,Board,Document}Repository.ts`,
    каждый `implements` свой порт: `fetch` + существующие mapper'ы из `dto/`
    (`create` шлёт черновик и разбирает ответ сервера — id генерировать не нужно); статусы →
    доменные ошибки (404 → NotFound, 409/412 → VersionConflict, сеть/5xx →
-   StorageUnavailable). Каскадное удаление зарисовки делает сервер.
+   StorageUnavailable). Каскадное удаление проекта и зарисовки делает сервер.
 2. Тесты: `runVersionedRepositoryContract(...)` для каждого поверх мок-сервера
    (например, msw) — те же сценарии, что и для localStorage.
 3. В `presentation/app/container.ts` заполнить ветку `case 'http'` в `createRepositories`.
@@ -154,9 +161,12 @@ src/
 
 ## Интерфейс
 
-Маршруты (`presentation/app/App.tsx`): `/` — список зарисовок; `/spaces/:spaceId` —
+Маршруты (`presentation/app/routes.tsx`, **плоские**): `/` — список проектов;
+`/projects/:projectId` — зарисовки проекта (обе страницы — общий `pages/CollectionPage.tsx`);
+`/spaces/:spaceId` —
 `SpaceLayout` (боковая панель с досками и документами + `<Outlet/>`): index — обзор,
-`boards/:boardId` — редактор доски, `docs/:documentId` — документ.
+`boards/:boardId` — редактор доски, `docs/:documentId` — документ. Зарисовка знает свой
+`projectId`, поэтому ссылка «назад» в боковой панели ведёт в её проект (с его названием).
 Боковую панель можно свернуть в узкую полоску (кнопка в её шапке); состояние —
 настройка этого браузера (`pages/useSidebarCollapsed.ts`, localStorage, как и тема).
 
@@ -170,7 +180,7 @@ debounce, не больше одного запроса одновременно
 ## Загрузка и чанки
 
 - **Маршруты грузятся лениво** (`presentation/app/routes.tsx`, React Router `lazy`): в
-  стартовом чанке только оболочка — список зарисовок и `SpaceLayout` с боковой панелью.
+  стартовом чанке только оболочка — список проектов, страница проекта и `SpaceLayout` с боковой панелью.
   Обзор зарисовки, редактор доски (roughjs, холст, экспорт) и документ (TipTap,
   подсветка кода) — отдельные чанки. Новая тяжёлая страница — тоже через `lazy`, не
   статическим импортом в `routes.tsx`/`App.tsx`.
@@ -232,7 +242,7 @@ debounce, не больше одного запроса одновременно
 - **Любой новый текст интерфейса — только через ключ во всех трёх словарях.** Пользовательские
   данные (названия досок, документов) не переводятся: «Без названия» при создании
   берётся на текущем языке и дальше остаётся как есть.
-- Термины: зарисовка = Space (en) / Bereich (de); доска = Board.
+- Термины: проект = Project / Projekt; зарисовка = Space (en) / Bereich (de); доска = Board.
 
 ## Документы
 
