@@ -32,6 +32,15 @@ describe('editorModel', () => {
     expect(m.elements[0]?.x).toBe(10)
   })
 
+  it('reorders the selection as one undo step and ignores moves that change nothing', () => {
+    let m = editor.select(editor.createEditorModel([el('a'), el('b')]), ['a'])
+    m = editor.reorderSelected(m, 'front')
+    expect(m.elements.map((e) => e.id)).toEqual(['b', 'a'])
+    expect(editor.reorderSelected(m, 'forward')).toBe(m)
+    m = editor.undo(m)
+    expect(m.elements.map((e) => e.id)).toEqual(['a', 'b'])
+  })
+
   it('does not record an interaction that changed nothing', () => {
     let m = editor.createEditorModel([el('a')])
     m = editor.endInteraction(editor.beginInteraction(m))

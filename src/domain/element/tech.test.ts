@@ -6,7 +6,7 @@ import { hitTestElement, labelBox } from './geometry'
 import { TECH_KINDS, TECH_LAYOUT } from './tech'
 import { isBindableElement, isShapeElement, TRANSPARENT } from './types'
 
-const style = { strokeColor: '#000', fillColor: TRANSPARENT, strokeWidth: 2, roughness: 1 }
+const style = { strokeColor: '#000', fillColor: TRANSPARENT, fillStyle: 'hachure' as const, strokeWidth: 2, roughness: 1 }
 
 describe('tech components', () => {
   it.each(TECH_KINDS)('%s keeps its label area inside its bounds', (kind) => {

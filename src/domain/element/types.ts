@@ -5,10 +5,16 @@ export type ElementId = string
 
 export const TRANSPARENT = 'transparent'
 
+/** How a fill colour is painted: sketchy strokes, a crossed grid or a solid area. */
+export const FILL_STYLES = ['hachure', 'cross-hatch', 'solid'] as const
+export type FillStyle = (typeof FILL_STYLES)[number]
+export const isFillStyle = (value: unknown): value is FillStyle => FILL_STYLES.includes(value as FillStyle)
+
 export interface ElementStyle {
   readonly strokeColor: string
   /** CSS color or `TRANSPARENT`. */
   readonly fillColor: string
+  readonly fillStyle: FillStyle
   readonly strokeWidth: number
   /** 0 = clean lines, higher = sketchier. */
   readonly roughness: number

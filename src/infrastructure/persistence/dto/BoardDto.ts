@@ -19,6 +19,8 @@ export interface PointDto {
 export interface ElementStyleDto {
   strokeColor: string
   fillColor: string
+  /** hachure | cross-hatch | solid; absent in old data = hachure. */
+  fillStyle?: string
   strokeWidth: number
   roughness: number
 }

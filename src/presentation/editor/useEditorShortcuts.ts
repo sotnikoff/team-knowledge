@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import * as editor from '@/application/editor/editorModel'
 import type { ToolType } from '@/application/editor/editorModel'
+import type { LayerMove } from '@/domain/element/order'
 import { isLinearElement, isShapeElement } from '@/domain/element/types'
 import { findElement } from '@/application/editor/scene'
 import { dispatch, getModel } from './store'
@@ -29,6 +30,23 @@ export const toolShortcuts: Record<string, ToolType> = {
   Digit9: 'tech',
 }
 
+/** Ctrl/⌘ + ] / [ moves one layer; with Shift, all the way (as in Excalidraw and Figma). */
+function layerMoveFor(code: string, shiftKey: boolean): LayerMove | null {
+  if (code === 'BracketRight') return shiftKey ? 'front' : 'forward'
+  if (code === 'BracketLeft') return shiftKey ? 'back' : 'backward'
+  return null
+}
+
+const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
+
+/** Human-readable shortcut for a layer move, for tooltips. */
+export function layerShortcutLabel(move: LayerMove): string {
+  const mod = isMac ? '⌘' : 'Ctrl+'
+  const shift = isMac ? '⇧' : 'Shift+'
+  const keys: Record<LayerMove, string> = { front: `${shift}]`, forward: ']', backward: '[', back: `${shift}[` }
+  return mod + keys[move]
+}
+
 function isTyping(target: EventTarget | null): boolean {
   return (
     target instanceof HTMLElement &&
@@ -44,6 +62,7 @@ export function useEditorShortcuts(options: { onOpenDocument: (documentId: strin
       const mod = e.metaKey || e.ctrlKey
       const key = e.key.toLowerCase()
       const code = e.code
+      const layerMove = mod ? layerMoveFor(code, e.shiftKey) : null
 
       if (mod && code === 'KeyZ') {
         e.preventDefault()
@@ -51,6 +70,9 @@ export function useEditorShortcuts(options: { onOpenDocument: (documentId: strin
       } else if (mod && code === 'KeyY') {
         e.preventDefault()
         dispatch(editor.redo)
+      } else if (layerMove) {
+        e.preventDefault()
+        dispatch((m) => editor.reorderSelected(m, layerMove))
       } else if (mod && code === 'KeyA') {
         e.preventDefault()
         dispatch(editor.selectAll)

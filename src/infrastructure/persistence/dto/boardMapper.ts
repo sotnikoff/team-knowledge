@@ -2,11 +2,13 @@ import type { Board, BoardSummary } from '@/domain/board/Board'
 import {
   ANCHORS,
   ELEMENT_TYPES,
+  isFillStyle,
   type Anchor,
   type Binding,
   type DiagramElement,
   type ElementStyle,
   type ElementType,
+  type FillStyle,
 } from '@/domain/element/types'
 import { isTechKind } from '@/domain/element/tech'
 import type { Point } from '@/domain/shared/geometry'
@@ -69,11 +71,17 @@ function parsePoint(raw: unknown): Point {
   return { x: field(raw, 'x', isNumber, 'a number'), y: field(raw, 'y', isNumber, 'a number') }
 }
 
+function parseFillStyle(raw: unknown): FillStyle {
+  if (!isFillStyle(raw)) throw new InvalidDataError('"fillStyle" must be a known fill style')
+  return raw
+}
+
 function parseStyle(raw: unknown): ElementStyle {
   if (!isObject(raw)) throw new InvalidDataError('"style" must be an object')
   return {
     strokeColor: field(raw, 'strokeColor', isString, 'a string'),
     fillColor: field(raw, 'fillColor', isString, 'a string'),
+    fillStyle: optional<FillStyle>(raw, 'fillStyle', parseFillStyle, 'hachure'),
     strokeWidth: field(raw, 'strokeWidth', isNumber, 'a number'),
     roughness: field(raw, 'roughness', isNumber, 'a number'),
   }

@@ -1,12 +1,14 @@
 import type { ReactNode } from 'react'
 import * as editor from '@/application/editor/editorModel'
 import { findElement } from '@/application/editor/scene'
-import { isLinearElement, TRANSPARENT, type ElementStyle } from '@/domain/element/types'
+import type { LayerMove } from '@/domain/element/order'
+import { isLinearElement, TRANSPARENT, type ElementStyle, type FillStyle } from '@/domain/element/types'
 import { dispatch, useEditor } from '../editor/store'
 import { cx } from '../ui/cx'
 import { Panel } from '../ui/Panel'
 import styles from './StylePanel.module.css'
 import { useI18n, type MessageKey } from '../i18n/i18n'
+import { layerShortcutLabel } from '../editor/useEditorShortcuts'
 
 const strokeColors = ['#1e1e1e', '#e03131', '#2f9e44', '#1971c2', '#f08c00']
 const fillColors = [TRANSPARENT, '#ffc9c9', '#b2f2bb', '#a5d8ff', '#ffec99']
@@ -19,6 +21,31 @@ const roughnesses: { value: number; label: MessageKey }[] = [
   { value: 0, label: 'style.architect' },
   { value: 1, label: 'style.artist' },
   { value: 2, label: 'style.cartoonist' },
+]
+
+const fillStyles: { value: FillStyle; label: MessageKey; icon: ReactNode }[] = [
+  {
+    value: 'hachure',
+    label: 'style.hachure',
+    icon: <path d="M3 13 13 3M3 8l5-5M8 13l5-5" />,
+  },
+  {
+    value: 'cross-hatch',
+    label: 'style.crossHatch',
+    icon: <path d="M3 13 13 3M3 8l5-5M8 13l5-5M3 3l10 10M3 8l5 5M8 3l5 5" />,
+  },
+  {
+    value: 'solid',
+    label: 'style.solid',
+    icon: <rect x="3" y="3" width="10" height="10" rx="1" fill="currentColor" />,
+  },
+]
+
+const layerMoves: { value: LayerMove; label: MessageKey; icon: string }[] = [
+  { value: 'back', label: 'layers.back', icon: 'M8 3v8M4.5 7.5 8 11l3.5-3.5M3 13.5h10' },
+  { value: 'backward', label: 'layers.backward', icon: 'M8 3v10M4.5 9.5 8 13l3.5-3.5' },
+  { value: 'forward', label: 'layers.forward', icon: 'M8 13V3M4.5 6.5 8 3l3.5 3.5' },
+  { value: 'front', label: 'layers.front', icon: 'M8 13V5M4.5 8.5 8 5l3.5 3.5M3 2.5h10' },
 ]
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -50,11 +77,17 @@ function Swatch({ color, active, onClick }: { color: string; active: boolean; on
   )
 }
 
-function OptionButton(props: { label: string; active: boolean; onClick: () => void; children: ReactNode }) {
+function OptionButton(props: {
+  label: string
+  hint?: string
+  active: boolean
+  onClick: () => void
+  children: ReactNode
+}) {
   return (
     <button
       type="button"
-      title={props.label}
+      title={props.hint ? `${props.label} (${props.hint})` : props.label}
       aria-label={props.label}
       aria-pressed={props.active}
       onClick={props.onClick}
@@ -84,9 +117,35 @@ export function StylePanel() {
   })
 
   if (!hasSelection && (tool === 'select' || tool === 'hand')) return null
-  if (onlyDocuments) return null
 
   const apply = (patch: Partial<ElementStyle>) => dispatch((m) => editor.applyStyle(m, patch))
+
+  // Order is the only thing a document card can change here.
+  const layers = hasSelection && (
+    <Section title={t('style.layers')}>
+      {layerMoves.map((l) => (
+        <OptionButton
+          key={l.value}
+          label={t(l.label)}
+          hint={layerShortcutLabel(l.value)}
+          active={false}
+          onClick={() => dispatch((m) => editor.reorderSelected(m, l.value))}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d={l.icon} />
+          </svg>
+        </OptionButton>
+      ))}
+    </Section>
+  )
+
+  if (onlyDocuments) {
+    return (
+      <Panel padding="none" className={styles.panel}>
+        {layers}
+      </Panel>
+    )
+  }
 
   return (
     <Panel padding="none" className={styles.panel}>
@@ -100,6 +159,22 @@ export function StylePanel() {
           <Swatch key={c} color={c} active={style.fillColor === c} onClick={() => apply({ fillColor: c })} />
         ))}
       </Section>
+      {style.fillColor !== TRANSPARENT && (
+        <Section title={t('style.fillStyle')}>
+          {fillStyles.map((f) => (
+            <OptionButton
+              key={f.value}
+              label={t(f.label)}
+              active={style.fillStyle === f.value}
+              onClick={() => apply({ fillStyle: f.value })}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
+                {f.icon}
+              </svg>
+            </OptionButton>
+          ))}
+        </Section>
+      )}
       <Section title={t('style.width')}>
         {widths.map((w) => (
           <OptionButton
@@ -140,6 +215,7 @@ export function StylePanel() {
           </OptionButton>
         </Section>
       )}
+      {layers}
     </Panel>
   )
 }

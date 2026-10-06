@@ -14,14 +14,14 @@ export interface RenderContext {
 export const toPairs = (points: readonly Point[]): [number, number][] => points.map((p) => [p.x, p.y])
 
 export function roughOptions(el: DiagramElement): Options {
-  const { strokeColor, fillColor, strokeWidth, roughness } = el.style
+  const { strokeColor, fillColor, fillStyle, strokeWidth, roughness } = el.style
   return {
     seed: el.seed,
     stroke: strokeColor,
     strokeWidth,
     roughness,
     fill: fillColor === TRANSPARENT ? undefined : fillColor,
-    fillStyle: 'hachure',
+    fillStyle,
     hachureGap: strokeWidth * 4,
     preserveVertices: true,
   }

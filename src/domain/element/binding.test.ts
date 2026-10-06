@@ -11,7 +11,7 @@ import { absolutePoints, createDocumentElement, createLinear } from './factory'
 import { translateElement } from './geometry'
 import { TRANSPARENT, type DiagramElement, type LinearElement, type ShapeElement } from './types'
 
-const style = { strokeColor: '#000', fillColor: TRANSPARENT, strokeWidth: 2, roughness: 1 }
+const style = { strokeColor: '#000', fillColor: TRANSPARENT, fillStyle: 'hachure' as const, strokeWidth: 2, roughness: 1 }
 
 const box = (id: string, x: number, y: number): ShapeElement => ({
   id,

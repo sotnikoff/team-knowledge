@@ -1,5 +1,6 @@
 import { syncBindings } from '@/domain/element/binding'
 import { setCurved } from '@/domain/element/linear'
+import { reorderElements, type LayerMove } from '@/domain/element/order'
 import type { TechKind } from '@/domain/element/tech'
 import { isLinearElement } from '@/domain/element/types'
 import type { Binding, DiagramElement, ElementId, ElementStyle } from '@/domain/element/types'
@@ -53,6 +54,7 @@ export interface BindingHint {
 export const defaultStyle: ElementStyle = {
   strokeColor: '#1e1e1e',
   fillColor: TRANSPARENT,
+  fillStyle: 'hachure',
   strokeWidth: 2,
   roughness: 1,
 }
@@ -171,6 +173,11 @@ export function setLinesCurved(m: EditorModel, curved: boolean): EditorModel {
     return setCurved(el, curved)
   })
   return changed ? commit(m, elements) : m
+}
+
+/** Changes the stacking order of the selection (one undo step; no-op if nothing moves). */
+export function reorderSelected(m: EditorModel, move: LayerMove): EditorModel {
+  return commit(m, reorderElements(m.elements, m.selectedIds, move))
 }
 
 function keepExistingSelection(m: EditorModel): EditorModel {

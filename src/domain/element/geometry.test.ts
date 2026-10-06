@@ -6,6 +6,7 @@ import { TRANSPARENT, type DiagramElement, type ElementStyle } from './types'
 const style: ElementStyle = {
   strokeColor: '#000',
   fillColor: TRANSPARENT,
+  fillStyle: 'hachure',
   strokeWidth: 2,
   roughness: 1,
 }

@@ -57,6 +57,20 @@ describe('boardMapper', () => {
     expect(boardFromDto(JSON.parse(JSON.stringify(boardToDto(withExtras))))).toEqual(withExtras)
   })
 
+  it('reads a missing fill style as hachure and round-trips a solid fill', () => {
+    const board = boardFromDto(legacy)
+    expect(board.elements[0]!.style.fillStyle).toBe('hachure')
+    const rect = board.elements[0]!
+    const solid = { ...board, elements: [{ ...rect, style: { ...rect.style, fillColor: '#a5d8ff', fillStyle: 'solid' as const } }] }
+    expect(boardFromDto(JSON.parse(JSON.stringify(boardToDto(solid))))).toEqual(solid)
+  })
+
+  it('rejects an unknown fill style', () => {
+    const bad = structuredClone(legacy)
+    Object.assign(bad.elements[0]!.style, { fillStyle: 'dots' })
+    expect(() => boardFromDto(bad)).toThrow(InvalidDataError)
+  })
+
   it('rejects an unknown anchor', () => {
     const bad = structuredClone(legacy)
     Object.assign(bad.elements[1]!, { endBinding: { elementId: 'r', anchor: 'center' } })

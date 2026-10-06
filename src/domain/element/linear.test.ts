@@ -14,7 +14,7 @@ import {
 } from './linear'
 import { TRANSPARENT, type LinearElement, type ShapeElement } from './types'
 
-const style = { strokeColor: '#000', fillColor: TRANSPARENT, strokeWidth: 2, roughness: 1 }
+const style = { strokeColor: '#000', fillColor: TRANSPARENT, fillStyle: 'hachure' as const, strokeWidth: 2, roughness: 1 }
 
 /** A "V": (0,100) -> (100,0) -> (200,100). */
 function vLine(curved: boolean): LinearElement {

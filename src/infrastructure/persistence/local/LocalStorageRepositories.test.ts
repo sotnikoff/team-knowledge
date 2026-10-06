@@ -48,7 +48,7 @@ runVersionedRepositoryContract<Board, LocalStorageBoardRepository>({
           width: 3,
           height: 4,
           seed: 42,
-          style: { strokeColor: '#000', fillColor: 'transparent', strokeWidth: 2, roughness: 1 },
+          style: { strokeColor: '#000', fillColor: 'transparent', fillStyle: 'hachure', strokeWidth: 2, roughness: 1 },
         },
       ],
       now,
@@ -162,7 +162,7 @@ describe('arrow bindings survive a reload', () => {
     const { translateElements } = await import('@/application/editor/scene')
     const { anchorPoint, moveLinearEnd } = await import('@/domain/element/binding')
     const { absolutePoints, createLinear } = await import('@/domain/element/factory')
-    const style = { strokeColor: '#000', fillColor: 'transparent', strokeWidth: 2, roughness: 1 }
+    const style = { strokeColor: '#000', fillColor: 'transparent', fillStyle: 'hachure' as const, strokeWidth: 2, roughness: 1 }
     const box = { id: 'box', type: 'rectangle' as const, label: '', x: 0, y: 0, width: 100, height: 50, seed: 1, style }
     const arrow = moveLinearEnd(
       createLinear({ id: 'arrow', type: 'arrow', seed: 1, style, origin: { x: 300, y: 25 } }),
