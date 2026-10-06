@@ -1,4 +1,5 @@
-.layer {
+/* Full-board plane of one card, so cards can sit between canvas layers. */
+.plane {
   position: absolute;
   inset: 0;
   overflow: hidden;

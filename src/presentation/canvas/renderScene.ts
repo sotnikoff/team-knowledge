@@ -5,7 +5,7 @@ import { findElement, selectionBounds } from '@/application/editor/scene'
 import { anchorPoint } from '@/domain/element/binding'
 import { absolutePoints } from '@/domain/element/factory'
 import { elementBounds, handlePosition, RESIZE_HANDLES } from '@/domain/element/geometry'
-import { ANCHORS, isLinearElement } from '@/domain/element/types'
+import { ANCHORS, isLinearElement, type DiagramElement } from '@/domain/element/types'
 import type { Bounds } from '@/domain/shared/geometry'
 import { drawElements } from './elementRenderers'
 import { HANDLE_SIZE, visibleMidpoints } from './selection'
@@ -18,26 +18,38 @@ export interface Surface {
 
 const SELECTION_COLOR = '#6965db'
 
-export function renderScene(canvas: HTMLCanvasElement, rc: RoughCanvas, model: EditorModel, surface: Surface) {
+/** Clears a layer canvas and applies the viewport transform; returns the context ready to draw in world units. */
+function beginFrame(canvas: HTMLCanvasElement, model: EditorModel, surface: Surface): CanvasRenderingContext2D | null {
   const ctx = canvas.getContext('2d')
-  if (!ctx) return
+  if (!ctx) return null
   const { zoom, scrollX, scrollY } = model.viewport
-
-  // Transparent: document cards (DOM) live underneath the drawing.
+  // Transparent: what lies underneath (document cards, lower layers) shows through.
   ctx.setTransform(surface.pixelRatio, 0, 0, surface.pixelRatio, 0, 0)
   ctx.clearRect(0, 0, surface.width, surface.height)
-
-  ctx.save()
   ctx.scale(zoom, zoom)
   ctx.translate(scrollX, scrollY)
+  return ctx
+}
 
-  drawElements(ctx, rc, model.elements, { editingId: model.editingTextId })
+/** One drawing layer: the elements between two document cards (see `splitAtDocuments`). */
+export function renderDrawing(
+  canvas: HTMLCanvasElement,
+  rc: RoughCanvas,
+  elements: readonly DiagramElement[],
+  model: EditorModel,
+  surface: Surface,
+) {
+  const ctx = beginFrame(canvas, model, surface)
+  if (ctx) drawElements(ctx, rc, elements, { editingId: model.editingTextId })
+}
 
+/** The topmost layer: selection, binding hints and the marquee, above every element and card. */
+export function renderOverlay(canvas: HTMLCanvasElement, model: EditorModel, surface: Surface) {
+  const ctx = beginFrame(canvas, model, surface)
+  if (!ctx) return
   drawSelection(ctx, model)
   drawBindingHint(ctx, model)
-  if (model.marquee) drawMarquee(ctx, model.marquee, zoom)
-
-  ctx.restore()
+  if (model.marquee) drawMarquee(ctx, model.marquee, model.viewport.zoom)
 }
 
 export function createRoughCanvas(canvas: HTMLCanvasElement): RoughCanvas {

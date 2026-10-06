@@ -8,36 +8,31 @@ import { dispatch, useEditor } from '../editor/store'
 import { useDocument } from '../hooks/useDocuments'
 import { useI18n } from '../i18n/i18n'
 import { cx } from '../ui/cx'
-import styles from './DocumentLayer.module.css'
+import styles from './DocumentCard.module.css'
 
 /**
- * Document cards of the board, rendered as DOM under the (transparent) canvas
- * and moved with the same transform as the scene: screen = (world + scroll) * zoom.
- * Pointer input still goes to the canvas, so tools treat cards like any element.
+ * A document card of the board: DOM, stacked between the canvas layers (see
+ * `SceneLayers`) and moved with the same transform as the scene:
+ * screen = (world + scroll) * zoom. Pointer input still goes to the overlay
+ * canvas on top, so tools treat cards like any element.
  */
-export function DocumentLayer() {
-  const elements = useEditor((m) => m.elements)
+export function DocumentCard({ element }: { element: DocumentElement }) {
   const viewport = useEditor((m) => m.viewport)
-  const documents = elements.filter((el): el is DocumentElement => el.type === 'document')
-  if (documents.length === 0) return null
-
   return (
-    <div className={styles.layer}>
+    <div className={styles.plane}>
       <div
         style={{
           transformOrigin: '0 0',
           transform: `scale(${viewport.zoom}) translate(${viewport.scrollX}px, ${viewport.scrollY}px)`,
         }}
       >
-        {documents.map((el) => (
-          <DocumentCard key={el.id} element={el} />
-        ))}
+        <CardContent element={element} />
       </div>
     </div>
   )
 }
 
-function DocumentCard({ element }: { element: DocumentElement }) {
+function CardContent({ element }: { element: DocumentElement }) {
   const { t } = useI18n()
   const { data: doc, error, isPending } = useDocument(element.documentId)
   const ref = useRef<HTMLDivElement>(null)

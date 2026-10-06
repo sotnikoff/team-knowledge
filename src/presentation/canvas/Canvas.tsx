@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
 import * as editor from '@/application/editor/editorModel'
 import { findElement, shapeAt, topmostElementAt, updateElements } from '@/application/editor/scene'
 import { isBendIndex, removeBend } from '@/domain/element/linear'
@@ -6,10 +6,10 @@ import { isLinearElement } from '@/domain/element/types'
 import type { Point } from '@/domain/shared/geometry'
 import { panBy, screenToWorld, zoomAt } from '@/application/editor/viewport'
 import { useDependencies } from '../app/dependencies'
-import { dispatch, getModel, subscribeToModel, useEditor } from '../editor/store'
+import { dispatch, getModel, useEditor } from '../editor/store'
 import { commitTextEdit, startEditing } from '../editor/textEditing'
-import { DocumentLayer } from './DocumentLayer'
-import { createRoughCanvas, renderScene, type Surface } from './renderScene'
+import { renderOverlay, type Surface } from './renderScene'
+import { SceneLayers } from './SceneLayers'
 import { HIT_TOLERANCE, lineHandleAt } from './selection'
 import { TextEditor } from './TextEditor'
 import { cx } from '../ui/cx'
@@ -19,6 +19,7 @@ import { startPan } from './tools/handTool'
 import { hoverCursor } from './tools/selectTool'
 import { hintFor, snapLineEnd } from './tools/snapping'
 import { startTextAt } from './tools/textTool'
+import { useLayerCanvas } from './useLayerCanvas'
 
 /** `onOpenDocument` is called on double click on a document card. */
 /** Double click on a bend of the selected line removes it. */
@@ -63,29 +64,9 @@ export function Canvas(props: { onOpenDocument: (documentId: string) => void }) 
     return () => observer.disconnect()
   }, [])
 
-  // Render on every model change, at most once per frame.
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas || surface.width === 0) return
-    canvas.width = Math.floor(surface.width * surface.pixelRatio)
-    canvas.height = Math.floor(surface.height * surface.pixelRatio)
-    const rc = createRoughCanvas(canvas)
-    let frame = 0
-    const draw = () => {
-      frame = 0
-      renderScene(canvas, rc, getModel(), surface)
-    }
-    const schedule = () => {
-      if (!frame) frame = requestAnimationFrame(draw)
-    }
-    draw()
-    const unsubscribe = subscribeToModel(schedule)
-    void document.fonts.ready.then(schedule)
-    return () => {
-      unsubscribe()
-      cancelAnimationFrame(frame)
-    }
-  }, [surface])
+  // The input canvas on top of every layer also shows the selection UI.
+  const drawOverlay = useCallback((canvas: HTMLCanvasElement) => renderOverlay(canvas, getModel(), surface), [surface])
+  useLayerCanvas(canvasRef, surface, drawOverlay)
 
   // Wheel: pan, or zoom with ctrl/cmd (also what trackpad pinch sends).
   useEffect(() => {
@@ -181,10 +162,10 @@ export function Canvas(props: { onOpenDocument: (documentId: string) => void }) 
 
   return (
     <div ref={containerRef} className={styles.container}>
-      <DocumentLayer />
+      <SceneLayers surface={surface} />
       <canvas
         ref={canvasRef}
-        className={cx('board-ink', styles.canvas)}
+        className={cx('board-ink', styles.layer, styles.input)}
         style={{ width: surface.width, height: surface.height, cursor }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}

@@ -1,4 +1,5 @@
 import rough from 'roughjs'
+import { splitAtDocuments } from '@/application/editor/scene'
 import { elementBounds } from '@/domain/element/geometry'
 import type { DiagramElement, DocumentElement } from '@/domain/element/types'
 import { unionBounds } from '@/domain/shared/geometry'
@@ -19,7 +20,7 @@ export interface ExportOptions {
   readonly format: ExportFormat
   /** Pixels per world unit (2 = retina-quality). */
   readonly scale: number
-  /** The rendered DOM card of a document element (drawn by `DocumentLayer`). */
+  /** The rendered DOM card of a document element (drawn by `DocumentCard`). */
   readonly findCardNode: (elementId: string) => HTMLElement | null
 }
 
@@ -29,10 +30,6 @@ const PADDING = 32
 const MAX_SIDE = 16_384
 const BACKGROUND = '#ffffff'
 
-/**
- * Renders the given elements to an image the way they look on the board:
- * document cards underneath, drawings on top, white background.
- */
 /** Nothing selected/drawn; the UI shows its own localized message. */
 export class NothingToExportError extends Error {
   constructor() {
@@ -41,6 +38,10 @@ export class NothingToExportError extends Error {
   }
 }
 
+/**
+ * Renders the given elements to an image the way they look on the board
+ * (same stacking order of drawings and document cards), white background.
+ */
 export async function exportImage(options: ExportOptions): Promise<Blob> {
   const content = unionBounds(options.elements.map(elementBounds))
   if (!content) throw new NothingToExportError()
@@ -64,9 +65,14 @@ export async function exportImage(options: ExportOptions): Promise<Blob> {
   ctx.setTransform(scale, 0, 0, scale, -area.x * scale, -area.y * scale)
 
   resetCssCache()
-  const cards = options.elements.filter((el): el is DocumentElement => el.type === 'document')
-  for (const card of cards) await drawCard(ctx, card, options.findCardNode(card.id), scale)
-  drawElements(ctx, rough.canvas(canvas), options.elements)
+  // Same stacking as on the board: drawings and cards interleaved in element order.
+  const rc = rough.canvas(canvas)
+  const { documents, drawings } = splitAtDocuments(options.elements)
+  for (const [i, card] of documents.entries()) {
+    drawElements(ctx, rc, drawings[i] ?? [])
+    await drawCard(ctx, card, options.findCardNode(card.id), scale)
+  }
+  drawElements(ctx, rc, drawings[documents.length] ?? [])
 
   return encode(canvas, options.format)
 }

@@ -102,7 +102,7 @@ export const elementRenderers: RendererRegistry = {
     ctx.stroke()
     ctx.restore()
   },
-  // Drawn by the DOM layer (`DocumentLayer`) as a real rich-text card.
+  // Drawn by the DOM layer (`DocumentCard`, stacked by `SceneLayers`) as a real rich-text card.
   document: () => {},
   tech: (el, r) => renderTech(el, r),
   text: (el, { ctx }) => {

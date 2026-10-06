@@ -4,7 +4,15 @@
   overflow: hidden;
 }
 
-.canvas {
-  position: relative;
+/* Every layer (drawing canvases, document cards, the input canvas) covers the
+   whole board; DOM order is the stacking order. */
+.layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.input {
+  pointer-events: auto;
   touch-action: none;
 }

@@ -1,6 +1,12 @@
 import { detachBindings } from '@/domain/element/binding'
 import { elementBounds, hitTestElement, isPointInsideShape, translateElement } from '@/domain/element/geometry'
-import { isShapeElement, type DiagramElement, type ElementId, type ShapeElement } from '@/domain/element/types'
+import {
+  isShapeElement,
+  type DiagramElement,
+  type DocumentElement,
+  type ElementId,
+  type ShapeElement,
+} from '@/domain/element/types'
 import { containsBounds, unionBounds, type Bounds, type Point } from '@/domain/shared/geometry'
 
 type Elements = readonly DiagramElement[]
@@ -53,4 +59,29 @@ export function shapeAt(elements: Elements, p: Point): ShapeElement | null {
 export function findElement(elements: Elements, id: ElementId | null): DiagramElement | null {
   if (id === null) return null
   return elements.find((el) => el.id === id) ?? null
+}
+
+/**
+ * The scene as it is stacked on screen. Document cards are DOM, everything else
+ * is drawn on canvases, so the drawings are cut at every card:
+ * `drawings[i]` lies under `documents[i]`, and the last drawing is on top of all cards.
+ * Always `drawings.length === documents.length + 1`.
+ */
+export interface SceneStrata {
+  readonly documents: readonly DocumentElement[]
+  readonly drawings: readonly (readonly DiagramElement[])[]
+}
+
+export function splitAtDocuments(elements: Elements): SceneStrata {
+  const documents: DocumentElement[] = []
+  const drawings: DiagramElement[][] = [[]]
+  for (const el of elements) {
+    if (el.type === 'document') {
+      documents.push(el)
+      drawings.push([])
+    } else {
+      drawings[drawings.length - 1]!.push(el)
+    }
+  }
+  return { documents, drawings }
 }
