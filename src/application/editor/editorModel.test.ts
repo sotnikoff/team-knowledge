@@ -41,6 +41,19 @@ describe('editorModel', () => {
     expect(m.elements.map((e) => e.id)).toEqual(['a', 'b'])
   })
 
+  it('sets the heads of the selected lines as one undo step and remembers them for new arrows', () => {
+    const line = createLinear({ id: 'l', type: 'line', seed: 1, style: editor.defaultStyle, origin: { x: 0, y: 0 } })
+    let m = editor.select(editor.createEditorModel([el('a'), line]), ['a', 'l'])
+    m = editor.setArrowStyle(m, { sides: 'both' })
+    expect(m.elements[1]).toMatchObject({ startArrowhead: 'arrow', endArrowhead: 'arrow' })
+    m = editor.setArrowStyle(m, { head: 'dot' })
+    expect(m.elements[1]).toMatchObject({ startArrowhead: 'dot', endArrowhead: 'dot' })
+    expect(m.arrowStyle).toEqual({ sides: 'both', head: 'dot' })
+    expect(m.history.past).toHaveLength(2)
+    m = editor.undo(m)
+    expect(m.elements[1]).toMatchObject({ startArrowhead: 'arrow', endArrowhead: 'arrow' })
+  })
+
   it('does not record an interaction that changed nothing', () => {
     let m = editor.createEditorModel([el('a')])
     m = editor.endInteraction(editor.beginInteraction(m))

@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import * as editor from '@/application/editor/editorModel'
 import { TECH_KINDS } from '@/domain/element/tech'
 import { dispatch, useEditor } from '../editor/store'
+import { toolHint } from '../editor/useEditorShortcuts'
 import { useI18n } from '../i18n/i18n'
 import { cx } from '../ui/cx'
 import { IconButton } from '../ui/IconButton'
@@ -26,7 +27,7 @@ export function TechPalette() {
       trigger={
         <IconButton
           label={t('tools.tech')}
-          hint={`K ${t('common.or')} 9`}
+          {...toolHint('tech', t('common.or'))}
           active={active || open}
           onClick={() => setOpen((o) => !o)}
         >

@@ -2,8 +2,10 @@ import type { Board, BoardSummary } from '@/domain/board/Board'
 import {
   ANCHORS,
   ELEMENT_TYPES,
+  isArrowhead,
   isFillStyle,
   type Anchor,
+  type Arrowhead,
   type Binding,
   type DiagramElement,
   type ElementStyle,
@@ -71,6 +73,15 @@ function parsePoint(raw: unknown): Point {
   return { x: field(raw, 'x', isNumber, 'a number'), y: field(raw, 'y', isNumber, 'a number') }
 }
 
+/** Absent = older data (`fallback`); `null` = deliberately no head. */
+function parseArrowhead(raw: Record<string, unknown>, key: string, fallback: Arrowhead | null): Arrowhead | null {
+  const value = raw[key]
+  if (value === undefined) return fallback
+  if (value === null) return null
+  if (!isArrowhead(value)) throw new InvalidDataError(`"${key}" must be a known arrowhead or null`)
+  return value
+}
+
 function parseFillStyle(raw: unknown): FillStyle {
   if (!isFillStyle(raw)) throw new InvalidDataError('"fillStyle" must be a known fill style')
   return raw
@@ -114,6 +125,9 @@ function parseElement(raw: unknown): DiagramElement {
         endBinding: optional<Binding | null>(raw, 'endBinding', parseBinding, null),
         curved: optional(raw, 'curved', parseBoolean, false),
         label: optional(raw, 'label', parseString, ''),
+        // Saved before arrowheads were editable: an arrow pointed at its end.
+        startArrowhead: parseArrowhead(raw, 'startArrowhead', null),
+        endArrowhead: parseArrowhead(raw, 'endArrowhead', type === 'arrow' ? 'arrow' : null),
       }
     case 'freedraw':
       return { ...base, type, points: field(raw, 'points', isArray, 'an array').map(parsePoint) }

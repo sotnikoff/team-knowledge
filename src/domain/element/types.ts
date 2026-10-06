@@ -66,6 +66,11 @@ export interface Binding {
   readonly anchor: Anchor
 }
 
+/** What can be drawn at an end of a line/arrow. */
+export const ARROWHEADS = ['arrow', 'triangle', 'dot', 'diamond', 'bar'] as const
+export type Arrowhead = (typeof ARROWHEADS)[number]
+export const isArrowhead = (value: unknown): value is Arrowhead => ARROWHEADS.includes(value as Arrowhead)
+
 /** `points` are relative to (x, y); width/height are their bounding box. */
 interface LinearBase extends BaseElement {
   /** Ends + bend points, in order. */
@@ -76,6 +81,9 @@ interface LinearBase extends BaseElement {
   readonly label: string
   readonly startBinding: Binding | null
   readonly endBinding: Binding | null
+  /** Head drawn at `points[0]` / at the last point (null = plain end). */
+  readonly startArrowhead: Arrowhead | null
+  readonly endArrowhead: Arrowhead | null
 }
 
 export interface LineElement extends LinearBase {

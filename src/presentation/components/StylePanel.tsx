@@ -1,8 +1,16 @@
 import type { ReactNode } from 'react'
 import * as editor from '@/application/editor/editorModel'
 import { findElement } from '@/application/editor/scene'
+import { arrowStyleOf, type ArrowSides, type ArrowStyle } from '@/domain/element/linear'
 import type { LayerMove } from '@/domain/element/order'
-import { isLinearElement, TRANSPARENT, type ElementStyle, type FillStyle } from '@/domain/element/types'
+import {
+  isLinearElement,
+  TRANSPARENT,
+  type Arrowhead,
+  type ElementStyle,
+  type FillStyle,
+} from '@/domain/element/types'
+import type { EditorModel } from '@/application/editor/editorModel'
 import { dispatch, useEditor } from '../editor/store'
 import { cx } from '../ui/cx'
 import { Panel } from '../ui/Panel'
@@ -10,8 +18,32 @@ import styles from './StylePanel.module.css'
 import { useI18n, type MessageKey } from '../i18n/i18n'
 import { layerShortcutLabel } from '../editor/useEditorShortcuts'
 
-const strokeColors = ['#1e1e1e', '#e03131', '#2f9e44', '#1971c2', '#f08c00']
-const fillColors = [TRANSPARENT, '#ffc9c9', '#b2f2bb', '#a5d8ff', '#ffec99']
+// Open Color shades (as in Excalidraw): strong ones for strokes, light ones for fills.
+// Stored as-is; the dark theme shows them through the board-ink filter.
+const strokeColors = [
+  '#1e1e1e', // black
+  '#868e96', // gray
+  '#e03131', // red
+  '#c2255c', // pink
+  '#7048e8', // violet
+  '#1971c2', // blue
+  '#0c8599', // cyan
+  '#2f9e44', // green
+  '#f08c00', // orange
+  '#846358', // brown
+]
+const fillColors = [
+  TRANSPARENT,
+  '#ffffff', // white: hides what lies underneath
+  '#ffc9c9', // red
+  '#fcc2d7', // pink
+  '#d0bfff', // violet
+  '#a5d8ff', // blue
+  '#99e9f2', // cyan
+  '#b2f2bb', // green
+  '#ffec99', // yellow
+  '#ffd8a8', // orange
+]
 const widths: { value: number; label: MessageKey }[] = [
   { value: 1, label: 'style.thin' },
   { value: 2, label: 'style.medium' },
@@ -48,6 +80,50 @@ const layerMoves: { value: LayerMove; label: MessageKey; icon: string }[] = [
   { value: 'front', label: 'layers.front', icon: 'M8 13V5M4.5 8.5 8 5l3.5 3.5M3 2.5h10' },
 ]
 
+// Arrow icons: a line with heads (24×14).
+const SHAFT = 'M3 7h18'
+const arrowSides: { value: ArrowSides; label: MessageKey; icon: string }[] = [
+  { value: 'end', label: 'arrow.end', icon: `${SHAFT}M16 3l5 4-5 4` },
+  { value: 'start', label: 'arrow.start', icon: `${SHAFT}M8 3L3 7l5 4` },
+  { value: 'both', label: 'arrow.both', icon: `${SHAFT}M16 3l5 4-5 4M8 3L3 7l5 4` },
+  { value: 'none', label: 'arrow.none', icon: SHAFT },
+]
+
+const arrowheads: { value: Arrowhead; label: MessageKey; icon: ReactNode }[] = [
+  { value: 'arrow', label: 'arrowhead.arrow', icon: <path d="M3 7h18M15 3l6 4-6 4" /> },
+  {
+    value: 'triangle',
+    label: 'arrowhead.triangle',
+    icon: <path d="M3 7h12M15 3l6 4-6 4z" fill="currentColor" />,
+  },
+  {
+    value: 'dot',
+    label: 'arrowhead.dot',
+    icon: (
+      <>
+        <path d="M3 7h13" />
+        <circle cx="18" cy="7" r="3" fill="currentColor" />
+      </>
+    ),
+  },
+  {
+    value: 'diamond',
+    label: 'arrowhead.diamond',
+    icon: <path d="M3 7h9M12 7l4.5-3.5L21 7l-4.5 3.5z" fill="currentColor" />,
+  },
+  { value: 'bar', label: 'arrowhead.bar', icon: <path d="M3 7h18M21 2v10" /> },
+]
+
+/**
+ * Arrow settings to show: those of the first selected line/arrow, or the
+ * defaults while the arrow tool is armed; null = no arrow section.
+ */
+function shownArrowStyle(m: EditorModel): ArrowStyle | null {
+  const line = m.elements.find((el) => m.selectedIds.includes(el.id) && isLinearElement(el))
+  if (line && isLinearElement(line)) return arrowStyleOf(line, m.arrowStyle.head)
+  return m.selectedIds.length === 0 && m.tool === 'arrow' ? m.arrowStyle : null
+}
+
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className={styles.section}>
@@ -81,6 +157,8 @@ function OptionButton(props: {
   label: string
   hint?: string
   active: boolean
+  /** Narrower button, so five fit in a row. */
+  compact?: boolean
   onClick: () => void
   children: ReactNode
 }) {
@@ -91,7 +169,7 @@ function OptionButton(props: {
       aria-label={props.label}
       aria-pressed={props.active}
       onClick={props.onClick}
-      className={cx(styles.option, props.active && styles.selected)}
+      className={cx(styles.option, props.compact && styles.compact, props.active && styles.selected)}
     >
       {props.children}
     </button>
@@ -115,6 +193,10 @@ export function StylePanel() {
     const line = m.elements.find((el) => m.selectedIds.includes(el.id) && isLinearElement(el))
     return line && isLinearElement(line) ? line.curved : undefined
   })
+
+  // Primitives only: a selector returning a fresh object would re-render forever.
+  const arrowSidesShown = useEditor((m) => shownArrowStyle(m)?.sides)
+  const arrowheadShown = useEditor((m) => shownArrowStyle(m)?.head)
 
   if (!hasSelection && (tool === 'select' || tool === 'hand')) return null
 
@@ -213,6 +295,39 @@ export function StylePanel() {
               <path d="M1 12L11 2l10 10" />
             </svg>
           </OptionButton>
+        </Section>
+      )}
+      {arrowSidesShown !== undefined && (
+        <Section title={t('style.arrow')}>
+          {arrowSides.map((a) => (
+            <OptionButton
+              key={a.value}
+              label={t(a.label)}
+              active={arrowSidesShown === a.value}
+              onClick={() => dispatch((m) => editor.setArrowStyle(m, { sides: a.value }))}
+            >
+              <svg width="24" height="14" viewBox="0 0 24 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d={a.icon} />
+              </svg>
+            </OptionButton>
+          ))}
+        </Section>
+      )}
+      {arrowSidesShown !== undefined && arrowSidesShown !== 'none' && (
+        <Section title={t('style.arrowhead')}>
+          {arrowheads.map((h) => (
+            <OptionButton
+              key={h.value}
+              label={t(h.label)}
+              compact
+              active={arrowheadShown === h.value}
+              onClick={() => dispatch((m) => editor.setArrowStyle(m, { head: h.value }))}
+            >
+              <svg width="24" height="14" viewBox="0 0 24 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                {h.icon}
+              </svg>
+            </OptionButton>
+          ))}
         </Section>
       )}
       {layers}

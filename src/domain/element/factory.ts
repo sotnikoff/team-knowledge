@@ -48,6 +48,9 @@ export function createLinear(
     ],
     startBinding: null,
     endBinding: null,
+    // An arrow points at its end; a line has no heads. Both can be changed later.
+    startArrowhead: null,
+    endArrowhead: init.type === 'arrow' ? 'arrow' : null,
     curved: true,
     label: '',
   }

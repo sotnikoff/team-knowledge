@@ -30,6 +30,8 @@ export interface BindingDto {
   anchor: 'top' | 'right' | 'bottom' | 'left'
 }
 
+export type ArrowheadDto = 'arrow' | 'triangle' | 'dot' | 'diamond' | 'bar'
+
 export interface ElementDto {
   id: string
   type: 'rectangle' | 'ellipse' | 'diamond' | 'line' | 'arrow' | 'freedraw' | 'text' | 'document' | 'tech'
@@ -46,6 +48,9 @@ export interface ElementDto {
   endBinding?: BindingDto | null
   /** line | arrow; absent in older data = false (broken line) */
   curved?: boolean
+  /** line | arrow; null = no head. Absent in older data = arrow: head at the end, line: none */
+  startArrowhead?: ArrowheadDto | null
+  endArrowhead?: ArrowheadDto | null
   /** rectangle | ellipse | diamond | tech | line | arrow; absent in older data = '' */
   label?: string
   /** tech: component kind (database, service, …) */

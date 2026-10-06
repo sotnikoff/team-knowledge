@@ -4,6 +4,7 @@ import { catmullRomSegments, cubicAt, pointAlong, traceLine } from './curve'
 import { absolutePoints, createLinear, withAbsolutePoints } from './factory'
 import { hitTestElement } from './geometry'
 import {
+  arrowStyleOf,
   insertBend,
   isBendIndex,
   lineLabelAnchor,
@@ -11,6 +12,7 @@ import {
   removeBend,
   segmentMidpoints,
   setCurved,
+  withArrowStyle,
 } from './linear'
 import { TRANSPARENT, type LinearElement, type ShapeElement } from './types'
 
@@ -140,5 +142,38 @@ describe('line labels', () => {
     const underApex = { x: 100, y: 12 }
     expect(hitTestElement(plain, underApex, 2)).toBe(false)
     expect(hitTestElement({ ...plain, label: 'запрос' }, underApex, 2)).toBe(true)
+  })
+})
+
+describe('arrow heads', () => {
+  const arrow = createLinear({ id: 'a', type: 'arrow', seed: 1, style, origin: { x: 0, y: 0 } })
+  const line = createLinear({ id: 'l', type: 'line', seed: 1, style, origin: { x: 0, y: 0 } })
+
+  it('an arrow points at its end, a line has no heads', () => {
+    expect(arrowStyleOf(arrow, 'dot')).toEqual({ sides: 'end', head: 'arrow' })
+    expect(arrowStyleOf(line, 'dot')).toEqual({ sides: 'none', head: 'dot' })
+  })
+
+  it('puts the chosen head on the chosen ends', () => {
+    expect(withArrowStyle(arrow, { sides: 'both', head: 'triangle' })).toMatchObject({
+      startArrowhead: 'triangle',
+      endArrowhead: 'triangle',
+    })
+    expect(withArrowStyle(arrow, { sides: 'start', head: 'bar' })).toMatchObject({
+      startArrowhead: 'bar',
+      endArrowhead: null,
+    })
+    expect(withArrowStyle(arrow, { sides: 'none', head: 'bar' })).toMatchObject({
+      startArrowhead: null,
+      endArrowhead: null,
+    })
+    expect(arrowStyleOf(withArrowStyle(line, { sides: 'start', head: 'diamond' }), 'arrow')).toEqual({
+      sides: 'start',
+      head: 'diamond',
+    })
+  })
+
+  it('returns the same element when nothing changes', () => {
+    expect(withArrowStyle(arrow, { sides: 'end', head: 'arrow' })).toBe(arrow)
   })
 })

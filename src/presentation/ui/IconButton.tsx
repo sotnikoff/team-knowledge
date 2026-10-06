@@ -7,6 +7,8 @@ export function IconButton(props: {
   label: string
   /** Shortcut shown after the label in the tooltip. */
   hint?: string
+  /** Tiny key label in the corner (e.g. the number-row shortcut of a tool). */
+  badge?: string
   active?: boolean
   disabled?: boolean
   size?: 'sm' | 'md'
@@ -25,6 +27,11 @@ export function IconButton(props: {
       className={cx(styles.iconButton, styles[props.size ?? 'md'], props.active && styles.active, props.className)}
     >
       {props.children}
+      {props.badge && (
+        <span className={styles.badge} aria-hidden="true">
+          {props.badge}
+        </span>
+      )}
     </button>
   )
 }

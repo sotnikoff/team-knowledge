@@ -7,28 +7,48 @@ import { findElement } from '@/application/editor/scene'
 import { dispatch, getModel } from './store'
 import { startEditing } from './textEditing'
 
-/** Keyed by `KeyboardEvent.code`, so shortcuts work with any keyboard layout. */
-export const toolShortcuts: Record<string, ToolType> = {
-  KeyV: 'select',
-  Digit1: 'select',
-  KeyR: 'rectangle',
-  Digit2: 'rectangle',
-  KeyD: 'diamond',
-  Digit3: 'diamond',
-  KeyO: 'ellipse',
-  Digit4: 'ellipse',
-  KeyA: 'arrow',
-  Digit5: 'arrow',
-  KeyL: 'line',
-  Digit6: 'line',
-  KeyP: 'freedraw',
-  Digit7: 'freedraw',
-  KeyT: 'text',
-  Digit8: 'text',
-  KeyH: 'hand',
-  KeyK: 'tech',
-  Digit9: 'tech',
+/** Tools as they appear on the toolbar; the number row 1…9, 0 picks them in this order. */
+export const TOOLBAR_ORDER: readonly ToolType[] = [
+  'hand',
+  'select',
+  'rectangle',
+  'diamond',
+  'ellipse',
+  'arrow',
+  'line',
+  'freedraw',
+  'text',
+  'tech',
+]
+
+/** Number-row keys (not the numpad: its codes are `Numpad1`…), in toolbar order. */
+const NUMBER_ROW = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
+
+const LETTERS: Record<ToolType, string> = {
+  hand: 'H',
+  select: 'V',
+  rectangle: 'R',
+  diamond: 'D',
+  ellipse: 'O',
+  arrow: 'A',
+  line: 'L',
+  freedraw: 'P',
+  text: 'T',
+  tech: 'K',
 }
+
+/** Tooltip hint ("R or 3") and corner badge ("3") of a tool button; `or` is the localized word. */
+export function toolHint(tool: ToolType, or: string): { hint: string; badge: string | undefined } {
+  const letter = LETTERS[tool]
+  const digit = NUMBER_ROW[TOOLBAR_ORDER.indexOf(tool)]
+  return { hint: digit ? `${letter} ${or} ${digit}` : letter, badge: digit }
+}
+
+/** Keyed by `KeyboardEvent.code`, so shortcuts work with any keyboard layout. */
+export const toolShortcuts: Record<string, ToolType> = Object.fromEntries([
+  ...Object.entries(LETTERS).map(([tool, letter]) => [`Key${letter}`, tool]),
+  ...TOOLBAR_ORDER.slice(0, NUMBER_ROW.length).map((tool, i) => [`Digit${NUMBER_ROW[i]}`, tool]),
+])
 
 /** Ctrl/⌘ + ] / [ moves one layer; with Shift, all the way (as in Excalidraw and Figma). */
 function layerMoveFor(code: string, shiftKey: boolean): LayerMove | null {

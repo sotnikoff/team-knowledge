@@ -1,7 +1,7 @@
 import type { Bounds, Point } from '../shared/geometry'
 import { catmullRomSegments, cubicAt, pointAlong, traceLine } from './curve'
 import { absolutePoints, withAbsolutePoints } from './factory'
-import type { LinearElement } from './types'
+import type { Arrowhead, LinearElement } from './types'
 
 /**
  * Editing of lines/arrows with bend points. `points[0]` and the last point are
@@ -73,4 +73,30 @@ export function removeBend(el: LinearElement, index: number): LinearElement {
 export function setCurved(el: LinearElement, curved: boolean): LinearElement {
   if (el.curved === curved) return el
   return withAbsolutePoints({ ...el, curved }, absolutePoints(el))
+}
+
+/** Which ends of a line carry a head, as offered in the UI. */
+export const ARROW_SIDES = ['end', 'start', 'both', 'none'] as const
+export type ArrowSides = (typeof ARROW_SIDES)[number]
+
+/** Arrow settings as the user picks them: where the heads are and what they look like. */
+export interface ArrowStyle {
+  readonly sides: ArrowSides
+  readonly head: Arrowhead
+}
+
+/** The arrow style of a line; `fallbackHead` is shown when it has no heads at all. */
+export function arrowStyleOf(el: LinearElement, fallbackHead: Arrowhead): ArrowStyle {
+  const { startArrowhead: start, endArrowhead: end } = el
+  const sides: ArrowSides = start && end ? 'both' : end ? 'end' : start ? 'start' : 'none'
+  return { sides, head: end ?? start ?? fallbackHead }
+}
+
+/** Puts the heads of `style` on the line (the same head on every chosen end). */
+export function withArrowStyle(el: LinearElement, style: ArrowStyle): LinearElement {
+  const at = (side: 'start' | 'end') => (style.sides === side || style.sides === 'both' ? style.head : null)
+  const startArrowhead = at('start')
+  const endArrowhead = at('end')
+  if (startArrowhead === el.startArrowhead && endArrowhead === el.endArrowhead) return el
+  return { ...el, startArrowhead, endArrowhead }
 }

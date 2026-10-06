@@ -6,6 +6,7 @@ import { catmullRomSegments } from '@/domain/element/curve'
 import { absolutePoints } from '@/domain/element/factory'
 import { LINE_LABEL_FONT_SIZE, lineLabelAnchor, linePath } from '@/domain/element/linear'
 import {
+  type Arrowhead,
   type DiagramElement,
   type ElementOfType,
   isLinearElement,
@@ -29,22 +30,76 @@ type ElementRenderer<E extends DiagramElement> = (el: E, r: RenderContext) => vo
 type RendererRegistry = { [K in ElementType]: ElementRenderer<ElementOfType<K>> }
 
 /**
- * `traced` gives the direction at the tip (tangent of a curve); the head is
- * capped by half of the last segment between `points`, so short ends stay sane.
+ * Where a head sits: the tip and the direction it points to. `traced` (the drawn
+ * polyline) gives the direction at the tip — the tangent of a curve; the head
+ * length is capped by half of the end segment between `points`, so short ends stay sane.
  */
-function arrowHead(traced: readonly Point[], points: readonly Point[], size: number): [Point, Point, Point] | null {
+function headPlacement(
+  traced: readonly Point[],
+  points: readonly Point[],
+  size: number,
+): { tip: Point; angle: number; length: number } | null {
   const tip = traced.at(-1)
   const from = traced.at(-2)
-  const lastPoint = points.at(-2)
-  if (!tip || !from || !lastPoint) return null
-  const angle = Math.atan2(tip.y - from.y, tip.x - from.x)
-  const length = Math.min(size, Math.hypot(tip.x - lastPoint.x, tip.y - lastPoint.y) / 2)
-  const spread = Math.PI / 7
-  return [
-    { x: tip.x - length * Math.cos(angle - spread), y: tip.y - length * Math.sin(angle - spread) },
-    tip,
-    { x: tip.x - length * Math.cos(angle + spread), y: tip.y - length * Math.sin(angle + spread) },
+  const neighbour = points.at(-2)
+  if (!tip || !from || !neighbour) return null
+  const length = Math.min(size, Math.hypot(tip.x - neighbour.x, tip.y - neighbour.y) / 2)
+  if (length <= 0) return null
+  return { tip, angle: Math.atan2(tip.y - from.y, tip.x - from.x), length }
+}
+
+/** Point `back` units behind the tip along the line, shifted `side` units across it. */
+function behind(p: { tip: Point; angle: number }, back: number, side = 0): Point {
+  const cos = Math.cos(p.angle)
+  const sin = Math.sin(p.angle)
+  return { x: p.tip.x - back * cos - side * sin, y: p.tip.y - back * sin + side * cos }
+}
+
+/** Drawables of one head; filled heads are filled with the stroke colour. */
+function headDrawables(head: Arrowhead, el: LinearElement, at: { tip: Point; angle: number; length: number }, r: RenderContext): Drawable[] {
+  const outline = roughOptions(el)
+  const filled = { ...outline, fill: el.style.strokeColor, fillStyle: 'solid' }
+  const { tip, length } = at
+  const half = length * Math.tan(Math.PI / 7)
+  switch (head) {
+    case 'arrow':
+      return [r.gen.linearPath(toPairs([behind(at, length, -half), tip, behind(at, length, half)]), outline)]
+    case 'triangle':
+      return [r.gen.polygon(toPairs([behind(at, length, -half), tip, behind(at, length, half)]), filled)]
+    case 'dot': {
+      const radius = Math.max(length / 3, el.style.strokeWidth * 1.5)
+      const centre = behind(at, radius)
+      return [r.gen.circle(centre.x, centre.y, radius * 2, filled)]
+    }
+    case 'diamond':
+      return [
+        r.gen.polygon(
+          toPairs([tip, behind(at, length / 2, -half * 0.8), behind(at, length), behind(at, length / 2, half * 0.8)]),
+          filled,
+        ),
+      ]
+    case 'bar':
+      return [r.gen.line(...pair(behind(at, 0, -half * 1.2)), ...pair(behind(at, 0, half * 1.2)), outline)]
+  }
+}
+
+const pair = (p: Point): [number, number] => [p.x, p.y]
+
+/** The shaft of a line/arrow plus the heads at its ends. */
+function linearDrawables(el: LinearElement, r: RenderContext): Drawable[] {
+  const drawables = [lineShape(el, r)]
+  const size = 12 + el.style.strokeWidth * 4
+  const traced = linePath(el)
+  const points = absolutePoints(el)
+  const ends: [Arrowhead | null, readonly Point[], readonly Point[]][] = [
+    [el.endArrowhead, traced, points],
+    [el.startArrowhead, [...traced].reverse(), [...points].reverse()],
   ]
+  for (const [head, path, pts] of ends) {
+    const at = head && headPlacement(path, pts, size)
+    if (head && at) drawables.push(...headDrawables(head, el, at, r))
+  }
+  return drawables
 }
 
 /** SVG path of the exact spline used by hit-testing (`catmullRomSegments`). */
@@ -74,13 +129,9 @@ export const elementRenderers: RendererRegistry = {
     ]),
   diamond: (el, r) =>
     drawCached(el, r, () => [r.gen.polygon(toPairs(diamondPoints(el)), roughOptions(el))]),
-  line: (el, r) => drawCached(el, r, () => [lineShape(el, r)]),
-  arrow: (el, r) =>
-    drawCached(el, r, () => {
-      const shaft = lineShape(el, r)
-      const head = arrowHead(linePath(el), absolutePoints(el), 12 + el.style.strokeWidth * 4)
-      return head ? [shaft, r.gen.linearPath(toPairs(head), roughOptions(el))] : [shaft]
-    }),
+  // Lines and arrows differ only in their default heads.
+  line: (el, r) => drawCached(el, r, () => linearDrawables(el, r)),
+  arrow: (el, r) => drawCached(el, r, () => linearDrawables(el, r)),
   freedraw: (el, { ctx }) => {
     const points = absolutePoints(el)
     const first = points[0]

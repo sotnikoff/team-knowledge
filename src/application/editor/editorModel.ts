@@ -1,5 +1,5 @@
 import { syncBindings } from '@/domain/element/binding'
-import { setCurved } from '@/domain/element/linear'
+import { arrowStyleOf, setCurved, withArrowStyle, type ArrowStyle } from '@/domain/element/linear'
 import { reorderElements, type LayerMove } from '@/domain/element/order'
 import type { TechKind } from '@/domain/element/tech'
 import { isLinearElement } from '@/domain/element/types'
@@ -34,6 +34,8 @@ export interface EditorModel {
   readonly techKind: TechKind
   /** Style applied to newly drawn elements. */
   readonly style: ElementStyle
+  /** Heads of newly drawn arrows (and the head shown for a line without heads). */
+  readonly arrowStyle: ArrowStyle
   readonly viewport: Viewport
   readonly history: history.History
   /** Elements as they were when the current pointer interaction started. */
@@ -59,6 +61,8 @@ export const defaultStyle: ElementStyle = {
   roughness: 1,
 }
 
+export const defaultArrowStyle: ArrowStyle = { sides: 'end', head: 'arrow' }
+
 export function createEditorModel(elements: readonly DiagramElement[]): EditorModel {
   return {
     elements: syncBindings(elements),
@@ -66,6 +70,7 @@ export function createEditorModel(elements: readonly DiagramElement[]): EditorMo
     tool: 'select',
     techKind: 'service',
     style: defaultStyle,
+    arrowStyle: defaultArrowStyle,
     viewport: initialViewport,
     history: history.emptyHistory,
     interactionBase: null,
@@ -178,6 +183,22 @@ export function setLinesCurved(m: EditorModel, curved: boolean): EditorModel {
 /** Changes the stacking order of the selection (one undo step; no-op if nothing moves). */
 export function reorderSelected(m: EditorModel, move: LayerMove): EditorModel {
   return commit(m, reorderElements(m.elements, m.selectedIds, move))
+}
+
+/**
+ * Changes where the heads of the selected lines/arrows are and what they look
+ * like (one undo step), and remembers it for new arrows.
+ */
+export function setArrowStyle(m: EditorModel, patch: Partial<ArrowStyle>): EditorModel {
+  const selected = new Set(m.selectedIds)
+  const elements = m.elements.map((el) =>
+    selected.has(el.id) && isLinearElement(el)
+      ? withArrowStyle(el, { ...arrowStyleOf(el, m.arrowStyle.head), ...patch })
+      : el,
+  )
+  const changed = elements.some((el, i) => el !== m.elements[i])
+  const arrowStyle = { ...m.arrowStyle, ...patch }
+  return { ...(changed ? commit(m, elements) : m), arrowStyle }
 }
 
 function keepExistingSelection(m: EditorModel): EditorModel {

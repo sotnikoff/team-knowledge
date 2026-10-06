@@ -23,6 +23,7 @@
 
 .row {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 }
 
@@ -66,6 +67,10 @@
   transition:
     background-color var(--dur-fast) var(--ease),
     border-color var(--dur-fast) var(--ease);
+}
+
+.compact {
+  width: 29px;
 }
 
 .option:hover {

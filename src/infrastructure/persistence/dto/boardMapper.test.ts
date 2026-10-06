@@ -65,6 +65,24 @@ describe('boardMapper', () => {
     expect(boardFromDto(JSON.parse(JSON.stringify(boardToDto(solid))))).toEqual(solid)
   })
 
+  it('reads heads of older lines and arrows, and keeps a deliberately removed head', () => {
+    const board = boardFromDto(legacy)
+    expect(board.elements[1]).toMatchObject({ startArrowhead: null, endArrowhead: 'arrow' })
+    const plainLine = structuredClone(legacy)
+    Object.assign(plainLine.elements[1]!, { type: 'line' })
+    expect(boardFromDto(plainLine).elements[1]).toMatchObject({ startArrowhead: null, endArrowhead: null })
+
+    const arrow = board.elements[1]!
+    const edited = { ...board, elements: [{ ...arrow, startArrowhead: 'dot' as const, endArrowhead: null }] }
+    expect(boardFromDto(JSON.parse(JSON.stringify(boardToDto(edited))))).toEqual(edited)
+  })
+
+  it('rejects an unknown arrowhead', () => {
+    const bad = structuredClone(legacy)
+    Object.assign(bad.elements[1]!, { endArrowhead: 'heart' })
+    expect(() => boardFromDto(bad)).toThrow(InvalidDataError)
+  })
+
   it('rejects an unknown fill style', () => {
     const bad = structuredClone(legacy)
     Object.assign(bad.elements[0]!.style, { fillStyle: 'dots' })

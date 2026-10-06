@@ -2,6 +2,7 @@ import * as editor from '@/application/editor/editorModel'
 import { updateElements } from '@/application/editor/scene'
 import { moveLinearEnd } from '@/domain/element/binding'
 import { createLinear } from '@/domain/element/factory'
+import { withArrowStyle } from '@/domain/element/linear'
 import { isLinearElement } from '@/domain/element/types'
 import type { Point } from '@/domain/shared/geometry'
 import { dispatch } from '../../editor/store'
@@ -35,7 +36,11 @@ export function linearTool(type: 'line' | 'arrow'): Tool {
           editor.updateLive(m, [
             ...m.elements,
             {
-              ...createLinear({ id, type, seed, style: m.style, origin: start.point }),
+              // The line tool always draws a plain line; arrows take the chosen heads.
+              ...withArrowStyle(createLinear({ id, type, seed, style: m.style, origin: start.point }), {
+                ...m.arrowStyle,
+                sides: type === 'arrow' ? m.arrowStyle.sides : 'none',
+              }),
               startBinding: start.binding,
             },
           ]),
