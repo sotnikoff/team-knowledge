@@ -1,4 +1,5 @@
 import type { Point } from '../shared/geometry'
+import type { TechKind } from './tech'
 
 export type ElementId = string
 
@@ -40,6 +41,12 @@ export interface EllipseElement extends LabeledElement {
 
 export interface DiamondElement extends LabeledElement {
   readonly type: 'diamond'
+}
+
+/** A software-architecture component (database, service, gateway…); see `tech.ts`. */
+export interface TechElement extends LabeledElement {
+  readonly type: 'tech'
+  readonly kind: TechKind
 }
 
 /** Midpoint of a side of the target's bounding box. */
@@ -103,6 +110,7 @@ export type DiagramElement =
   | FreedrawElement
   | TextElement
   | DocumentElement
+  | TechElement
 
 export type ElementType = DiagramElement['type']
 
@@ -112,7 +120,7 @@ export type PointsElement = LineElement | ArrowElement | FreedrawElement
 
 export type LinearElement = LineElement | ArrowElement
 
-export type ShapeElement = RectangleElement | EllipseElement | DiamondElement
+export type ShapeElement = RectangleElement | EllipseElement | DiamondElement | TechElement
 
 /** Elements a line/arrow can be bound to. */
 export type BindableElement = ShapeElement | TextElement | DocumentElement
@@ -126,6 +134,7 @@ export const ELEMENT_TYPES: readonly ElementType[] = [
   'freedraw',
   'text',
   'document',
+  'tech',
 ]
 
 export function isPointsElement(el: DiagramElement): el is PointsElement {
@@ -137,7 +146,7 @@ export function isLinearElement(el: DiagramElement): el is LinearElement {
 }
 
 export function isShapeElement(el: DiagramElement): el is ShapeElement {
-  return el.type === 'rectangle' || el.type === 'ellipse' || el.type === 'diamond'
+  return el.type === 'rectangle' || el.type === 'ellipse' || el.type === 'diamond' || el.type === 'tech'
 }
 
 export function isBindableElement(el: DiagramElement): el is BindableElement {

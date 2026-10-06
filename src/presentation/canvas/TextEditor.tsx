@@ -76,7 +76,7 @@ function LabelTextArea({ element }: { element: ShapeElement }) {
   const box = labelBox(element)
   const lines = wrapText(element.label, LABEL_FONT_SIZE, box.width).length
   const height = lines * LABEL_FONT_SIZE * LINE_HEIGHT
-  const topLeft = worldToScreen(viewport, { x: box.x, y: element.y + element.height / 2 - height / 2 })
+  const topLeft = worldToScreen(viewport, { x: box.x, y: box.y + box.height / 2 - height / 2 })
 
   const onChange = (label: string) =>
     dispatch((m) =>

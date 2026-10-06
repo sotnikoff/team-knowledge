@@ -4,11 +4,12 @@ import { dispatch, useEditor } from '../editor/store'
 import { AppIcon } from './icons'
 import { IconButton } from '../ui/IconButton'
 import { Panel } from '../ui/Panel'
+import { TechPalette } from './TechPalette'
 import styles from './Toolbar.module.css'
 import { useI18n } from '../i18n/i18n'
 
 /** Keyboard shortcuts of each tool (see `useEditorShortcuts`). */
-const items: { tool: ToolType; keys: readonly string[] }[] = [
+const items: { tool: Exclude<ToolType, 'tech'>; keys: readonly string[] }[] = [
   { tool: 'hand', keys: ['H'] },
   { tool: 'select', keys: ['V', '1'] },
   { tool: 'rectangle', keys: ['R', '2'] },
@@ -36,6 +37,8 @@ export function Toolbar() {
           <AppIcon name={item.tool} />
         </IconButton>
       ))}
+      <span className={styles.separator} />
+      <TechPalette />
     </Panel>
   )
 }

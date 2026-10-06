@@ -1,6 +1,8 @@
 import { boundsOfPoints, type Point } from '../shared/geometry'
 import { traceLine } from './curve'
+import type { TechKind } from './tech'
 import type {
+  TechElement,
   DocumentElement,
   ElementId,
   ElementStyle,
@@ -17,9 +19,15 @@ interface CommonInit {
   readonly style: ElementStyle
 }
 
+export function createTech(
+  init: CommonInit & { kind: TechKind; x: number; y: number; width: number; height: number },
+): TechElement {
+  return { ...init, type: 'tech', label: '' }
+}
+
 export function createShape(
-  init: CommonInit & { type: ShapeElement['type']; x: number; y: number },
-): ShapeElement {
+  init: CommonInit & { type: 'rectangle' | 'ellipse' | 'diamond'; x: number; y: number },
+): Exclude<ShapeElement, TechElement> {
   return { ...init, width: 0, height: 0, label: '' }
 }
 

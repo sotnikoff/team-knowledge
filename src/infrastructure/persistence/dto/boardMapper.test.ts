@@ -83,4 +83,27 @@ describe('boardMapper', () => {
     broken.elements.push({ ...broken.elements[0]!, id: 'x', type: 'document' })
     expect(() => boardFromDto(broken)).toThrow(InvalidDataError)
   })
+
+  it('round-trips an architecture component and rejects an unknown kind', () => {
+    const board = boardFromDto(legacy)
+    const component = {
+      id: 'db',
+      type: 'tech' as const,
+      kind: 'database' as const,
+      label: 'Orders DB',
+      x: 1,
+      y: 2,
+      width: 140,
+      height: 120,
+      seed: 7,
+      style: board.elements[0]!.style,
+    }
+    const withComponent = { ...board, elements: [...board.elements, component] }
+    expect(boardFromDto(JSON.parse(JSON.stringify(boardToDto(withComponent))))).toEqual(withComponent)
+
+    const broken = structuredClone(legacy)
+    broken.elements.push({ ...broken.elements[0]!, id: 'x', type: 'tech', kind: 'mainframe' } as never)
+    expect(() => boardFromDto(broken)).toThrow(InvalidDataError)
+  })
 })
+

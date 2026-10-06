@@ -30,7 +30,7 @@ export interface BindingDto {
 
 export interface ElementDto {
   id: string
-  type: 'rectangle' | 'ellipse' | 'diamond' | 'line' | 'arrow' | 'freedraw' | 'text' | 'document'
+  type: 'rectangle' | 'ellipse' | 'diamond' | 'line' | 'arrow' | 'freedraw' | 'text' | 'document' | 'tech'
   x: number
   y: number
   width: number
@@ -44,8 +44,10 @@ export interface ElementDto {
   endBinding?: BindingDto | null
   /** line | arrow; absent in older data = false (broken line) */
   curved?: boolean
-  /** rectangle | ellipse | diamond | line | arrow; absent in older data = '' */
+  /** rectangle | ellipse | diamond | tech | line | arrow; absent in older data = '' */
   label?: string
+  /** tech: component kind (database, service, …) */
+  kind?: string
   /** document: id of the referenced text document */
   documentId?: string
   /** text */

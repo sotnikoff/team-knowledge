@@ -1,5 +1,6 @@
 import { syncBindings } from '@/domain/element/binding'
 import { setCurved } from '@/domain/element/linear'
+import type { TechKind } from '@/domain/element/tech'
 import { isLinearElement } from '@/domain/element/types'
 import type { Binding, DiagramElement, ElementId, ElementStyle } from '@/domain/element/types'
 import { TRANSPARENT } from '@/domain/element/types'
@@ -11,6 +12,7 @@ import { initialViewport, type Viewport } from './viewport'
 export type ToolType =
   | 'select'
   | 'hand'
+  | 'tech'
   | 'rectangle'
   | 'diamond'
   | 'ellipse'
@@ -27,6 +29,8 @@ export interface EditorModel {
   readonly elements: readonly DiagramElement[]
   readonly selectedIds: readonly ElementId[]
   readonly tool: ToolType
+  /** Component placed by the 'tech' tool (database, service…). */
+  readonly techKind: TechKind
   /** Style applied to newly drawn elements. */
   readonly style: ElementStyle
   readonly viewport: Viewport
@@ -58,6 +62,7 @@ export function createEditorModel(elements: readonly DiagramElement[]): EditorMo
     elements: syncBindings(elements),
     selectedIds: [],
     tool: 'select',
+    techKind: 'service',
     style: defaultStyle,
     viewport: initialViewport,
     history: history.emptyHistory,
@@ -78,6 +83,11 @@ export function select(m: EditorModel, ids: readonly ElementId[]): EditorModel {
 
 export function selectAll(m: EditorModel): EditorModel {
   return { ...m, tool: 'select', selectedIds: m.elements.map((el) => el.id) }
+}
+
+/** Picks a component from the palette and arms the 'tech' tool with it. */
+export function chooseTechKind(m: EditorModel, kind: TechKind): EditorModel {
+  return { ...setTool(m, 'tech'), techKind: kind }
 }
 
 export function setViewport(m: EditorModel, viewport: Viewport): EditorModel {

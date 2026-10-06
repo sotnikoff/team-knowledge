@@ -1,5 +1,4 @@
-import type { Drawable, Options } from 'roughjs/bin/core'
-import type { RoughGenerator } from 'roughjs/bin/generator'
+import type { Drawable } from 'roughjs/bin/core'
 import rough from 'roughjs'
 import type { RoughCanvas } from 'roughjs/bin/canvas'
 import { diamondPoints, labelBox } from '@/domain/element/geometry'
@@ -7,7 +6,6 @@ import { catmullRomSegments } from '@/domain/element/curve'
 import { absolutePoints } from '@/domain/element/factory'
 import { LINE_LABEL_FONT_SIZE, lineLabelAnchor, linePath } from '@/domain/element/linear'
 import {
-  TRANSPARENT,
   type DiagramElement,
   type ElementOfType,
   isLinearElement,
@@ -18,13 +16,9 @@ import {
   type ShapeElement,
 } from '@/domain/element/types'
 import type { Point } from '@/domain/shared/geometry'
+import { drawCached, roughOptions, toPairs, type RenderContext } from './roughHelpers'
+import { renderTech } from './techRenderers'
 import { fontFor, LABEL_FONT_SIZE, LINE_HEIGHT, wrapText } from './text'
-
-interface RenderContext {
-  readonly ctx: CanvasRenderingContext2D
-  readonly rc: RoughCanvas
-  readonly gen: RoughGenerator
-}
 
 type ElementRenderer<E extends DiagramElement> = (el: E, r: RenderContext) => void
 
@@ -33,34 +27,6 @@ type ElementRenderer<E extends DiagramElement> = (el: E, r: RenderContext) => vo
  * `ElementType`, so adding a shape is a compile-guided, additive change.
  */
 type RendererRegistry = { [K in ElementType]: ElementRenderer<ElementOfType<K>> }
-
-const toPairs = (points: readonly Point[]): [number, number][] => points.map((p) => [p.x, p.y])
-
-function roughOptions(el: DiagramElement): Options {
-  const { strokeColor, fillColor, strokeWidth, roughness } = el.style
-  return {
-    seed: el.seed,
-    stroke: strokeColor,
-    strokeWidth,
-    roughness,
-    fill: fillColor === TRANSPARENT ? undefined : fillColor,
-    fillStyle: 'hachure',
-    hachureGap: strokeWidth * 4,
-    preserveVertices: true,
-  }
-}
-
-// Elements are immutable, so the object itself is a perfect cache key.
-const drawableCache = new WeakMap<DiagramElement, Drawable[]>()
-
-function drawCached(el: DiagramElement, r: RenderContext, build: () => Drawable[]) {
-  let drawables = drawableCache.get(el)
-  if (!drawables) {
-    drawables = build()
-    drawableCache.set(el, drawables)
-  }
-  for (const d of drawables) r.rc.draw(d)
-}
 
 /**
  * `traced` gives the direction at the tip (tangent of a curve); the head is
@@ -138,6 +104,7 @@ export const elementRenderers: RendererRegistry = {
   },
   // Drawn by the DOM layer (`DocumentLayer`) as a real rich-text card.
   document: () => {},
+  tech: (el, r) => renderTech(el, r),
   text: (el, { ctx }) => {
     ctx.save()
     ctx.font = fontFor(el.fontSize)
@@ -156,13 +123,13 @@ export function renderLabel(el: ShapeElement, ctx: CanvasRenderingContext2D): vo
   const box = labelBox(el)
   const lines = wrapText(el.label, LABEL_FONT_SIZE, box.width)
   const lineHeight = LABEL_FONT_SIZE * LINE_HEIGHT
-  const top = el.y + el.height / 2 - (lines.length * lineHeight) / 2
+  const top = box.y + box.height / 2 - (lines.length * lineHeight) / 2
   ctx.save()
   ctx.font = fontFor(LABEL_FONT_SIZE)
   ctx.fillStyle = el.style.strokeColor
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  lines.forEach((line, i) => ctx.fillText(line, el.x + el.width / 2, top + (i + 0.5) * lineHeight))
+  lines.forEach((line, i) => ctx.fillText(line, box.x + box.width / 2, top + (i + 0.5) * lineHeight))
   ctx.restore()
 }
 

@@ -8,6 +8,7 @@ import {
   type ElementStyle,
   type ElementType,
 } from '@/domain/element/types'
+import { isTechKind } from '@/domain/element/tech'
 import type { Point } from '@/domain/shared/geometry'
 import {
   BOARD_SCHEMA_VERSION,
@@ -108,6 +109,13 @@ function parseElement(raw: unknown): DiagramElement {
       }
     case 'freedraw':
       return { ...base, type, points: field(raw, 'points', isArray, 'an array').map(parsePoint) }
+    case 'tech':
+      return {
+        ...base,
+        type,
+        kind: field(raw, 'kind', isTechKind, 'a known component kind'),
+        label: optional(raw, 'label', parseString, ''),
+      }
     case 'document':
       return { ...base, type, documentId: field(raw, 'documentId', isString, 'a string') }
     case 'text':

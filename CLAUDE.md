@@ -347,6 +347,23 @@ debounce, не больше одного запроса одновременно
   карточку и зависание вкладки. Веб-шрифты внутри картинки недоступны (системные).
 - BMP браузер не кодирует (`toBlob` молча отдаёт PNG) — свой кодировщик `export/bmp.ts`.
 
+### ИТ-компоненты (проектирование систем)
+
+- Один тип элемента `TechElement { type: 'tech', kind: TechKind }`: сервис, БД, кэш,
+  очередь, хранилище, функция, сервер, шлюз, балансировщик, внешняя система, веб,
+  мобильный клиент, пользователь. Это фигура (`ShapeElement`): подпись, привязка
+  стрелок, заливка и стиль как у прямоугольника; hit-test — по рамке.
+- `domain/element/tech.ts`: `TECH_KINDS`, `TECH_LAYOUT` (размер по умолчанию + доля
+  рамки под подпись — у «иконочных» видов подпись под глифом), `techLabelBox`.
+- Рисунки — `presentation/canvas/techRenderers.ts → drawings` (roughjs, общие хелперы
+  в `roughHelpers.ts`); иконки палитры — `components/techIcons.tsx`.
+- UI: кнопка «Компоненты» в тулбаре (`TechPalette`) → `chooseTechKind`; инструмент
+  `tools/techTool.ts`: клик ставит компонент размера по умолчанию, протяжка задаёт
+  размер (Shift — пропорции). Шорткаты K / 9.
+- **Новый вид** = значение в `TECH_KINDS` + запись в `TECH_LAYOUT`, `drawings`,
+  иконка в `techIcons` и ключ `tech.<kind>` в трёх словарях (mapped types и `Messages`
+  не дадут забыть). JSON не меняется: `kind` валидируется `isTechKind`.
+
 ### Как добавить тип фигуры
 
 1. `domain/element/types.ts` — интерфейс + в union `DiagramElement` + `ELEMENT_TYPES`.

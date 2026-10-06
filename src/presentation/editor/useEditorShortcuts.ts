@@ -25,6 +25,8 @@ export const toolShortcuts: Record<string, ToolType> = {
   KeyT: 'text',
   Digit8: 'text',
   KeyH: 'hand',
+  KeyK: 'tech',
+  Digit9: 'tech',
 }
 
 function isTyping(target: EventTarget | null): boolean {

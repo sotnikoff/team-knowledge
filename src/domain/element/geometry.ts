@@ -7,6 +7,7 @@ import {
 } from '../shared/geometry'
 import { absolutePoints } from './factory'
 import { lineLabelBox, linePath } from './linear'
+import { techLabelBox } from './tech'
 import {
   TRANSPARENT,
   type DiagramElement,
@@ -118,6 +119,11 @@ export const geometryHandlers: GeometryRegistry = {
     // Only the width is free: the height always follows the content.
     resize: (el, target) => ({ ...el, x: target.x, width: Math.max(160, target.width) }),
   },
+  // Components are solid: clicking anywhere on the glyph/body picks them.
+  tech: {
+    hitTest: (el, p, tol) => containsPoint(el, p, tol),
+    resize: resizeBox,
+  },
   text: {
     hitTest: (el, p, tol) => containsPoint(el, p, tol),
     resize: (el, target) => {
@@ -198,6 +204,7 @@ export function resizeBounds(start: Bounds, handle: ResizeHandle, pointer: Point
 export function isPointInsideShape(el: ShapeElement, p: Point): boolean {
   switch (el.type) {
     case 'rectangle':
+    case 'tech':
       return containsPoint(el, p)
     case 'diamond':
       return isPointInPolygon(p, diamondPoints(el))
@@ -216,6 +223,7 @@ export const LABEL_PADDING = 8
 
 /** Area available for a shape's label: the largest box comfortably inside it. */
 export function labelBox(el: ShapeElement): Bounds {
+  if (el.type === 'tech') return techLabelBox(el.kind, el, LABEL_PADDING / 2)
   const ratio = el.type === 'rectangle' ? 1 : el.type === 'ellipse' ? Math.SQRT1_2 : 0.5
   const width = Math.max(0, el.width * ratio - LABEL_PADDING * 2)
   const height = Math.max(0, el.height * ratio - LABEL_PADDING * 2)
