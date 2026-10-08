@@ -2,11 +2,14 @@
  * Composition root — the ONLY module outside `infrastructure/` that knows
  * concrete adapters. Switching persistence (localStorage -> HTTP) happens here.
  */
+import type { AccessTokenProvider } from '@/application/ports/AccessTokenProvider'
+import type { AuthGateway } from '@/application/ports/AuthGateway'
 import type { BoardRepository } from '@/application/ports/BoardRepository'
 import type { DocumentRepository } from '@/application/ports/DocumentRepository'
 import type { ProjectRepository } from '@/application/ports/ProjectRepository'
 import type { SpaceRepository } from '@/application/ports/SpaceRepository'
 import {
+  CompleteProfile,
   CreateBoard,
   CreateDocument,
   CreateProject,
@@ -17,10 +20,12 @@ import {
   DeleteDocument,
   DeleteProject,
   DeleteSpace,
+  GetSession,
   ListBoards,
   ListDocuments,
   ListProjects,
   ListSpaces,
+  Logout,
   OpenBoard,
   OpenDocument,
   OpenProject,
@@ -29,9 +34,13 @@ import {
   RenameDocument,
   RenameProject,
   RenameSpace,
+  RequestLoginCode,
   SaveBoardContent,
   SaveDocumentContent,
+  VerifyLoginCode,
 } from '@/application/usecases'
+import { LocalAuthGateway } from '@/infrastructure/auth/LocalAuthGateway'
+import { LocalStorageSessionStore } from '@/infrastructure/auth/LocalStorageSessionStore'
 import { LocalStorageBoardRepository } from '@/infrastructure/persistence/local/LocalStorageBoardRepository'
 import { LocalStorageDocumentRepository } from '@/infrastructure/persistence/local/LocalStorageDocumentRepository'
 import { LocalStorageProjectRepository } from '@/infrastructure/persistence/local/LocalStorageProjectRepository'
@@ -56,14 +65,17 @@ export function readConfig(env: ImportMetaEnv = import.meta.env): AppConfig {
   return { persistence, apiUrl: env.VITE_API_URL }
 }
 
+/** Everything that talks to the backend (or plays it, in local mode). */
 interface Repositories {
+  readonly auth: AuthGateway
   readonly projects: ProjectRepository
   readonly spaces: SpaceRepository
   readonly boards: BoardRepository
   readonly documents: DocumentRepository
 }
 
-function createRepositories(config: AppConfig): Repositories {
+/** `tokens` is the current access token; every adapter gets it (HTTP sends it, local ignores it). */
+function createRepositories(config: AppConfig, tokens: AccessTokenProvider): Repositories {
   switch (config.persistence) {
     case 'local': {
       purgeLegacyData(window.localStorage)
@@ -71,25 +83,36 @@ function createRepositories(config: AppConfig): Repositories {
       // the adapter does it itself. The HTTP adapters will not need this.
       const identity = { ids: new CryptoIdGenerator(), clock: new SystemClock() }
       return {
-        projects: new LocalStorageProjectRepository(window.localStorage, identity),
-        spaces: new LocalStorageSpaceRepository(window.localStorage, identity),
-        boards: new LocalStorageBoardRepository(window.localStorage, identity),
-        documents: new LocalStorageDocumentRepository(window.localStorage, identity),
+        // No mail in local mode: any 6-digit code but 000000 signs in.
+        auth: new LocalAuthGateway(window.localStorage, identity, tokens),
+        projects: new LocalStorageProjectRepository(window.localStorage, identity, tokens),
+        spaces: new LocalStorageSpaceRepository(window.localStorage, identity, tokens),
+        boards: new LocalStorageBoardRepository(window.localStorage, identity, tokens),
+        documents: new LocalStorageDocumentRepository(window.localStorage, identity, tokens),
       }
     }
     case 'http':
-      // const http = new FetchHttpClient(config.apiUrl)
-      // return { projects: new HttpProjectRepository(http), spaces: ..., boards: ..., documents: ... }
+      // const http = new FetchHttpClient(config.apiUrl, tokens) // adds `Authorization: Bearer`
+      // return { auth: new HttpAuthGateway(http), projects: new HttpProjectRepository(http), spaces: ..., boards: ..., documents: ... }
       throw new Error('HTTP persistence is not implemented yet')
   }
 }
 
 export function createContainer(config: AppConfig = readConfig()): AppDependencies {
-  const { projects, spaces, boards, documents } = createRepositories(config)
+  // The session is client state: kept in this browser with any backend.
+  const sessions = new LocalStorageSessionStore(window.localStorage, window)
+  const { auth, projects, spaces, boards, documents } = createRepositories(config, sessions)
   // Ids of board elements (shapes, arrows…), created by the drawing tools.
   const ids = new CryptoIdGenerator()
   const clock = new SystemClock()
   return {
+    sessions,
+    getSession: new GetSession(sessions, clock),
+    requestLoginCode: new RequestLoginCode(auth),
+    verifyLoginCode: new VerifyLoginCode(auth, sessions),
+    completeProfile: new CompleteProfile(auth, sessions),
+    logout: new Logout(sessions),
+
     listProjects: new ListProjects(projects),
     createProject: new CreateProject(projects),
     openProject: new OpenProject(projects),

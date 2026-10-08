@@ -1,3 +1,4 @@
+import type { AccessTokenProvider } from '@/application/ports/AccessTokenProvider'
 import type { ProjectRepository } from '@/application/ports/ProjectRepository'
 import type { Project, ProjectDraft, ProjectId } from '@/domain/project/Project'
 import { projectFromDto, projectToDto } from '../dto/projectMapper'
@@ -13,7 +14,11 @@ export class LocalStorageProjectRepository implements ProjectRepository {
   private readonly identity: LocalIdentity
 
   /** `identity` assigns ids/timestamps of created projects — a localStorage-only concern. */
-  constructor(store: KeyValueStore, identity: LocalIdentity, prefix = DEFAULT_PREFIX) {
+  /**
+   * `_tokens` is the access token every adapter receives; HTTP adapters send it
+   * as `Authorization: Bearer`. Local data is not tied to users yet, so it is ignored.
+   */
+  constructor(store: KeyValueStore, identity: LocalIdentity, _tokens: AccessTokenProvider, prefix = DEFAULT_PREFIX) {
     this.store = store
     this.prefix = prefix
     this.identity = identity

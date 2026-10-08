@@ -1,4 +1,6 @@
 import type { RouteObject } from 'react-router'
+import { RequireAuth } from '../auth/RequireAuth'
+import { LoginPage } from '../pages/LoginPage'
 import { ProjectPage } from '../pages/ProjectPage'
 import { ProjectsListPage } from '../pages/ProjectsListPage'
 import { SpaceLayout } from '../pages/SpaceLayout'
@@ -17,15 +19,22 @@ const pages = {
 }
 
 export const routes: RouteObject[] = [
-  { path: '/', element: <ProjectsListPage /> },
-  { path: '/projects/:projectId', element: <ProjectPage /> },
+  { path: '/login', element: <LoginPage /> },
   {
-    path: '/spaces/:spaceId',
-    element: <SpaceLayout />,
+    // Everything else needs a signed-in user with a filled-in profile.
+    element: <RequireAuth />,
     children: [
-      { index: true, lazy: pages.overview },
-      { path: 'boards/:boardId', lazy: pages.board },
-      { path: 'docs/:documentId', lazy: pages.document },
+      { path: '/', element: <ProjectsListPage /> },
+      { path: '/projects/:projectId', element: <ProjectPage /> },
+      {
+        path: '/spaces/:spaceId',
+        element: <SpaceLayout />,
+        children: [
+          { index: true, lazy: pages.overview },
+          { path: 'boards/:boardId', lazy: pages.board },
+          { path: 'docs/:documentId', lazy: pages.document },
+        ],
+      },
     ],
   },
 ]

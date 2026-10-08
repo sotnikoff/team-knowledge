@@ -1,3 +1,4 @@
+import type { AccessTokenProvider } from '@/application/ports/AccessTokenProvider'
 import type { SpaceRepository } from '@/application/ports/SpaceRepository'
 import type { ProjectId } from '@/domain/project/Project'
 import type { Space, SpaceDraft, SpaceId } from '@/domain/space/Space'
@@ -44,7 +45,11 @@ export class LocalStorageSpaceRepository implements SpaceRepository {
   private readonly identity: LocalIdentity
 
   /** `identity` assigns ids/timestamps of created spaces — a localStorage-only concern. */
-  constructor(store: KeyValueStore, identity: LocalIdentity, prefix = DEFAULT_PREFIX) {
+  /**
+   * `_tokens` is the access token every adapter receives; HTTP adapters send it
+   * as `Authorization: Bearer`. Local data is not tied to users yet, so it is ignored.
+   */
+  constructor(store: KeyValueStore, identity: LocalIdentity, _tokens: AccessTokenProvider, prefix = DEFAULT_PREFIX) {
     this.store = store
     this.prefix = prefix
     this.identity = identity

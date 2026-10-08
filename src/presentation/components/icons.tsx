@@ -123,6 +123,11 @@ const paths = {
       <path d="M15 18l-6-6 6-6" />
     </Icon>
   ),
+  logout: (
+    <Icon>
+      <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l-4-4 4-4M6 12h10" />
+    </Icon>
+  ),
 } as const
 
 export type IconName = keyof typeof paths

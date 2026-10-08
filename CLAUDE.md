@@ -129,6 +129,30 @@ src/
 - Серверное состояние в UI — через TanStack Query (`presentation/hooks`), кэш
   обновляется из ответов use cases.
 
+## Аутентификация (вход = регистрация)
+
+- Без паролей: email → 6-значный код из письма → сессия; первый вход создаёт аккаунт с `name: null`,
+  и до заполнения профиля (имя обязательно, компания — нет) приложение не пускает дальше
+  (`domain/auth/User.ts → needsProfile`).
+- Domain: `domain/auth/` (`User`, `Session`, `normalizeEmail`, `normalizeLoginCode`); ошибки
+  `InvalidEmailError`, `InvalidCodeError { reason: format | wrong | expired }`, `UnauthorizedError`.
+- Порты: `AuthGateway` (`requestCode` / `verifyCode` / `updateProfile` = `POST /auth/code`,
+  `POST /auth/verify`, `PUT /me`; контракт `authGateway.contract.ts`), `SessionStore` (сессия на клиенте) и
+  узкий `AccessTokenProvider { current() }` — **его получает каждый адаптер данных**: HTTP шлёт
+  `Authorization: Bearer`, localStorage-репозитории принимают и игнорируют. В порты репозиториев токен
+  не протаскивается. Use cases — `usecases/auth/` (`RequestLoginCode`, `VerifyLoginCode`, `CompleteProfile`,
+  `GetSession`, `Logout`).
+- Local-режим: `infrastructure/auth/LocalAuthGateway` играет сервер — **любой 6-значный код верен, кроме
+  `000000`** (так тестируется «неверный код»), пользователи в `tk3:users`, токен — неподписанный JWT
+  (`fakeJwt.ts`, `alg: none`). Сессия — `LocalStorageSessionStore` (`team-knowledge:session`, общий для
+  всех бэкендов, т.к. это состояние клиента).
+- Сущности к пользователю **пока не привязаны** (нет `userId`/владельца).
+- UI: `/login` (`pages/LoginPage.tsx`, три шага), остальные маршруты под `auth/RequireAuth.tsx`
+  (редирект на `/login` с `state.from`, после входа — обратно). `useSession` — `useSyncExternalStore`
+  поверх `SessionStore.subscribe` (видит и другие вкладки). `UnauthorizedError` из любого запроса →
+  `logout` (`App.tsx`, `QueryCache/MutationCache.onError`). Юзер-панель с выходом — `auth/UserPanel.tsx`
+  (`bar` — шапка главной/проекта, `panel` — низ боковой панели, `icon` — свёрнутая панель); выход чистит кэш React Query.
+
 ### Чек-лист: переход на HTTP
 
 Контракт API для бэкенда (эндпоинты, тела, статусы, версии, каскады, формат элементов) —
@@ -142,8 +166,10 @@ src/
    StorageUnavailable). Каскадное удаление проекта и зарисовки делает сервер.
 2. Тесты: `runVersionedRepositoryContract(...)` для каждого поверх мок-сервера
    (например, msw) — те же сценарии, что и для localStorage.
-3. В `presentation/app/container.ts` заполнить ветку `case 'http'` в `createRepositories`.
-4. `.env`: `VITE_PERSISTENCE=http`, `VITE_API_URL=...`.
+3. `infrastructure/auth/HttpAuthGateway.ts` + `runAuthGatewayContract(...)`. Всем HTTP-адаптерам —
+   `AccessTokenProvider` (`sessions` из контейнера) → `Authorization: Bearer`, `401` → `UnauthorizedError`.
+4. В `presentation/app/container.ts` заполнить ветку `case 'http'` в `createRepositories`.
+5. `.env`: `VITE_PERSISTENCE=http`, `VITE_API_URL=...`.
 
 Больше ничего менять не нужно. Не добавляйте в порт методы «под localStorage»
 и не протаскивайте `fetch`/`Response`/HTTP-коды выше infrastructure.
@@ -165,7 +191,7 @@ src/
 
 ## Интерфейс
 
-Маршруты (`presentation/app/routes.tsx`, **плоские**): `/` — список проектов;
+Маршруты (`presentation/app/routes.tsx`, **плоские**): `/login` — вход (единственный без `RequireAuth`); `/` — список проектов;
 `/projects/:projectId` — зарисовки проекта (обе страницы — общий `pages/CollectionPage.tsx`);
 `/spaces/:spaceId` —
 `SpaceLayout` (боковая панель с досками и документами + `<Outlet/>`): index — обзор,

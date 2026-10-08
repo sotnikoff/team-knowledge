@@ -11,7 +11,90 @@
 - **Id проектов, зарисовок, досок и документов** назначает сервер при создании, рекомендуется UUID v4. Id элементов на доске назначает клиент.
 - **Иерархия:** проект → зарисовки (`projectId`) → доски и документы (`spaceId`). Родитель не хранит список детей, ребёнок ссылается на родителя по id.
 - **Оптимистичная блокировка.** У каждой сущности есть `version`. При сохранении (`update_*`) клиент присылает прочитанную версию в заголовке `If-Match` и в теле. Сервер сохраняет, только если она совпадает с текущей, и отвечает сущностью с `version + 1`. Иначе — `409` и никаких изменений.
-- **Порядок операций** ниже: проекты, зарисовки, доски, документы. В конце — сводная таблица.
+- **Авторизация.** Все операции, кроме `/auth/*`, требуют заголовок `Authorization: Bearer <accessToken>` (токен из `verify_login_code`); в таблицах заголовков ниже он не повторяется. Нет токена, он просрочен или отозван → `401 UNAUTHORIZED`, фронтенд разлогинивает пользователя.
+- **Порядок операций** ниже: вход, проекты, зарисовки, доски, документы. В конце — сводная таблица.
+
+---
+
+## Вход и профиль
+
+Вход и регистрация — одно и то же: email → код из письма → сессия. Если аккаунта не было, он создаётся
+при первом `verify_login_code`, с `name: null` — тогда фронтенд просит имя и компанию (`update_me`).
+
+`User`: `id` (string), `email` (string, в нижнем регистре), `name` (string | null — профиль не заполнен),
+`company` (string | null), `createdAt` (ISO-8601 UTC).
+
+### request_login_code
+
+**Отправить код на почту.** Вызывает: `RequestLoginCode` — шаг 1 экрана входа и «Отправить код ещё раз».
+
+```http
+POST /auth/code HTTP/1.1
+Content-Type: application/json; charset=utf-8
+
+{ "email": "ann@example.com" }
+```
+
+**Успешный ответ:** `204 No Content`. Сервер генерирует одноразовый 6-значный код (рекомендуется: живёт
+~10 минут, до 5 попыток) и отправляет письмо; прежний код этого email становится недействительным.
+
+| Статус | `code` | Когда | Что делает фронтенд |
+|---|---|---|---|
+| `422` | `INVALID_EMAIL` | адрес некорректен | «Проверьте адрес почты» |
+| `429` | — | слишком частые запросы | «хранилище недоступно», можно повторить |
+
+### verify_login_code
+
+**Войти по коду (и зарегистрироваться при первом входе).** Вызывает: `VerifyLoginCode` — шаг 2, отправляется
+автоматически после 6-й цифры.
+
+```http
+POST /auth/verify HTTP/1.1
+Content-Type: application/json; charset=utf-8
+
+{ "email": "ann@example.com", "code": "123456" }
+```
+
+**Успешный ответ:** `200 OK` — сессия.
+
+```json
+{
+  "accessToken": "eyJhbGciOi…",
+  "expiresAt": "2026-11-07T12:00:00.000Z",
+  "user": { "id": "7c0e…", "email": "ann@example.com", "name": null, "company": null, "createdAt": "2026-10-08T12:00:00.000Z" }
+}
+```
+
+`accessToken` — JWT, клиент его не разбирает. `expiresAt` — когда клиент сам перестанет считать сессию
+действующей. Повторный вход тем же email возвращает того же пользователя.
+
+| Статус | `code` | Когда | Что делает фронтенд |
+|---|---|---|---|
+| `422` | `INVALID_EMAIL` | адрес некорректен | «Проверьте адрес почты» |
+| `422` | `INVALID_CODE`, `reason: "format"` | не 6 цифр | «Код — это 6 цифр» |
+| `422` | `INVALID_CODE`, `reason: "wrong"` | не тот код | «Неверный код» |
+| `422` | `INVALID_CODE`, `reason: "expired"` | код истёк или исчерпаны попытки | «Код устарел — запросите новый» |
+
+### update_me
+
+**Заполнить профиль после регистрации.** Вызывает: `CompleteProfile` — шаг 3 экрана входа (только когда `user.name === null`).
+
+```http
+PUT /me HTTP/1.1
+Authorization: Bearer eyJhbGciOi…
+Content-Type: application/json; charset=utf-8
+
+{ "name": "Анна", "company": "Acme" }
+```
+
+`name` — обязательно, 1–100 символов после `trim`; `company` — `null` или до 100 символов.
+
+**Успешный ответ:** `200 OK` — `User` целиком. Клиент кладёт его в сохранённую сессию.
+
+| Статус | `code` | Когда | Что делает фронтенд |
+|---|---|---|---|
+| `401` | `UNAUTHORIZED` | нет/просрочен токен | выход, экран входа |
+| `422` | `INVALID_NAME` | имя пустое или длинное, компания длинная | «Укажите имя» |
 
 ---
 
@@ -2130,10 +2213,13 @@ Accept: application/json
 
 ## Сводка
 
-`Page<T>` = `{ "items": T[], "nextCursor": string | null, "total"?: number }`.
+`Page<T>` = `{ "items": T[], "nextCursor": string | null, "total"?: number }`. Все операции, кроме `/auth/*`, — с `Authorization: Bearer`.
 
 | Имя | Метод и путь | Заголовки запроса | Payload | Успех | Response |
 |---|---|---|---|---|---|
+| `request_login_code` | `POST /auth/code` | `Content-Type` | `{ email }` | `204` | — |
+| `verify_login_code` | `POST /auth/verify` | `Content-Type` | `{ email, code }` | `200` | `Session` |
+| `update_me` | `PUT /me` | `Authorization`, `Content-Type` | `{ name, company }` | `200` | `User` |
 | `get_projects` | `GET /projects?limit=&cursor=` | `Accept` | — | `200` | `Page<Project>` |
 | `get_project` | `GET /projects/{projectId}` | `Accept` | — | `200` | `Project` |
 | `create_project` | `POST /projects` | `Accept`, `Content-Type` | `{ name }` | `201` | `Project` |

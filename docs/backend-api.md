@@ -28,7 +28,7 @@ JSON — [`backend-api-operations.md`](./backend-api-operations.md).
 | `schemaVersion` | Версия формата тела у проектов, зарисовок, досок и документов, сейчас везде `1`. Клиент отклоняет ответ, где `schemaVersion` больше известного ему. Сервер возвращает то, что сохранил. |
 | Названия | `name` проекта, зарисовки и доски, `title` документа: после `trim()` от 1 до **100** символов. Клиент проверяет сам, но сервер обязан проверить тоже (раздел 4). |
 | Списки | Конверт `Page<T>` с курсорной пагинацией (раздел 2.1). Клиент сам сортирует по `updatedAt`, новые первыми. |
-| Авторизация | Пока не используется (раздел 9). |
+| Авторизация | `Authorization: Bearer <accessToken>` на **всех** эндпоинтах, кроме `/auth/*`. Токен (JWT) выдаёт `POST /auth/verify` (раздел 2.3). Нет токена, он просрочен или отозван → `401`. Сущности к пользователям пока не привязаны (раздел 9). |
 
 ### Иерархия
 
@@ -69,6 +69,9 @@ Project (проект)
 | 18 | `CreateDocument` | `POST /spaces/{spaceId}/documents` | `DocumentDraft` | `201` `DocumentDto` |
 | 19 | `SaveDocumentContent`, `RenameDocument` | `PUT /documents/{documentId}` | `DocumentDto` | `200` `DocumentDto` |
 | 20 | `DeleteDocument` | `DELETE /documents/{documentId}` | — | `204` |
+| 21 | `RequestLoginCode` | `POST /auth/code` | `{ email }` | `204` |
+| 22 | `VerifyLoginCode` | `POST /auth/verify` | `{ email, code }` | `200` `SessionDto` |
+| 23 | `CompleteProfile` | `PUT /me` | `{ name, company }` | `200` `UserDto` |
 
 ### 2.1. Списки: конверт и курсор
 
@@ -176,6 +179,46 @@ GET /spaces/2bb3…/boards?limit=100 HTTP/1.1
 
 ---
 
+### 2.3. Аутентификация (вход = регистрация)
+
+Без паролей: пользователь вводит email, получает на почту 6-значный код и вводит его. Если аккаунта
+с этим email не было, `POST /auth/verify` его создаёт — отдельной регистрации нет. У нового
+пользователя `name: null`: фронтенд показывает форму «имя + компания» и не пускает дальше, пока
+она не отправлена (`PUT /me`). Порт — `src/application/ports/AuthGateway.ts`, контрактный сьют —
+`authGateway.contract.ts`.
+
+```ts
+interface UserDto {
+  id: string
+  email: string            // trim + lowercase, ≤ 254 символов
+  name: string | null      // null — профиль ещё не заполнен
+  company: string | null   // необязательно
+  createdAt: string        // ISO-8601 UTC
+}
+
+interface SessionDto {
+  accessToken: string      // JWT; клиент его не разбирает, только шлёт в Authorization
+  expiresAt: string        // ISO-8601 UTC, = exp токена
+  user: UserDto
+}
+```
+
+| Эндпоинт | Тело | Успех | Ошибки |
+|---|---|---|---|
+| `POST /auth/code` | `{ "email": "ann@example.com" }` | `204`; письмо с кодом. Новый запрос делает прежний код недействительным | `422 INVALID_EMAIL`, `429` (слишком часто — фронт сам не даёт повторить раньше 30 с) |
+| `POST /auth/verify` | `{ "email": "ann@example.com", "code": "123456" }` | `200 SessionDto`; аккаунт создаётся при первом входе | `422 INVALID_CODE` с `reason`: `format` (не 6 цифр), `wrong` (не тот), `expired` (истёк или исчерпаны попытки) |
+| `PUT /me` | `{ "name": "Анна", "company": "Acme" }` (`company` может быть `null`) | `200 UserDto` | `401`, `422 INVALID_NAME` (имя 1–100 символов после `trim`, компания ≤ 100) |
+
+Рекомендации серверу: код живёт ~10 минут, не больше 5 попыток ввода, одноразовый. Срок жизни
+токена — на усмотрение сервера (фронт смотрит на `expiresAt`, в local-режиме — 30 дней). Выход —
+только на клиенте (забыть токен), эндпоинт не нужен.
+
+В режиме localStorage сервера нет: `LocalAuthGateway` принимает **любой** 6-значный код, кроме
+`000000` (так проверяется «неверный код»), пользователей хранит в `tk3:users`, а токен — неподписанный
+JWT (`alg: none`) с `sub`, `email`, `iat`, `exp`. Local-репозитории токен получают и игнорируют.
+
+---
+
 ## 3. Оптимистичная конкурентность (`version`)
 
 1. Клиент читает сущность и запоминает её `version`.
@@ -221,6 +264,9 @@ ETag: "8"
 
 | Ситуация | Статус | `code` | Ошибка на фронте |
 |---|---|---|---|
+| Нет токена, он просрочен или отозван | `401` | `UNAUTHORIZED` | `UnauthorizedError` → выход, экран входа |
+| Неверный email при входе | `422` | `INVALID_EMAIL` | `InvalidEmailError` |
+| Неверный / истёкший код | `422` | `INVALID_CODE` (+ `reason`: `format` / `wrong` / `expired`) | `InvalidCodeError` |
 | Сущности или родителя нет | `404` | `NOT_FOUND` (+ `entity`: `project` / `space` / `board` / `document`, `id`) | `NotFoundError` |
 | `version` / `If-Match` не совпали | `409` или `412` | `VERSION_CONFLICT` | `VersionConflictError` |
 | Пустое или длиннее 100 символов название | `422` | `INVALID_NAME` | `InvalidNameError` |
@@ -367,13 +413,14 @@ interface RichTextNodeDto {
 
 1. `src/infrastructure/persistence/http/Http{Project,Space,Board,Document}Repository.ts`: `fetch` + существующие маппер'ы из `dto/` (`*ToDto`, `*FromDto`), статусы → доменные ошибки по таблице раздела 4. `list` листает `Page<T>` до `nextCursor: null` (раздел 2.1).
 2. Контрактные тесты `runVersionedRepositoryContract(...)` поверх мок-сервера (например, msw), с теми же сценариями, что для localStorage.
-3. `presentation/app/container.ts` → ветка `case 'http'`; `.env`: `VITE_PERSISTENCE=http`, `VITE_API_URL=…`.
+3. `src/infrastructure/auth/HttpAuthGateway.ts` (`implements AuthGateway`) + `runAuthGatewayContract(...)`. Все HTTP-адаптеры получают `AccessTokenProvider` (в контейнере это `sessions`) и шлют `Authorization: Bearer`; `401` → `UnauthorizedError`.
+4. `presentation/app/container.ts` → ветка `case 'http'`; `.env`: `VITE_PERSISTENCE=http`, `VITE_API_URL=…`.
 
 ---
 
 ## 9. Вне рамок / открытые вопросы
 
-- **Авторизация и права** (кто видит какие проекты) — не определены. Когда появятся, удобно отдавать `401`/`403`, а клиент добавит их обработку.
+- **Права доступа** (кто видит какие проекты) — не определены: аутентификация есть (раздел 2.3), но у сущностей пока нет `userId`/владельца. Когда появятся, запрет — `403`; `401` клиент уже обрабатывает.
 - **Совместное редактирование в реальном времени** не предусмотрено: модель — «последний успешный `PUT` с верной версией», конфликты решает пользователь.
 - **Перенос** зарисовки в другой проект и доски/документа в другую зарисовку не поддерживается.
 - **Файлы и картинки** не хранятся: экспорт PNG/JPEG/BMP делается на клиенте.

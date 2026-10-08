@@ -2,7 +2,9 @@ import { createContext, useContext } from 'react'
 import type { ArchiveFormat } from '@/application/ports/ArchiveFormat'
 import type { ElementClipboardFormat } from '@/application/ports/ElementClipboardFormat'
 import type { IdGenerator } from '@/application/ports/IdGenerator'
+import type { SessionStore } from '@/application/ports/SessionStore'
 import type {
+  CompleteProfile,
   CreateBoard,
   CreateDocument,
   CreateProject,
@@ -13,10 +15,12 @@ import type {
   DeleteDocument,
   DeleteProject,
   DeleteSpace,
+  GetSession,
   ListBoards,
   ListDocuments,
   ListProjects,
   ListSpaces,
+  Logout,
   OpenBoard,
   OpenDocument,
   OpenProject,
@@ -25,8 +29,10 @@ import type {
   RenameDocument,
   RenameProject,
   RenameSpace,
+  RequestLoginCode,
   SaveBoardContent,
   SaveDocumentContent,
+  VerifyLoginCode,
 } from '@/application/usecases'
 
 /**
@@ -35,6 +41,14 @@ import type {
  * Dependency Inversion).
  */
 export interface AppDependencies {
+  /** Only to subscribe to sign-in / sign-out; reading goes through `getSession`. */
+  readonly sessions: Pick<SessionStore, 'subscribe'>
+  readonly getSession: GetSession
+  readonly requestLoginCode: RequestLoginCode
+  readonly verifyLoginCode: VerifyLoginCode
+  readonly completeProfile: CompleteProfile
+  readonly logout: Logout
+
   readonly listProjects: ListProjects
   readonly createProject: CreateProject
   readonly openProject: OpenProject

@@ -1,4 +1,5 @@
 import { Link, Outlet, useParams } from 'react-router'
+import { UserPanel } from '../auth/UserPanel'
 import { AppIcon } from '../components/icons'
 import { ErrorPage, Loading } from '../components/PageState'
 import { SpaceSidebar } from '../components/SpaceSidebar'
@@ -41,6 +42,7 @@ export function SpaceLayout() {
           </IconButton>
           <div className={styles.railBottom}>
             <ThemeToggle />
+            <UserPanel variant="icon" />
           </div>
         </aside>
       ) : (
@@ -59,8 +61,11 @@ export function SpaceLayout() {
           </Link>
           <SpaceSidebar spaceId={space.data.id} />
           <div className={styles.footer}>
-            <ThemeToggle withLabel />
-            <LanguageSelect />
+            <UserPanel variant="panel" />
+            <div className={styles.prefs}>
+              <ThemeToggle withLabel />
+              <LanguageSelect />
+            </div>
           </div>
         </aside>
       )}

@@ -1,5 +1,6 @@
 import {
   DomainError,
+  InvalidCodeError,
   InvalidFileError,
   NotFoundError,
   StorageUnavailableError,
@@ -15,8 +16,16 @@ const notFound: Record<EntityKind, MessageKey> = {
   document: 'errors.notFound.document',
 }
 
+const invalidCode: Record<InvalidCodeError['reason'], MessageKey> = {
+  format: 'errors.code.format',
+  wrong: 'errors.code.wrong',
+  expired: 'errors.code.expired',
+}
+
 const byCode: Record<string, MessageKey> = {
   INVALID_NAME: 'errors.invalidName',
+  INVALID_EMAIL: 'errors.invalidEmail',
+  UNAUTHORIZED: 'errors.unauthorized',
   STORAGE_UNAVAILABLE: 'errors.storage',
 }
 
@@ -24,6 +33,7 @@ const byCode: Record<string, MessageKey> = {
 export function errorMessage(error: unknown, t: Translate): string {
   if (error instanceof NotFoundError) return t(notFound[error.entity])
   if (error instanceof VersionConflictError) return t('errors.conflict')
+  if (error instanceof InvalidCodeError) return t(invalidCode[error.reason])
   if (error instanceof InvalidFileError) {
     return error.reason === 'wrongKind' && error.expected && error.actual
       ? t('errors.wrongFileKind', { expected: t(`archive.kind.${error.expected}`), actual: t(`archive.kind.${error.actual}`) })

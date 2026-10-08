@@ -1,0 +1,167 @@
+.page {
+  min-height: 100vh;
+  padding: var(--space-8);
+  background-color: var(--paper);
+  /* Graph paper, as on the board. */
+  background-image:
+    linear-gradient(var(--grid-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(var(--grid-minor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
+  background-size:
+    100px 100px,
+    100px 100px,
+    20px 20px,
+    20px 20px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-sm);
+  background: var(--marker);
+  color: var(--on-marker);
+  font-size: var(--text-xs);
+  letter-spacing: 0;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.prefs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  margin: 12vh auto 0;
+  padding: var(--space-8);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-md);
+  background: var(--sheet);
+  box-shadow: var(--shadow-lg);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.header {
+  margin-bottom: var(--space-2);
+}
+
+.step {
+  margin-bottom: var(--space-3);
+  color: var(--accent-ink);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.underline {
+  display: block;
+  width: 40px;
+  height: 5px;
+  margin-top: var(--space-1);
+  background: var(--marker);
+}
+
+.subtitle {
+  margin-top: var(--space-3);
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.label {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.optional {
+  color: var(--ink-faint);
+  font-weight: 400;
+}
+
+.code {
+  height: 52px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+  letter-spacing: 0.5em;
+  text-align: center;
+  /* Letter spacing also follows the last digit: keep the group centred. */
+  text-indent: 0.5em;
+}
+
+.submit {
+  justify-content: center;
+}
+
+.error {
+  color: var(--danger);
+  font-size: var(--text-sm);
+}
+
+.note {
+  color: var(--success);
+  font-size: var(--text-sm);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: var(--space-4);
+  }
+
+  .card {
+    margin-top: var(--space-8);
+    padding: var(--space-5);
+  }
+}

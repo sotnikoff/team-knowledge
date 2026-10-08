@@ -83,3 +83,35 @@ export class InvalidFileError extends DomainError {
     this.actual = details.actual ?? null
   }
 }
+
+/** The email address is malformed. */
+export class InvalidEmailError extends DomainError {
+  readonly code = 'INVALID_EMAIL'
+
+  constructor() {
+    super('Invalid email address')
+  }
+}
+
+/**
+ * The login code cannot be accepted: not six digits (`format`), not the one
+ * that was sent (`wrong`), or too old / used up (`expired`).
+ */
+export class InvalidCodeError extends DomainError {
+  readonly code = 'INVALID_CODE'
+  readonly reason: 'format' | 'wrong' | 'expired'
+
+  constructor(reason: 'format' | 'wrong' | 'expired') {
+    super(`Invalid login code: ${reason}`)
+    this.reason = reason
+  }
+}
+
+/** No valid session: the access token is missing, expired or rejected (HTTP 401). */
+export class UnauthorizedError extends DomainError {
+  readonly code = 'UNAUTHORIZED'
+
+  constructor(message = 'Not signed in') {
+    super(message)
+  }
+}

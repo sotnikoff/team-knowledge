@@ -26,3 +26,9 @@ export { DeleteDocument } from './documents/DeleteDocument'
 
 export { ExportArchive } from './archive/ExportArchive'
 export { ImportArchive, type ImportTarget, type Imported } from './archive/ImportArchive'
+
+export { RequestLoginCode } from './auth/RequestLoginCode'
+export { VerifyLoginCode } from './auth/VerifyLoginCode'
+export { CompleteProfile } from './auth/CompleteProfile'
+export { GetSession } from './auth/GetSession'
+export { Logout } from './auth/Logout'

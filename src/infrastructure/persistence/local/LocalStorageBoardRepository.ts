@@ -1,3 +1,4 @@
+import type { AccessTokenProvider } from '@/application/ports/AccessTokenProvider'
 import type { BoardRepository } from '@/application/ports/BoardRepository'
 import { toSummary, type Board, type BoardDraft, type BoardId, type BoardSummary } from '@/domain/board/Board'
 import type { SpaceId } from '@/domain/space/Space'
@@ -25,7 +26,11 @@ export class LocalStorageBoardRepository implements BoardRepository {
   private readonly boards: LocalCollection<Board, BoardSummary>
 
   /** `identity` assigns ids/timestamps of created boards — a localStorage-only concern. */
-  constructor(store: KeyValueStore, identity: LocalIdentity, prefix = DEFAULT_PREFIX) {
+  /**
+   * `_tokens` is the access token every adapter receives; HTTP adapters send it
+   * as `Authorization: Bearer`. Local data is not tied to users yet, so it is ignored.
+   */
+  constructor(store: KeyValueStore, identity: LocalIdentity, _tokens: AccessTokenProvider, prefix = DEFAULT_PREFIX) {
     this.boards = boardCollection(store, prefix, identity)
   }
 

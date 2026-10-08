@@ -1,3 +1,4 @@
+import type { AccessTokenProvider } from '@/application/ports/AccessTokenProvider'
 import type { DocumentRepository } from '@/application/ports/DocumentRepository'
 import {
   toDocumentSummary,
@@ -36,7 +37,11 @@ export class LocalStorageDocumentRepository implements DocumentRepository {
   private readonly documents: LocalCollection<Document, DocumentSummary>
 
   /** `identity` assigns ids/timestamps of created documents — a localStorage-only concern. */
-  constructor(store: KeyValueStore, identity: LocalIdentity, prefix = DEFAULT_PREFIX) {
+  /**
+   * `_tokens` is the access token every adapter receives; HTTP adapters send it
+   * as `Authorization: Bearer`. Local data is not tied to users yet, so it is ignored.
+   */
+  constructor(store: KeyValueStore, identity: LocalIdentity, _tokens: AccessTokenProvider, prefix = DEFAULT_PREFIX) {
     this.documents = documentCollection(store, prefix, identity)
   }
 

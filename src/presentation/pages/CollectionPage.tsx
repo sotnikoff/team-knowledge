@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { NAME_MAX_LENGTH } from '@/domain/shared/name'
+import { UserPanel } from '../auth/UserPanel'
 import { AppIcon } from '../components/icons'
 import { ItemCard } from '../components/ItemCard'
 import { errorMessage } from '../errors'
@@ -62,6 +63,7 @@ export function CollectionPage<T extends Named>(props: {
         <div className={styles.prefs}>
           <ThemeToggle />
           <LanguageSelect />
+          <UserPanel variant="bar" />
         </div>
       </div>
 
